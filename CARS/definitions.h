@@ -24,7 +24,7 @@
 
 // Controls which parameters are used in PIDController.
 #define safeMode
-//#define fullForce
+// #define fullForce
 
 // ---------- Globals ----------
 // Radius of circle (squared) surrounding the car. Used in controller.
@@ -64,6 +64,7 @@ namespace ControllerType
     enum Enum
     {
         PIDController,
+        PIDControllerSR,
     };
 }
 
@@ -161,8 +162,9 @@ extern struct LapData lapData;
 extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData;
 extern HANDLE hDrawThreadEvent;
 extern HANDLE hControllerThreadEvent1, hControllerThreadEvent_signalsWritten, hControllerThreadEvent_signalsRead;
-// Reference signal. Should be placed in regulatorThreadData?
+// Reference signals. Should be placed in regulatorThreadData?
 extern std::vector<float> gRef;
+extern std::vector<float> vRef;
 // Length of reference signal (number of coordinate pairs).
 extern int gRefLen;
 

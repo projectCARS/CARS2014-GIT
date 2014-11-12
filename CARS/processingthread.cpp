@@ -23,6 +23,8 @@ void ProcessingThread::run()
     // Timing.
     QTime time;
     int t1;
+    double t2,t3,t4 = 0;
+    clock_t timerTest1, timerTest2;
     double timeDiff, currTime;
     // Counts the number while loops.
     int loopCounter = 0;
@@ -104,11 +106,15 @@ void ProcessingThread::run()
         // Save car data from previous iteration.
         oldCarData = carData;
 
+        timerTest1 = clock();
         // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
         markers = sensor.detectMarkers();
 
+        timerTest2 = clock();
         // Calculate position, angle and id.
         carMeasurements = findCars(markers);
+
+        t2 = clock() - timerTest2;
 
         // Add measurements to cars.
         for (int j = 0; j < carMeasurements.size(); j++)

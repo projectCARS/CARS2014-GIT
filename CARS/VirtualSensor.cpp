@@ -3,6 +3,7 @@
 #include "definitions.h"
 #include "functions.h"
 
+
 VirtualSensor::VirtualSensor()
 {
 #ifdef CAMERA_IS_AVALIABLE
@@ -95,6 +96,7 @@ std::vector<float> VirtualSensor::detectMarkers()
 
     // Converting to meters
     cameraToWorldCoordinates(allMarkers);
+
 
     return allMarkers;
 }

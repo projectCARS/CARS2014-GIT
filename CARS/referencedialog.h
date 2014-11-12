@@ -24,6 +24,7 @@ private:
     cv::Mat m_image;
     QSettings m_settings;
     std::vector<float> m_ref;
+    std::vector<float> m_vRef;
     int m_refLen;
 
     void loadReference(void);

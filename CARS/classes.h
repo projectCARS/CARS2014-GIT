@@ -6,6 +6,7 @@
 #include "Controller.h"
 #include "IOControl.h"
 #include "PIDController.h"
+#include "PIDControllerSR.h"
 #include "AutoReverse.h"
 #include "Car.h"
 #include "Filter.h"

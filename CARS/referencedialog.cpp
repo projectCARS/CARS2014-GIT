@@ -109,15 +109,17 @@ void ReferenceDialog::loadReference()
     file.open(m_fileName.toStdString().c_str(), std::ios::in);
     if (!file)
     {
-        std::cout << "Error: Could not open reference file, in loadReference(), processingthread.cpp" << std::endl;
+        std::cout << "Error: Could not open reference file, in loadReference(), referencedialog.cpp" << std::endl;
         return;
     }
     // First row of reference.txt must be the number of reference points.
     file >> m_refLen;
     // Delete old reference vector.
     m_ref.resize(0);
+    m_vRef.resize(0);
     // Allocate memory for vector with reference curve.
     m_ref.resize(m_refLen * 2);
+    m_vRef.resize(m_refLen);
     // Get values from reference curve and convert from pixels to meters.
     for (int i = 0; i < m_refLen; i++)
     {
@@ -127,6 +129,8 @@ void ReferenceDialog::loadReference()
         // y pixel coordinate.
         file >> m_ref[i * 2 + 1];
         m_ref[i * 2 + 1] = m_ref[i * 2 + 1];
+        // take care of speed reference. NOT USED
+        file >> m_vRef[i];
         numPoints++;
     }
 

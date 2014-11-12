@@ -22,6 +22,7 @@ CarGroupBox::CarGroupBox(QWidget *parent) :
     ui->motionModelComboBox->addItem("CTModel", (int)MotionModelType::CTModel);
     // Add controllers.
     ui->controllerComboBox->addItem("PIDController", (int)ControllerType::PIDController);
+    ui->controllerComboBox->addItem("PIDControllerSR", (int)ControllerType::PIDControllerSR);
 
     // Set fixed width of combo boxes (not optimal solution, but it works).
     ui->filterComboBox->setFixedWidth(70);

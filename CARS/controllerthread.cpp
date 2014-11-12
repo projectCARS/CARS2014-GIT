@@ -16,6 +16,7 @@ void ControllerThread::loadControllerSettings()
         it = m_controllers.erase(it);
     }
 
+
     m_numCars = 0;
     // Load controller settings and populate controller vector.
     while (m_settings.contains(QString("car/id%1/mode").arg(m_numCars)))
@@ -27,11 +28,16 @@ void ControllerThread::loadControllerSettings()
         case ControllerType::PIDController:
             m_controllers.push_back(new PIDController(m_numCars));
             break;
+        case ControllerType::PIDControllerSR:
+            qDebug() << "case PIDControllerSR";
+            m_controllers.push_back(new PIDControllerSR(m_numCars));
+            break;
         default:
             qDebug() << "Error: Controller type not implemented, in loadControllerSettings(), controllerthread.cpp";
         }
         m_settings.endGroup();
         m_numCars++;
+        qDebug() << m_numCars;
     }
 
     // If no controller settings are found, create a default controller.

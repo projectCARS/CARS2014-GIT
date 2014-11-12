@@ -232,7 +232,7 @@ void MainWindow::initFrame(void)
             for (int j = 0; j < drawThreadData.background.size(); j++)
             {
                 line(drawThreadData.background[j], cv::Point(gRef[i]*PIXELS_PER_METER, gRef[i + 1]*PIXELS_PER_METER),
-                        cv::Point(gRef[i + 2]*PIXELS_PER_METER, gRef[i + 3]*PIXELS_PER_METER), cv::Scalar(20, 255, 20), 2);
+                        cv::Point(gRef[i + 2]*PIXELS_PER_METER, gRef[i + 3]*PIXELS_PER_METER), cv::Scalar(0, 0, 0), 2); //(20, 255, 20), 2);
             }
         }
         // Draw a line between the first and last points.
@@ -508,15 +508,17 @@ void MainWindow::loadReference()
     file.open(filePath.toStdString().c_str(), std::ios::in);
     if (!file)
     {
-        std::cout << "Error: Could not open reference file, in loadReference(), processingthread.cpp" << std::endl;
+        std::cout << "Error: Could not open reference file, in loadReference(), mainWindow.cpp" << std::endl;
         return;
     }
-    // First row of reference.txt must be the number of reference points.
+    // First row of reference.txt must be the number of reference points. Then each rows must include: x-coordinate, y-coordinate, speed
     file >> gRefLen;
-    // Delete old reference vector.
+    // Delete old reference vectors.
     gRef.resize(0);
-    // Allocate memory for vector with reference curve.
+    vRef.resize(0);
+    // Allocate memory for vector with reference curves.
     gRef.resize(gRefLen * 2);
+    vRef.resize(gRefLen);
     // Get values from reference curve and convert from pixels to meters.
     for (int i = 0; i < gRefLen; i++)
     {
@@ -526,13 +528,16 @@ void MainWindow::loadReference()
         // y pixel coordinate.
         file >> gRef[i * 2 + 1];
         gRef[i * 2 + 1] = gRef[i * 2 + 1] / PIXELS_PER_METER;
+        // v_i - speed reference at point (x_i,y_i)
+        file >> vRef[i];  //speed must be stored in global coordinates in reference.txt
+
         numPoints++;
     }
 
     // Check that there were at least gRefLen numbers to read.
     if (numPoints < gRefLen)
     {
-        std::cout << "Error: Number of points on reference curve is smaller than gRefLen (reference file is not formatted properly), in loadReference(), processingthread.cpp" << std::endl;
+        std::cout << "Error: Number of points on reference curve is smaller than gRefLen (reference file is not formatted properly), in loadReference(), mainWindow.cpp" << std::endl;
     }
 
     // Close file.
