@@ -19,6 +19,18 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
 		case FilterType::EKF:
             m_filter = new EKF(motionModelType);
 			break;
+        case FilterType::ParticleFilter:
+            
+            Eigen::MatrixXf carPattern;
+            //TODO make this id-dependent
+            cv::FileStorage storage("indata/car01.yml", cv::FileStorage::READ);
+            cv::Mat tmp;
+            storage["pattern"] >> tmp;
+            storage.release();
+            cv::cv2eigen(tmp, carPattern);
+            m_filter = new ParticleFilter(carPattern, 20, 5, motionModelType);
+            
+            break;
         case FilterType::NoFilter:
             m_filter = new NoFilter();
             break;
