@@ -47,6 +47,7 @@ namespace FilterType
     enum Enum
     {
         EKF,
+        ParticleFilter,
         NoFilter,
     };
 }
