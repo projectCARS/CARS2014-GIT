@@ -4,18 +4,12 @@
 
 namespace Bilbana
 {
-	ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType)
+	ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim)
 	{
 		carPattern = ID;
 		expectedSpeed = speed;
 		limit = lim;
 		noCar = true;
-        
-        switch (motionModelType)
-        {
-            default:
-                //Use random Walk
-        }
 	}
 
 	ParticleFilter::~ParticleFilter()
@@ -105,7 +99,6 @@ namespace Bilbana
 					else
 					{
 						sum += mean.val[0];
-                        
 					}
 
 
@@ -202,10 +195,6 @@ namespace Bilbana
                 posX[j] = posXPoints[k];
                 posY[j] = posYPoints[k];
                 yaw[j] = yawPoints[k];
-                
-                sumStates[0] += posXPoints[k];
-                sumStates[1] += posYPoints[k];
-                sumStates[2] += yawPoints[k];
             }
             
         }
@@ -310,47 +299,3 @@ namespace Bilbana
 		noCar = false; // To break extensive search. This will be tried on next image search.
 	}
 }
-
-
-
-virtual void ParticleFilter::addMeasurement(const cv::Mat img){
-    m_img = img;
-    m_newMeasurement = true;
-}
-
-// Add a new set of inputsignals to the filter
-virtual void addInputSignals(float gas, float turn){
-    u(0) = gas;
-    u(1) = turn;
-}
-
-// Create new state estimates.
-virtual void updateFilter()
-{
-    if (particleFilter.carGone())
-    {
-        std::cout << "Class ParticleFilter:	Could not find any matching hypotheses. Attempting extensive search" << std::endl;
-        particleFilter.extensiveSearch(img);
-    }
-    else
-    {
-        particleFilter.propagate();
-        particleFilter.update(m_img);
-        particleFilter.resample();
-    }
-
-}
-
-// Get current state estimets.
-virtual std::vector<float> getState()
-{
-    std::vector<float> state(xhat.size());
-    for(int i = 0; i < xhat.size(); i++){
-        state[i] = xhat[i];
-    }
-    return state;
-}
-
-
-
-
