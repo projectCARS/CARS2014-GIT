@@ -67,7 +67,9 @@ SOURCES += main.cpp\
     AutoReverse.cpp \
     NoFilter.cpp \
     drawsettingsdialog.cpp \
-    Calibrator.cpp
+    Calibrator.cpp \
+    PIDControllerSR.cpp \
+    particleFilter.cpp
 
 HEADERS  += mainwindow.h \
     processingthread.h \
@@ -93,7 +95,9 @@ HEADERS  += mainwindow.h \
     AutoReverse.h \
     NoFilter.h \
     drawsettingsdialog.h \
-    Calibrator.h
+    Calibrator.h \
+    PIDControllerSR.h \
+    ParticleFilter.h
 
 FORMS    += mainwindow.ui \
     referencedialog.ui \

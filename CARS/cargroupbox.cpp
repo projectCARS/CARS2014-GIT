@@ -17,6 +17,7 @@ CarGroupBox::CarGroupBox(QWidget *parent) :
 
     // Add filters.
     ui->filterComboBox->addItem("EKF", (int)FilterType::EKF);
+    ui->filterComboBox->addItem("ParticleFilter", (int)FilterType::ParticleFilter);
     ui->filterComboBox->addItem("NoFilter", (int)FilterType::NoFilter);
     // Add motion models.
     ui->motionModelComboBox->addItem("CTModel", (int)MotionModelType::CTModel);

@@ -18,12 +18,12 @@ unsigned __stdcall drawThread(void *ArgList);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	float speedExp = 40; // expected speed(ppx / timestep)
-	int lim = 5; // How far around every point to search in hypothesis(+-border in x - and y - dimension respectively)
+	float speedExp = 10; // expected speed(ppx / timestep)
+	int lim = 7; // How far around every point to search in hypothesis(+-border in x - and y - dimension respectively)
 
 	// Read car pattern
 	Eigen::MatrixXf carPattern;
-	cv::FileStorage storage("indata/car01.yml", cv::FileStorage::READ);
+	cv::FileStorage storage("indata/car02.yml", cv::FileStorage::READ);
 	cv::Mat tmp;
 	storage["pattern"] >> tmp;
 	storage.release();
@@ -49,7 +49,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//std::cout << "Threshold: " << lowerThresh << '\xd';
 	int upperThresh = 255;
 	int gaussSize = 3;
-
+	float t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
 	
 	
 
@@ -99,9 +99,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		else
 		{
+			t1 = clock();
 			particleFilter.propagate();
+			t2 = clock();
 			particleFilter.update(img);
+			t3 = clock();
 			particleFilter.resample();
+			t4 = clock();
 		}
 		clock_t stop = clock();
 		
@@ -124,6 +128,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		particleFilter.logStates(&logFile);
 		
 		std::cout << "Time: " << (stop - start) / (float)CLOCKS_PER_SEC << "s" << std::endl;
+		std::cout << "prop: " << (t2 - t1) / (float)CLOCKS_PER_SEC << "s" << std::endl;
+		std::cout << "up: " << (t3 - t2) / (float)CLOCKS_PER_SEC << "s" << std::endl;
+		std::cout << "res: " << (t4 - t3) / (float)CLOCKS_PER_SEC << "s" << std::endl;
 	}
 	std::cout << "Main thread:		Exiting" << std::endl;
 

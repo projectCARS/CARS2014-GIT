@@ -22,6 +22,8 @@
 // Track width in meters.
 #define TRACK_WIDTH 0.445
 
+#define NUMBER_OF_PARTICLES     1000
+
 // Controls which parameters are used in PIDController.
 #define safeMode
 // #define fullForce
