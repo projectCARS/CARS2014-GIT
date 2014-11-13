@@ -1,0 +1,6 @@
+%YAML:1.0
+pattern: !!opencv-matrix
+   rows: 3
+   cols: 2
+   dt: d
+   data: [ 0., 12., -5.5, -12., 5.5, -12. ]
