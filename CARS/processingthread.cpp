@@ -54,7 +54,7 @@ void ProcessingThread::run()
     // Deciding which log file to write to
     int fileNo = 1;
     std::stringstream str;
-    for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here
+    for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here. (i < ceiling)
     {
         str.clear();
         str.str(std::string());
@@ -174,7 +174,7 @@ void ProcessingThread::run()
         {
             // Time elapsed since startup in seconds.
             currTime = (double)time.elapsed()/1000.0;
-            //logData(currTime, carData, carMeasurements, signal, &logFile);
+            logData(currTime, carData, carMeasurements, signal, &logFile);
         }
 
         // Use old and new states to draw traveled distance on evaluated image.

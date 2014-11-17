@@ -1,14 +1,16 @@
 #include "headers.h"
 #include "definitions.h"
 #include "PIDControllerSR.h"
-//#include <QDebug>
+#include "functions.h"
 
+#include <fstream>
+#include <QTime>
 
 PIDControllerSR::PIDControllerSR(int ID)
 {
     m_ID = ID;
     m_startInd = 0;
-    m_onPath = false;   //dont update speed reference until car has started to drive.
+    m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;      //m_vRef is uniqe to each car
 
     m_prevI = 0;
@@ -73,6 +75,27 @@ PIDControllerSR::PIDControllerSR(int ID)
             m_turnGain = 1;
             break;
     }
+
+    // Deciding which log file to write to
+    timeSR.start();
+    int fileNo = 1;
+    std::stringstream str;
+    for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here. (i < ceiling)
+    {
+        str.clear();
+        str.str(std::string());
+        str << "outdata/logFiles/logSR" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
+        if (!fileExists(str.str()))
+        {
+            break;
+        }
+        fileNo++;
+    }
+    //std::ofstream logFile;
+    logFileSR.open(str.str());
+    logFileSR << "sysTime carID xPos yPos speed yaw yawVel xPosRaw yPosRaw yawRaw gas turn\n";
+    std::cout << "PIDControllerSR object:		Writing log to " << str.str() << std::endl;
+
 }
 
 PIDControllerSR::~PIDControllerSR()
@@ -93,7 +116,7 @@ void PIDControllerSR::calcSignals(std::vector<float> &state, float &gas, float &
     turn = calcTurnSignal(state, m_refIndCircle);
 
     //update speed reference vector
-    updateSpeedRef(m_refIndClosest, m_dist_lateral);
+    updateSpeedRef(state, m_refIndClosest, m_dist_lateral);
 }
 
 
@@ -332,11 +355,11 @@ float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 
 // Update speed reference vector
 
-void PIDControllerSR::updateSpeedRef(int refInd, int lateralError)
+void PIDControllerSR::updateSpeedRef(std::vector<float> &state, int refInd, int lateralError)
 {
-    float bigError, smallError, oldSR;
-    bigError = (0.1)^2;            // lateralError is squerad distance [m^2] //TODO: välj ett lämpligt avstånd att jämföra mot
-    smallError = (0.03)^2;          // smallError must be smaller then bigError
+    float bigError, smallError, old_vRef;
+    bigError = (0.1)*(0.1);            // lateralError is squerad distance [m^2] //TODO: välj ett lämpligt avstånd att jämföra mot
+    smallError = (0.03)*(0.03);          // smallError must be smaller then bigError
 
     // if car is outside big error. Dont update speed ref. When car is back on track(within small error) restart updating speed ref.
     if (lateralError>bigError)
@@ -348,15 +371,25 @@ void PIDControllerSR::updateSpeedRef(int refInd, int lateralError)
     if (m_onPath)
     {
         //update speed ref based on lateralError
+        old_vRef = m_vRef[refInd];
         if (lateralError<smallError)       //it the error is small -> drive faster next time
         {
-            m_vRef[refInd] = m_vRef[refInd]*1.05;    //go 5% faster
+            m_vRef[refInd] =old_vRef*1.05;    //go 5% faster
         } else                      // drive slower
         {
-            m_vRef[refInd] = m_vRef[refInd]*0.95;    //go 5% slower
+            m_vRef[refInd] = old_vRef*0.95;    //go 5% slower
         }
         //TODO: how should update be done? Update several values. How to make sure that v_ref is always smooth?
     }
+
+    double currTime = (double)timeSR.elapsed()/1000.0;
+    //"sysTime carID xPos yPos speed lateralError || refInd vRef[refInd]_before vRef[refInd]_after \n";
+    (logFileSR) << currTime << " " << m_ID << " " << state[0] << " " << state[1] << " " << state[2] << " " << lateralError << " ";
+    (logFileSR) << refInd << " " << old_vRef << " " << m_vRef[refInd] << " ";
+    (logFileSR) << "\n";
+
+
+
 }
 
 

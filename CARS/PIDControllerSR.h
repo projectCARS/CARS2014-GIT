@@ -1,6 +1,8 @@
 #pragma once
 #include "Controller.h"
 #include <chrono>
+#include <fstream>
+#include <QTime>
 
 class PIDControllerSR : public Controller
 {
@@ -27,6 +29,9 @@ private:
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
+    QTime timeSR;
+    std::ofstream logFileSR;
+
 
 public:
     PIDControllerSR(int ID);
@@ -51,5 +56,5 @@ private:
     // Calcultes reference speed for regulation
     float calcRefSpeed(std::vector<float> &state, int refInd);
     // Updates the refernce speed vector
-    void updateSpeedRef(int refInd, int lateralError);
+    void updateSpeedRef(std::vector<float> &state, int refInd, int lateralError);
 };
