@@ -24,7 +24,9 @@ public:
 	~NoFilter();
 
 	// Add a new measurement to the filter.
-	virtual void addMeasurement(float x, float y, float theta);
+    virtual void addMeasurement(float x, float y, float theta);
+    // Add a new image measurement to the filter.
+    virtual void addImageMeasurement(cv::Mat img){}
 	// Add a new set of inputsignals to the filter
 	virtual void addInputSignals(float gas, float turn);
 	// Create new state estimates.

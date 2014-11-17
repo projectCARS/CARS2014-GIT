@@ -77,7 +77,7 @@ public:
 	~EKF();
 
 	// Add a new measurement to the filter.
-	virtual void addMeasurement(float x, float y, float theta);
+    virtual void addMeasurement(float x, float y, float theta);
     // Add a new set of inputsignals to the filter
     virtual void addInputSignals(float gas, float turn);
     // Create new state estimates.
@@ -86,6 +86,8 @@ public:
 	virtual std::vector<float> getState(void);
     // Returns true if the filter has recieved new measurements, otherwise false.
     virtual bool hasNewMeasurement(void){return m_newMeasurement;}
+
+    virtual void addImageMeasurement(cv::Mat img){}
 
 private:
     // Initiate Kalman filter

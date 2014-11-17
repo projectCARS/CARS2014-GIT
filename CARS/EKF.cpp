@@ -115,9 +115,9 @@ void EKF::addMeasurement(float x, float y, float theta)
 {
 	/* Add measurements to the filter. We assume here that all motion models
 	measure x, y and theta. */
-	z(0) = x;
-	z(1) = y;
-	z(2) = theta;
+    z(0) = x;
+    z(1) = y;
+    z(2) = theta;
     // Set measurement boolean to true (we just recieved new measurements).
 	m_newMeasurement = true;
 }

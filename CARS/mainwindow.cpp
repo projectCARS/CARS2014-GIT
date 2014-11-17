@@ -269,6 +269,7 @@ void MainWindow::updateFrame(void)
     // have not had time to resize it.
     if (m_carData.size() != 0)
     {
+        //drawCar(drawThreadData.pattern, drawThreadData.sumStates[0] / NUMBER_OF_PARTICLES, drawThreadData.sumStates[1] / NUMBER_OF_PARTICLES, drawThreadData.sumStates[2] / NUMBER_OF_PARTICLES, drawThreadData.image);
         // Draw car on track. The variable j represents car id.
         for (int j = 0; j < m_numCars; j++)
         {

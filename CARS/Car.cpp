@@ -6,7 +6,6 @@
 
 #include <QDebug>
 
-using namespace Bilbana;
 Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelType::Enum motionModelType)
 {
 	// Assign car attributes.
@@ -14,6 +13,8 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
 	m_active = false;
 	m_lost = false;
 	m_mode = mode;
+    m_filtertype = filterType;
+
 
     Eigen::MatrixXf carPattern;
     cv::FileStorage storage("indata/car01.yml", cv::FileStorage::READ);
@@ -21,6 +22,7 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
     storage["pattern"] >> tmp;
     storage.release();
     cv::cv2eigen(tmp, carPattern);
+    drawThreadData.pattern = carPattern;
     float speed = 20;
 
 	// Initialize filter.
@@ -32,8 +34,9 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
         case FilterType::ParticleFilter:
         {
             //TODO make this id-dependent
-            ParticleFilter particlefilter(carPattern, speed, 5, motionModelType);
-           }
+            //ParticleFilter particlefilter(carPattern, speed, 5, motionModelType);
+            m_filter = new ParticleFilter(carPattern, speed, 5, motionModelType);
+        }
             break;
         case FilterType::NoFilter:
             m_filter = new NoFilter();
@@ -56,7 +59,8 @@ void Car::addMeasurement(float x, float y, float theta)
 	{
 		m_lost = false;
 		m_inactiveTimer = 0;
-		m_filter->addMeasurement(x, y, theta);
+        m_filter->addMeasurement(x, y, theta);
+
 	}
 	else
 	{
@@ -67,9 +71,32 @@ void Car::addMeasurement(float x, float y, float theta)
 			m_active = true;
 			m_activeTimer = 0;
 			m_numberOfFalseDetections -= m_activeTimerMax;
-			m_filter->addMeasurement(x, y, theta);
+            m_filter->addMeasurement(x, y, theta);
 		}
 	}
+}
+
+void Car::addImageMeasurement(cv::Mat img)
+{
+    if (m_active)
+    {
+        m_lost = false;
+        m_inactiveTimer = 0;
+        m_filter->addImageMeasurement(img);
+
+    }
+    else
+    {
+        m_activeTimer++;
+        m_numberOfFalseDetections++;
+        if (m_activeTimer == m_activeTimerMax)
+        {
+            m_active = true;
+            m_activeTimer = 0;
+            m_numberOfFalseDetections -= m_activeTimerMax;
+            m_filter->addImageMeasurement(img);
+        }
+    }
 }
 
 void Car::addInputSignals(float gas, float turn){

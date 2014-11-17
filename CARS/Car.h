@@ -19,6 +19,8 @@ private:
 	// The current mode of the car. 
 	CarMode::Enum m_mode;
 
+    FilterType::Enum m_filtertype;
+
 	// Counts the number of times an active car is not detected.
 	int m_numberOfLosses = 0;
 	// Counts the number of times an inactive car is detected.
@@ -49,11 +51,15 @@ public:
     std::vector<float> getState(void) { return m_filter->getState(); }
 	// Returns the mode of the car.
     CarMode::Enum getMode() { return m_mode; }
+    // returns the filter type of the car
+    FilterType::Enum getFiltertype(){ return m_filtertype;}
 	// Returns true if the filter has received a new measurement.
     bool hasNewMeasurement() { return m_filter->hasNewMeasurement(); }
 
 	// Adds measurements to the filter.
-	void addMeasurement(float x, float y, float theta);
+    void addMeasurement(float x, float y, float theta);
+
+    void addImageMeasurement(cv::Mat img);
     // Adds input signal to the filter.
     void addInputSignals(float gas, float turn);
 	// Calls the filters updateFilter() function.

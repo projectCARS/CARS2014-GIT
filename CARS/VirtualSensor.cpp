@@ -2,7 +2,7 @@
 #include "classes.h"
 #include "definitions.h"
 #include "functions.h"
-
+#include <QDebug>
 
 VirtualSensor::VirtualSensor()
 {
@@ -53,10 +53,8 @@ void VirtualSensor::stopSensor(void)
 #endif
 }
 
-std::vector<float> VirtualSensor::detectMarkers()
+void VirtualSensor::grabThresholdImage()
 {
-    std::vector<float> allMarkers;
-
 #ifdef CAMERA_IS_AVALIABLE
     // Grab image from camera.
     m_pgrCamera.grabImage(&m_rawData);
@@ -68,14 +66,12 @@ std::vector<float> VirtualSensor::detectMarkers()
     }
 #else
     // Read image from file.
-    cv::Mat tempMat = cv::imread("indate/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat tempMat = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 #endif
-
     // Enter critical section and copy image to struct drawThreadData.
     EnterCriticalSection(&csDrawThreadData);
     tempMat.copyTo(drawThreadData.image);
     LeaveCriticalSection(&csDrawThreadData);
-
     tempMat = tempMat - mask * .5;
 
     int lowerThresh = 140;
@@ -85,7 +81,42 @@ std::vector<float> VirtualSensor::detectMarkers()
     cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
     cv::GaussianBlur(tempMat, tempMat, cv::Size(gaussSize, gaussSize), 0, 0); //(3,3)
     cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
+    // Enter critical section and copy the processed image (tempMat) to processedImage.
 
+    EnterCriticalSection(&csDrawThreadData);
+    tempMat.copyTo(drawThreadData.processedImage);
+    LeaveCriticalSection(&csDrawThreadData);
+}
+
+std::vector<float> VirtualSensor::detectMarkers()
+{
+    std::vector<float> allMarkers;
+#ifdef CAMERA_IS_AVALIABLE
+    // Grab image from camera.
+    m_pgrCamera.grabImage(&m_rawData);
+    // Create cv::Mat object. Data is not copied - pData is simply stored in tempMat.
+    cv::Mat tempMat = cv::Mat(m_rawData.rows, m_rawData.cols, CV_8UC1, m_rawData.pData, cv::Mat::AUTO_STEP);
+    if (tempMat.empty())
+    {
+        std::cout << "Error: Failed to aquire image from camera. Try replugging the camera." << std::endl;
+    }
+#else
+    // Read image from file.
+    cv::Mat tempMat = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+#endif
+    // Enter critical section and copy image to struct drawThreadData.
+    EnterCriticalSection(&csDrawThreadData);
+    tempMat.copyTo(drawThreadData.image);
+    LeaveCriticalSection(&csDrawThreadData);
+    tempMat = tempMat - mask * .5;
+
+    int lowerThresh = 140;
+    int upperThresh = 255;
+    int gaussSize = 3;
+
+    cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
+    cv::GaussianBlur(tempMat, tempMat, cv::Size(gaussSize, gaussSize), 0, 0); //(3,3)
+    cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
     // Enter critical section and copy the processed image (tempMat) to processedImage.
     EnterCriticalSection(&csDrawThreadData);
     tempMat.copyTo(drawThreadData.processedImage);
@@ -93,7 +124,6 @@ std::vector<float> VirtualSensor::detectMarkers()
 
     /* Calculate markers from tempMat. Markers are given in camera coordinates. */
     imageToMarkers(tempMat, allMarkers);
-
     // Converting to meters
     cameraToWorldCoordinates(allMarkers);
 

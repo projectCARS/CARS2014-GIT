@@ -11,6 +11,7 @@ private:
     int m_startInd;
     int m_refIndCircle;
     int m_refIndClosest;
+    float m_dist_lateral;
     float m_turnGain;
     std::vector<float> m_speedPID;
     std::vector<float> m_turnPID;
@@ -39,7 +40,7 @@ public:
 
 private:
     // Finds closest point on the reference path to the car
-    int findClosestReferencePoint(std::vector<float> &state);
+    void findClosestReferencePoint(std::vector<float> &state);
     // Finds the intersection between the reference curve and the circle around the car with radius gCarRadius.
     int findIntersection(std::vector<float> &state, int m_startInd);
     // Calculates turn signal based on point on reference curve.

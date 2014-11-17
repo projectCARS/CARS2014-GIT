@@ -3,9 +3,14 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <Eigen/Dense>
+
 
 // This file contains definitions, macros, etc.
 #pragma once
+
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 // ---------- Macros ----------
 // Unit convesion; 1m = PIXELS_PER_METER
@@ -22,6 +27,7 @@
 // Track width in meters.
 #define TRACK_WIDTH 0.445
 
+// Number of particles to use in the particle filter
 #define NUMBER_OF_PARTICLES     1000
 
 // Controls which parameters are used in PIDController.
@@ -115,6 +121,7 @@ struct CarData
     // True if the car is active but is not detected, otherwise false.
     bool lost;
     CarMode::Enum mode;
+    FilterType::Enum filter;
     std::vector<float> state;
 };
 
@@ -138,6 +145,8 @@ struct DrawThreadData
     cv::Mat processedImage;
     //cv::Mat evaluatedImage;
     std::vector<CarData> carData;
+    float *sumStates;
+    Eigen::MatrixXf pattern;
 };
 
 // Struct to store lap data.
@@ -155,6 +164,7 @@ struct ControllerThreadData
 {
     std::vector<CarData> carData;
     std::vector<Signal> signal; // gas, turn.
+
 };
 
 // ---------- External declarations ----------

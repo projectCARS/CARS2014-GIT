@@ -23,8 +23,8 @@ void ProcessingThread::run()
     // Timing.
     QTime time;
     int t1;
-    double t2,t3,t4 = 0;
-    clock_t timerTest1, timerTest2;
+   //double t2,t3,t4 = 0;
+    //clock_t timerTest1, timerTest2;
     double timeDiff, currTime;
     // Counts the number while loops.
     int loopCounter = 0;
@@ -44,7 +44,7 @@ void ProcessingThread::run()
     std::vector<CarData> oldCarData(m_numCars);
     std::vector<Signal> signal(m_numCars);
 
-    // TODO: Should all resizing and initialization of gloabl variables be done in the GUI thread when the program starts, instead of here?
+    // TODO: Should all resizing and initialization of global variables be done in the GUI thread when the program starts, instead of here?
 
     // Initiate vectors in structs.
     drawThreadData.carData.resize(m_numCars);
@@ -106,21 +106,32 @@ void ProcessingThread::run()
         // Save car data from previous iteration.
         oldCarData = carData;
 
-        timerTest1 = clock();
         // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
-        markers = sensor.detectMarkers();
 
-        timerTest2 = clock();
-        // Calculate position, angle and id.
-        carMeasurements = findCars(markers);
-
-        t2 = clock() - timerTest2;
+        if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter){
+            markers = sensor.detectMarkers();
+            // Calculate position, angle and id.
+            carMeasurements = findCars(markers);
+        }
+        else
+            sensor.grabThresholdImage();
 
         // Add measurements to cars.
-        for (int j = 0; j < carMeasurements.size(); j++)
+        for (int j = 0; j <= carMeasurements.size(); j++)
         {
+            if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
+            {
+                EnterCriticalSection(&csDrawThreadData);
+                m_cars[j].addImageMeasurement(drawThreadData.processedImage);
+                LeaveCriticalSection(&csDrawThreadData);
+            }
+            else
+            {
+                m_cars[carMeasurements[j].id].addMeasurement(carMeasurements[j].x, carMeasurements[j].y, carMeasurements[j].theta);
+
+            }
             // Add new measurement to car.
-            m_cars[carMeasurements[j].id].addMeasurement(carMeasurements[j].x, carMeasurements[j].y, carMeasurements[j].theta);
+
         }
 
         // Wait for new input signal values to be written to struct.
@@ -148,6 +159,14 @@ void ProcessingThread::run()
             carData[j].lost = m_cars[j].isLost();
             carData[j].mode = m_cars[j].getMode();
             carData[j].state = m_cars[j].getState();
+
+            if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
+            {
+                float yaw = carData[j].state[3];
+                sensor.cameraToWorldCoordinates(carData[j].state);
+                carData[j].state[3] = yaw;
+            }
+            //std::cout << carData[j].state[0] << std::endl << carData[j].state[1] << std::endl << carData[j].state[3] << std::endl;
         }
 
         // Log data. Currently only log data of car with id 0.
@@ -155,7 +174,7 @@ void ProcessingThread::run()
         {
             // Time elapsed since startup in seconds.
             currTime = (double)time.elapsed()/1000.0;
-            logData(currTime, carData, carMeasurements, signal, &logFile);
+            //logData(currTime, carData, carMeasurements, signal, &logFile);
         }
 
         // Use old and new states to draw traveled distance on evaluated image.

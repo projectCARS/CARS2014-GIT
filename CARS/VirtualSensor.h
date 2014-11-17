@@ -38,6 +38,7 @@ public:
 	void stopSensor(void);
     // Grabs an image from the camera, then finds and returns midpoints of markers.
 	std::vector<float> detectMarkers(void);
+    void grabThresholdImage();
     void imageToMarkers(cv::Mat tempMat, std::vector<float> &markers);
     void VirtualSensor::cameraToWorldCoordinates(std::vector<float> &data);
 

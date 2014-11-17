@@ -4,8 +4,7 @@
 #include "CTModel.h"
 #include <Eigen/Dense>
 
-namespace Bilbana
-{
+
     class ParticleFilter : public Filter
     {
     private:
@@ -17,14 +16,16 @@ namespace Bilbana
         float yawPoints[NUMBER_OF_PARTICLES];
         float weights[NUMBER_OF_PARTICLES];
         float cumulativeWeights[NUMBER_OF_PARTICLES];
-        float sumStates[3];
+        float sumStates[5];
 
         Eigen::MatrixXf carPattern;
         float expectedSpeed;
         int limit;
         bool noCar;
 
-        const cv::Mat m_img;
+        cv::Mat m_img;
+
+        MotionModel *M;
 
         VectorXd xhat;
 
@@ -72,9 +73,11 @@ namespace Bilbana
         // Returns true if the filter has recieved new measurements, otherwise false.
         virtual bool hasNewMeasurement(void){return m_newMeasurement;}
 
+        virtual void addImageMeasurement(cv::Mat img);
+
 
     };
-}
+
 
 
 

@@ -10,6 +10,8 @@ public:
 	// Pure virtual methods.
     // Add a new measurement to the filter.
     virtual void addMeasurement(float x, float y, float theta) = 0;
+    // Add an image to the filter
+    virtual void addImageMeasurement(cv::Mat img) = 0;
     // Add a new set of inputsignals to the filter
     virtual void addInputSignals(float gas, float turn) = 0;
     // Create new state estimates.

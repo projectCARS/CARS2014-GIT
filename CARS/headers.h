@@ -30,4 +30,6 @@
 #include "opencv2/calib3d/calib3d.hpp"			// Used in Calibrator
 #include <opencv2/core/eigen.hpp>				// To convert between eigen and openCV
 
+#include <QDebug>
+
 #endif // HEADERS_H

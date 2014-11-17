@@ -87,8 +87,9 @@ void PIDControllerSR::calcSignals(std::vector<float> &state, float &gas, float &
 {
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
-    m_refIndClosest = findClosestReferencePoint(state);
+    findClosestReferencePoint(state);
     m_refSpeed = calcRefSpeed(state, m_refIndClosest);
+    //qDebug() << m_dist_lateral;
 
     if(m_refSpeed > state[2] + 0.5)
     {
@@ -211,17 +212,18 @@ int PIDControllerSR::findIntersection(std::vector<float> &state, int startInd)
 
 /*Find the the point on the reference path closest to the car
  */
-int PIDControllerSR::findClosestReferencePoint(std::vector<float> &state)
+void PIDControllerSR::findClosestReferencePoint(std::vector<float> &state)
 {
-    int index, i;
-    float dist1, dist2, diffX, diffY, carX, carY;
+    int i, index1, index2;
+    float dist1, dist2, dist3, diffX, diffY, carX, carY;
+    float x1,y1,x2,y2,t,Qx,Qy,d2;
     // x and y coordinates of the car.
     carX = state[0];
     carY = state[1];
 
     dist1 = 1000;  // A big number
 
-    //sweep all points in refernce path and find shortest distance
+    //sweep all points in refernce path and find shortest distance and correspoding index
     for (i = 0; i < gRefLen; i++)
     {
         diffX = gRef[2 * i] - carX;
@@ -230,10 +232,40 @@ int PIDControllerSR::findClosestReferencePoint(std::vector<float> &state)
         if (dist2<dist1)    //if new distance is shorter save distance and corresponding index.
         {
             dist1 = dist2;
-            index = i;
+            index1 = i;
         }
     }
-    return index;
+    //index1 is now the closest reference point
+
+    diffX = gRef[2 * index1 + 2] - carX;
+    diffY = gRef[2 * index1 + 3] - carY;
+    dist2 = diffX*diffX + diffY*diffY;      //distance to refernce next reference point
+    diffX = gRef[2 * index1 - 2] - carX;
+    diffY = gRef[2 * index1 - 1] - carY;
+    dist3 = diffX*diffX + diffY*diffY;      //distance to previus reference point
+
+    if (dist2>dist3)
+        index2 = index1 + 1;
+    else
+        index2 = index1 - 1;
+    //index2 is second closest reference point.
+
+    //find distance to projection on reference curve
+    x1 = gRef[2 * index1];        //point 1 on line L
+    y1 = gRef[2 * index1 + 1];
+    x2 = gRef[2 * index2];        //point 2 on line L
+    y2 = gRef[2 * index2 + 1];
+    //t is parameter needed to go from point 1 in direction to point 2 which gives shortest distance to the car point.
+    t = (-(x1-carX)*(x2-x1) - (y1-carY)*(y2-y1))/((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+    //squered distance from P to Q
+    Qx = x1 + t*(x2-x1);
+    Qy = y1 + t*(y2-y1);
+    d2 = sqrt((carX-Qx)*(carX-Qx)+(carY-Qy)*(carY-Qy));
+
+    qDebug() << d2 << x1 << x2 << Qx << t << index1 << index2;
+
+    m_refIndClosest = index1;
+    m_dist_lateral = d2;
 }
 
 
