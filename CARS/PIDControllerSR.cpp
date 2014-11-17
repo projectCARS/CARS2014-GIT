@@ -8,6 +8,8 @@ PIDControllerSR::PIDControllerSR(int ID)
 {
     m_ID = ID;
     m_startInd = 0;
+    m_onPath = false;   //dont update speed reference until car has started to drive.
+    m_vRef = vRef;      //m_vRef is uniqe to each car
 
     m_prevI = 0;
     m_prevD = 0;
@@ -81,14 +83,17 @@ void PIDControllerSR::calcSignals(std::vector<float> &state, float &gas, float &
 {
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
-    findClosestReferencePoint(state);
+    findClosestReferencePoint(state);  //updates m_refIndClosest and m_dist_lateral
+
+    //prepare reference speed
     m_refSpeed = calcRefSpeed(state, m_refIndClosest);
 
-
     // Calculate gas and turn signal.
-    gas = calcGasSignalAlt(state, m_refSpeed);
-    //gas = m_refGas;
+    gas = calcGasSignal(state, m_refSpeed);
     turn = calcTurnSignal(state, m_refIndCircle);
+
+    //update speed reference vector
+    updateSpeedRef(m_refIndClosest, m_dist_lateral);
 }
 
 
@@ -100,7 +105,7 @@ void PIDControllerSR::calcTurnSignal(std::vector<float> &state, float &turn)
 
 
 
-float PIDControllerSR::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
+float PIDControllerSR::calcGasSignal(std::vector<float> &state, float refSpeed){
 
     float error = (refSpeed - state[2]);
 
@@ -134,20 +139,6 @@ float PIDControllerSR::calcGasSignalAlt(std::vector<float> &state, float refSpee
     return signal;
 }
 
-// JAG TROR INTE ATT DENNA ANVÄNDS
-/*float PIDControllerSR::findSpeed(std::vector<float> &state)
-{
-    uchar val = speedProfile.at<uchar>(state[1]*PIXELS_PER_METER, state[0]*PIXELS_PER_METER);
-    float speed = (float)val;
-
-    if (speed < 0)
-        speed = ((speed / 127.5) - 1)*.9;
-    else
-        speed = ((speed / 127.5) - 1)*.6;
-
-    std::cout << "Speed: " << speed << '\xd';
-    return speed;
-}*/
 
 // Finds the intersection between the reference curve
 // and the circle with gCarRadius.
@@ -323,11 +314,11 @@ float PIDControllerSR::calcTurnSignal(std::vector<float> &state, int refInd)
     return turnSignal;
 }
 
-// Calculate ref speed. Or more like get Ref speed from vector vRef...
+// Calculate/Get reference speed
 float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 {
     float refSpeed = 0;
-    refSpeed = vRef[refInd];
+    refSpeed = m_vRef[refInd];  //TODO: take mean of several values? maybe 5????
 
     if(refSpeed > state[2] + 0.5)
     {
@@ -337,3 +328,39 @@ float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
     // Return refSpeed.
     return refSpeed;
 }
+
+
+// Update speed reference vector
+
+void PIDControllerSR::updateSpeedRef(int refInd, int lateralError)
+{
+    float bigError, smallError, oldSR;
+    bigError = (0.1)^2;            // lateralError is squerad distance [m^2] //TODO: välj ett lämpligt avstånd att jämföra mot
+    smallError = (0.03)^2;          // smallError must be smaller then bigError
+
+    // if car is outside big error. Dont update speed ref. When car is back on track(within small error) restart updating speed ref.
+    if (lateralError>bigError)
+        m_onPath = false;
+    else if (lateralError<smallError)
+        m_onPath = true;
+
+    //check if of the on_track bool is true, if so update
+    if (m_onPath)
+    {
+        //update speed ref based on lateralError
+        if (lateralError<smallError)       //it the error is small -> drive faster next time
+        {
+            m_vRef[refInd] = m_vRef[refInd]*1.05;    //go 5% faster
+        } else                      // drive slower
+        {
+            m_vRef[refInd] = m_vRef[refInd]*0.95;    //go 5% slower
+        }
+        //TODO: how should update be done? Update several values. How to make sure that v_ref is always smooth?
+    }
+}
+
+
+
+
+
+

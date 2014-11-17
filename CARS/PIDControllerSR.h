@@ -5,7 +5,6 @@
 class PIDControllerSR : public Controller
 {
 private:
-    //int m_gain = 1;
 
     int m_ID;
     int m_startInd;
@@ -23,9 +22,11 @@ private:
     float m_refSpeed;
     float m_refGas;
 
+    bool m_onPath;
+    std::vector<float> m_vRef;
+
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
-    cv::Mat speedProfile;
 
 public:
     PIDControllerSR(int ID);
@@ -35,7 +36,7 @@ public:
     virtual void calcSignals(std::vector<float> &state, float &gas, float &turn);
     // Calculates and returns a turn signal.
     virtual void calcTurnSignal(std::vector<float> &state, float &turn);
-    //float findSpeed(std::vector<float> &state);
+    //floacalcGasSignaled(std::vector<float> &state);
     virtual bool isBacking(void){ return false; }
 
 private:
@@ -46,8 +47,9 @@ private:
     // Calculates turn signal based on point on reference curve.
     float calcTurnSignal(std::vector<float> &state, int refInd);
     // Calculates gas signal based on speed profile.
-    float calcGasSignal(std::vector<float> &state, int refGas);
-    // Calculates gas signal based on diffAngle.
-    float calcGasSignalAlt(std::vector<float> &state, float m_refSpeed);
+    float calcGasSignal(std::vector<float> &state, float m_refSpeed);
+    // Calcultes reference speed for regulation
     float calcRefSpeed(std::vector<float> &state, int refInd);
+    // Updates the refernce speed vector
+    void updateSpeedRef(int refInd, int lateralError);
 };
