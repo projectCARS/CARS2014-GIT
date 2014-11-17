@@ -77,30 +77,28 @@ PIDControllerSR::~PIDControllerSR()
 {
 }
 
-void PIDControllerSR::calcTurnSignal(std::vector<float> &state, float &turn)
-{
-    m_refIndCircle = findIntersection(state, m_startInd);
-    turn = calcTurnSignal(state, m_refIndCircle);
-}
-
 void PIDControllerSR::calcSignals(std::vector<float> &state, float &gas, float &turn)
 {
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
     findClosestReferencePoint(state);
     m_refSpeed = calcRefSpeed(state, m_refIndClosest);
-    //qDebug() << m_dist_lateral;
 
-    if(m_refSpeed > state[2] + 0.5)
-    {
-        m_refSpeed = state[2] + 0.5;
-    }
+
     // Calculate gas and turn signal.
-    //gas = calcGasSignal(state, m_refGas);
     gas = calcGasSignalAlt(state, m_refSpeed);
     //gas = m_refGas;
     turn = calcTurnSignal(state, m_refIndCircle);
 }
+
+
+void PIDControllerSR::calcTurnSignal(std::vector<float> &state, float &turn)
+{
+    m_refIndCircle = findIntersection(state, m_startInd);
+    turn = calcTurnSignal(state, m_refIndCircle);
+}
+
+
 
 float PIDControllerSR::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
 
@@ -121,7 +119,6 @@ float PIDControllerSR::calcGasSignalAlt(std::vector<float> &state, float refSpee
     float D = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
 
 
-
     float signal = P * m_speedPID[0] +
                    I * m_speedPID[1] +
                    D * m_speedPID[2];
@@ -137,7 +134,8 @@ float PIDControllerSR::calcGasSignalAlt(std::vector<float> &state, float refSpee
     return signal;
 }
 
-float PIDControllerSR::findSpeed(std::vector<float> &state)
+// JAG TROR INTE ATT DENNA ANVÄNDS
+/*float PIDControllerSR::findSpeed(std::vector<float> &state)
 {
     uchar val = speedProfile.at<uchar>(state[1]*PIXELS_PER_METER, state[0]*PIXELS_PER_METER);
     float speed = (float)val;
@@ -149,7 +147,7 @@ float PIDControllerSR::findSpeed(std::vector<float> &state)
 
     std::cout << "Speed: " << speed << '\xd';
     return speed;
-}
+}*/
 
 // Finds the intersection between the reference curve
 // and the circle with gCarRadius.
@@ -223,7 +221,7 @@ void PIDControllerSR::findClosestReferencePoint(std::vector<float> &state)
 
     dist1 = 1000;  // A big number
 
-    //sweep all points in refernce path and find shortest distance and correspoding index
+    //sweep all points on refernce path, find shortest distance and correspoding index
     for (i = 0; i < gRefLen; i++)
     {
         diffX = gRef[2 * i] - carX;
@@ -234,36 +232,35 @@ void PIDControllerSR::findClosestReferencePoint(std::vector<float> &state)
             dist1 = dist2;
             index1 = i;
         }
-    }
-    //index1 is now the closest reference point
+    } //index1 is now refering to the closest reference point
 
     diffX = gRef[2 * index1 + 2] - carX;
     diffY = gRef[2 * index1 + 3] - carY;
-    dist2 = diffX*diffX + diffY*diffY;      //distance to refernce next reference point
+    dist2 = diffX*diffX + diffY*diffY;      //distance to next reference point
     diffX = gRef[2 * index1 - 2] - carX;
     diffY = gRef[2 * index1 - 1] - carY;
     dist3 = diffX*diffX + diffY*diffY;      //distance to previus reference point
 
-    if (dist2>dist3)
+    if (dist2>dist3)                        //find second closest reference point
         index2 = index1 + 1;
     else
         index2 = index1 - 1;
     //index2 is second closest reference point.
 
-    //find distance to projection on reference curve
-    x1 = gRef[2 * index1];        //point 1 on line L
+    //find distance to projection on reference curve. Approximating curve to be a line(L) pasing through closest and second closest reference points
+    x1 = gRef[2 * index1];        //coordinates for point 1 on line L
     y1 = gRef[2 * index1 + 1];
-    x2 = gRef[2 * index2];        //point 2 on line L
+    x2 = gRef[2 * index2];        //coordinates for point 2 on line L
     y2 = gRef[2 * index2 + 1];
-    //t is parameter needed to go from point 1 in direction to point 2 which gives shortest distance to the car point.
+    // L : {x = x1 + t(x2-x1), y = y1 + t(y2-y1).  Equation for line, with parameter t all points on the line could be reached
+    // with t = ... we find the point Q on L which is closest to the car
     t = (-(x1-carX)*(x2-x1) - (y1-carY)*(y2-y1))/((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
-    //squered distance from P to Q
+    //squered distance from car to Q
     Qx = x1 + t*(x2-x1);
     Qy = y1 + t*(y2-y1);
     d2 = sqrt((carX-Qx)*(carX-Qx)+(carY-Qy)*(carY-Qy));
 
-    qDebug() << d2 << x1 << x2 << Qx << t << index1 << index2;
-
+    //update varibles with new information
     m_refIndClosest = index1;
     m_dist_lateral = d2;
 }
@@ -331,6 +328,11 @@ float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 {
     float refSpeed = 0;
     refSpeed = vRef[refInd];
+
+    if(refSpeed > state[2] + 0.5)
+    {
+        refSpeed = state[2] + 0.5;
+    }
 
     // Return refSpeed.
     return refSpeed;

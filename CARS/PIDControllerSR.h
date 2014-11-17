@@ -35,7 +35,7 @@ public:
     virtual void calcSignals(std::vector<float> &state, float &gas, float &turn);
     // Calculates and returns a turn signal.
     virtual void calcTurnSignal(std::vector<float> &state, float &turn);
-    float findSpeed(std::vector<float> &state);
+    //float findSpeed(std::vector<float> &state);
     virtual bool isBacking(void){ return false; }
 
 private:
