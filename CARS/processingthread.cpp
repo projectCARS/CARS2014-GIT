@@ -108,24 +108,25 @@ void ProcessingThread::run()
 
         // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
 
-        if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter){
+        if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter)
+        {
             markers = sensor.detectMarkers();
             // Calculate position, angle and id.
             carMeasurements = findCars(markers);
         }
         else
+        {
             sensor.grabThresholdImage();
+            EnterCriticalSection(&csDrawThreadData);
+            m_cars[0].addImageMeasurement(drawThreadData.processedImage);
+            LeaveCriticalSection(&csDrawThreadData);
+        }
 
         // Add measurements to cars.
-        for (int j = 0; j <= carMeasurements.size(); j++)
+        for (int j = 0; j < carMeasurements.size(); j++)
         {
-            if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
-            {
-                EnterCriticalSection(&csDrawThreadData);
-                m_cars[j].addImageMeasurement(drawThreadData.processedImage);
-                LeaveCriticalSection(&csDrawThreadData);
-            }
-            else
+
+            if(m_cars[j].getFiltertype() != FilterType::Enum::ParticleFilter)
             {
                 m_cars[carMeasurements[j].id].addMeasurement(carMeasurements[j].x, carMeasurements[j].y, carMeasurements[j].theta);
 
