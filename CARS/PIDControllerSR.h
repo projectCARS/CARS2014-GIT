@@ -2,7 +2,7 @@
 #include "Controller.h"
 #include <chrono>
 #include <fstream>
-#include <QTime>
+#include <QTime> //for timeSR
 
 class PIDControllerSR : public Controller
 {
