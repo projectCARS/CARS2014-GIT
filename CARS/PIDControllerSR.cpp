@@ -4,7 +4,7 @@
 #include "functions.h"
 
 #include <fstream>
-#include <QTime>
+//#include <QTime>
 
 PIDControllerSR::PIDControllerSR(int ID)
 {
@@ -91,7 +91,6 @@ PIDControllerSR::PIDControllerSR(int ID)
         }
         fileNo++;
     }
-    //std::ofstream logFile;
     logFileSR.open(str.str());
     logFileSR << "sysTime carID xPos yPos speed yaw yawVel xPosRaw yPosRaw yawRaw gas turn\n";
     std::cout << "PIDControllerSR object:		Writing log to " << str.str() << std::endl;
@@ -388,7 +387,6 @@ void PIDControllerSR::updateSpeedRef(std::vector<float> &state, int refInd, int 
     (logFileSR) << refInd << " " << old_vRef << " " << m_vRef[refInd] << " ";
     (logFileSR) << "\n";
 
-    //d
 
 
 }

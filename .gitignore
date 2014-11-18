@@ -2,9 +2,13 @@ ParticleFilter/ParticleFilter/indata/testImages/test 1/car36.png
 ParticleFilter/x64
 ParticleFilter/ParticleFilter/x64
 ParticleFilter/ipch
-tbb43_20141023oss/
 *.sdf
 *.obj
 *.obj
 *.exe
 *.dll
+build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/release/Car.obj
+build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/release/controllerthread.obj
+build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/release/Car.obj
+build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Debug/
+build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/
