@@ -357,8 +357,8 @@ float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 void PIDControllerSR::updateSpeedRef(std::vector<float> &state, int refInd, int lateralError)
 {
     float bigError, smallError, old_vRef;
-    bigError = (0.1)*(0.1);            // lateralError is squerad distance [m^2] //TODO: välj ett lämpligt avstånd att jämföra mot
-    smallError = (0.03)*(0.03);          // smallError must be smaller then bigError
+    bigError = (0.1);            // lateralError                  //TODO: välj ett lämpligt avstånd att jämföra mot
+    smallError = (0.03);          // smallError must be smaller then bigError
 
     // if car is outside big error. Dont update speed ref. When car is back on track(within small error) restart updating speed ref.
     if (lateralError>bigError)

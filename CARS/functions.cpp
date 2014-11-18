@@ -10,9 +10,52 @@
 
 
 
-void updateLapData(std::vector<float> oldRawStates, std::vector<float> rawStates)
+void updateLapData(std::vector<float> oldStates, std::vector<float> States)
 {
-    // To be implemented.
+    float carX, carY, dist;
+    carX = States[0];
+    carY = States[1];
+    if (~lapData.lapRunning)
+    {
+        if (carY<.5 && carX > 1.3 && carX < 1.7)
+        {
+            //coordinates for point(Q) on finising line closest to car. Qx=1.5 and Qy=carY
+            Qx = 1.5;
+            dist = abs(carX-Qx);
+            if (dist<0.02)
+            {
+                lapData.lapTimer.reset();
+                lapData.lapRunning = true;
+                lapData.bestTime = 1000;
+                qDebug() << "start first lap";
+            }
+        }
+
+    } else
+    {
+        lapData.lapTime = lapData.lapTimer.elapsed()/1000;
+        if (carY<.5 && carX > 1.3 && carX < 1.7) //is car near finishing line?
+        {
+            //find distance to finnishing line
+            Qx = 1.5;
+            dist = abs(carX-Qx);
+            //is dist very small(and timer big) save lap time and reset timer
+            if (dist < 0.02 && lapData.lapTime > 3)
+            {
+                lapData.lastLapTime = lapData.lapTime;
+                lapData.lapTimer.restart();
+                qDebug() << "lapTime: " <<lapData.lapTime;
+                if (lapData.lapTime<lapData.bestTime)
+                {
+                    lapData.bestTime = lapData.lapTime;
+                    qDebug() << "bestTime: " << lapData.bestTime;
+                }
+
+            }
+            //update LapData with information
+        }
+    }
+
 }
 
 // Used in class Calibrator

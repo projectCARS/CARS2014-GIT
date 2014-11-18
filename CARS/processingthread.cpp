@@ -89,6 +89,11 @@ void ProcessingThread::run()
     // Start virtual sensor.
     sensor.startSensor();
 
+    // Initiate timer for lap times
+    lapData.lapTimer.start();
+    lapData.lapRunning = false;
+
+
     time.start();
     while(1)
     {
@@ -197,6 +202,10 @@ void ProcessingThread::run()
         EnterCriticalSection(&csDrawThreadData);
         drawThreadData.carData = carData;
         LeaveCriticalSection(&csDrawThreadData);
+
+        // Update lap times
+        updateLapData(oldCarData.state, carData.state);
+
 
         // Estimate FPS in processing thread.
         if ((loopCounter % fpsInterval) == 0)

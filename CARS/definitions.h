@@ -4,6 +4,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <Eigen/Dense>
+#include <QElapsedTimer>
 
 
 // This file contains definitions, macros, etc.
@@ -152,11 +153,15 @@ struct DrawThreadData
 // Struct to store lap data.
 struct LapData
 {
-    int checkPoint = 730;
-    int check1, check2;
+    //int checkPoint = 730;
+    //int check1, check2;
     //clock_t startTime, t2;
-    float currTime, lapTime, bestTime;
-    std::vector<float> bestTimes;
+    float currTime;             // used to get time for log file.
+
+    QElapsedTimer lapTimer;
+    float lapTime, bestTime, lastLapTime;
+    bool lapRunning;
+    //std::vector<float> bestTimes;
 };
 
 // The main thread uses this struct to communicate with the regulator thread.

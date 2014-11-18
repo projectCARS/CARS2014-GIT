@@ -2,6 +2,7 @@
 #include "Controller.h"
 #include <chrono>
 #include <fstream>
+#include <QElapsedTimer>
 //#include <QTime> //for timeSR
 
 class PIDControllerSR : public Controller
@@ -29,7 +30,7 @@ private:
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
-    QTime timeSR;
+    QElapsedTimer timeSR;
     std::ofstream logFileSR;
 
 
