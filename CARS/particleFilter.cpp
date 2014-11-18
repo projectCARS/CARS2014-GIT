@@ -8,6 +8,7 @@
 #include <math.h>
 #include <QDebug>
 
+
     ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType)
     {
         switch (motionModelType)
@@ -16,7 +17,7 @@
                 M = new CTModel();
                 break;
             default:
-                std::cout << "Error: Motion model type not implemented, in EKF::EKF(), EKF.cpp" << std::endl;
+                std::cout << "Error: Motion model type not implemented, in ParticleFilter::ParticleFilter(), ParticleFilter.cpp" << std::endl;
         }
 
         carPattern = ID;
@@ -255,7 +256,7 @@
 
     void ParticleFilter::logStates(std::ofstream *logFile)
     {
-        *logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
+        //*logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
     }
 
     void ParticleFilter::extensiveSearch(cv::Mat img)
@@ -320,15 +321,6 @@
         noCar = false; // To break extensive search. This will be tried on next image search.
     }
 
-void ParticleFilter::addMeasurement2(const cv::Mat img)
-{
-    img.copyTo(m_img);
-    // Set measurement boolean to true (we just recieved new measurements).
-    m_newMeasurement = true;
-}
-
-
-
 void ParticleFilter::addInputSignals(float gas, float turn)
 {
     //Add control signals to filter.
@@ -357,7 +349,7 @@ void ParticleFilter::updateFilter()
     {
         propagate();
         update(m_img);
-        resample();
+        systematicResample();
     }
     drawThreadData.sumStates = getSumStates();
 }
@@ -374,5 +366,10 @@ void ParticleFilter::addImageMeasurement(cv::Mat img)
 {
     img.copyTo(m_img);
     m_newMeasurement = true;
+}
+
+bool ParticleFilter::hasNewMeasurement(void)
+{
+    return m_newMeasurement;
 }
 

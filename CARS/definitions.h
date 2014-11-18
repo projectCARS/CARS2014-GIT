@@ -4,7 +4,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <Eigen/Dense>
-
+#include <windows.h>
 
 // This file contains definitions, macros, etc.
 #pragma once

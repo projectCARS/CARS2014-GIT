@@ -4,6 +4,7 @@
 #include "classes.h"
 #include "functions.h"
 
+
 #include <iomanip>
 #include <fstream>
 
@@ -108,30 +109,28 @@ void ProcessingThread::run()
 
         // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
 
-        if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter){
+        if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter)
+        {
             markers = sensor.detectMarkers();
             // Calculate position, angle and id.
             carMeasurements = findCars(markers);
         }
         else
+        {
             sensor.grabThresholdImage();
+            EnterCriticalSection(&csDrawThreadData);
+            m_cars[0].addImageMeasurement(drawThreadData.processedImage);
+            LeaveCriticalSection(&csDrawThreadData);
+        }
 
         // Add measurements to cars.
-        for (int j = 0; j <= carMeasurements.size(); j++)
+        for (int j = 0; j < carMeasurements.size(); j++)
         {
-            if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
-            {
-                EnterCriticalSection(&csDrawThreadData);
-                m_cars[j].addImageMeasurement(drawThreadData.processedImage);
-                LeaveCriticalSection(&csDrawThreadData);
-            }
-            else
+            // Add new measurement to car.
+            if(m_cars[j].getFiltertype() != FilterType::Enum::ParticleFilter)
             {
                 m_cars[carMeasurements[j].id].addMeasurement(carMeasurements[j].x, carMeasurements[j].y, carMeasurements[j].theta);
-
             }
-            // Add new measurement to car.
-
         }
 
         // Wait for new input signal values to be written to struct.
@@ -174,7 +173,7 @@ void ProcessingThread::run()
         {
             // Time elapsed since startup in seconds.
             currTime = (double)time.elapsed()/1000.0;
-            //logData(currTime, carData, carMeasurements, signal, &logFile);
+            logData(currTime, carData, carMeasurements, signal, &logFile);
         }
 
         // Use old and new states to draw traveled distance on evaluated image.

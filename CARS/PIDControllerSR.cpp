@@ -1,10 +1,10 @@
 #include "headers.h"
 #include "definitions.h"
+#include "classes.h"
 #include "PIDControllerSR.h"
 #include "functions.h"
 
 #include <fstream>
-//#include <QTime>
 
 PIDControllerSR::PIDControllerSR(int ID)
 {

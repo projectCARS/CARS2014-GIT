@@ -7,8 +7,5 @@ ParticleFilter/ipch
 *.obj
 *.exe
 *.dll
-build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/release/Car.obj
-build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/release/controllerthread.obj
-build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/release/Car.obj
 build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Debug/
 build-CARS-Desktop_Qt_5_3_MSVC2013_64bit-Release/
