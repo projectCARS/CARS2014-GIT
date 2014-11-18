@@ -2,7 +2,6 @@
 #include "Car.h"
 #include "definitions.h"
 #include "classes.h"
-#include "ParticleFilter.cpp"
 
 #include <QDebug>
 
@@ -34,7 +33,6 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
         case FilterType::ParticleFilter:
         {
             //TODO make this id-dependent
-            //ParticleFilter particlefilter(carPattern, speed, 5, motionModelType);
             m_filter = new ParticleFilter(carPattern, speed, 5, motionModelType);
         }
             break;

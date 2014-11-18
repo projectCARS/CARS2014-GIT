@@ -2,8 +2,13 @@
 #include "Controller.h"
 #include <chrono>
 #include <fstream>
+<<<<<<< HEAD
 #include <QElapsedTimer>
 //#include <QTime> //for timeSR
+=======
+#include "qtheaders.h"
+#include <QElapsedTimer>
+>>>>>>> origin/master
 
 class PIDControllerSR : public Controller
 {

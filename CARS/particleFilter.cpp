@@ -8,257 +8,297 @@
 #include <math.h>
 #include <QDebug>
 
-    ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType)
-    {
-        switch (motionModelType)
-        {
-            case MotionModelType::CTModel:
-                M = new CTModel();
-                break;
-            default:
-                std::cout << "Error: Motion model type not implemented, in EKF::EKF(), EKF.cpp" << std::endl;
-        }
 
-        carPattern = ID;
-        expectedSpeed = speed;
-        limit = lim;
-        noCar = true;
-        xhat = VectorXd::Zero(M->getNumStates());
-        sumStates[0] = 0;
-        sumStates[1] = 0;
-        sumStates[2] = 0;
-        m_img = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+
+
+
+ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType)
+{
+    switch (motionModelType)
+    {
+        case MotionModelType::CTModel:
+            M = new CTModel();
+            break;
+        default:
+            std::cout << "Error: Motion model type not implemented, in ParticleFilter::ParticleFilter(), ParticleFilter.cpp" << std::endl;
     }
 
-    ParticleFilter::~ParticleFilter()
+    carPattern = ID;
+    expectedSpeed = speed;
+    limit = lim;
+    noCar = true;
+    xhat = VectorXd::Zero(M->getNumStates());
+    sumStates[0] = 0;
+    sumStates[1] = 0;
+    sumStates[2] = 0;
+    m_img = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+}
+
+ParticleFilter::~ParticleFilter()
+{
+}
+
+void ParticleFilter::setState(float state[3])
+{
+    for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
+        posX[i] = state[0];
+        posY[i] = state[1];
+        yaw[i] = state[3];
     }
+}
 
-    void ParticleFilter::setState(float state[3])
+void ParticleFilter::propagate(void)
+{
+    for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
-        for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
-        {
-            posX[i] = state[0];
-            posY[i] = state[1];
-            yaw[i] = state[3];
-        }
+        // update points with random walk model
+        float speed = expectedSpeed + 20 * gaussianNoise();
+        yawPoints[i] = yaw[i] + M_PI / 5 * gaussianNoise(); // angle
+        posXPoints[i] = posX[i] + speed*sin(yawPoints[i]);
+        posYPoints[i] = posY[i] - speed*cos(yawPoints[i]); // note negative Y - direction with pixel coordinates
+        velPoints[i] = speed;
+
     }
+}
 
-    void ParticleFilter::propagate(void)
+void ParticleFilter::propagateCT(void)
+{
+    for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
-        for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
-        {
-            // update points with random walk model
-            float speed = expectedSpeed + 20 * gaussianNoise();
-            yawPoints[i] = yaw[i] + M_PI / 5 * gaussianNoise(); // angle
-            posXPoints[i] = posX[i] + speed*sin(yawPoints[i]);
-            posYPoints[i] = posY[i] - speed*cos(yawPoints[i]); // note negative Y - direction with pixel coordinates
+        // update points with CT model
+        velPoints[i] = vel[i] + gaussianNoise()*0.1;
+        if(velPoints[i] < 0)
+            velPoints[i] = 0;
+        yawPoints[i] = yaw[i] + angvel[i]*T;
+        angvelPoints[i] = angvel[i] + gaussianNoise()*0.1;
+        posXPoints[i] = posX[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
+        posYPoints[i] = posY[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
 
-        }
+
     }
+}
 
-    float ParticleFilter::gaussianNoise(void)
+float ParticleFilter::gaussianNoise(void)
+{
+    static float rand1, rand2;
+
+    rand1 = rand() / ((float)RAND_MAX);
+    // Something not to small, since it's stored as a float
+    if (rand1 < 1e-20)
     {
-        static float rand1, rand2;
-
-        rand1 = rand() / ((float)RAND_MAX);
-        // Something not to small, since it's stored as a float
-        if (rand1 < 1e-20)
-        {
-            rand1 = 1e-20;
-        }
-        rand1 = -2 * log(rand1);
-        rand2 = (rand() / ((float)RAND_MAX)) * 2 * M_PI;
-
-        return sqrt(rand1) * cos(rand2);
+        rand1 = 1e-20f;
     }
+    rand1 = -2 * log(rand1);
+    rand2 = (rand() / ((float)RAND_MAX)) * 2 * M_PI;
 
-    void ParticleFilter::update(const cv::Mat img)
+    return sqrt(rand1) * cos(rand2);
+}
+
+void ParticleFilter::update(const cv::Mat img)
+{
+    // Add border values around each point controlled
+    cv::Rect ROI = cv::Rect(0, 0, limit, limit);
+    cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
+
+    int points = carPattern.rows();
+    Eigen::Matrix2f rotate, translate;
+    Eigen::MatrixXf pos;
+    Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(2, points);
+    float val, sum;
+    float totSum = 0.;
+
+    for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
-        // Add border values around each point controlled
-        cv::Rect ROI = cv::Rect(0, 0, limit, limit);
-        cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
+        // Rotate and translate pattern according to hypothesis
+        rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
+            sin(yawPoints[n]), cos(yawPoints[n]);
+        translate << posXPoints[n], 0,
+            posYPoints[n], 0;
+        pos = rotate*carPattern.transpose() + translate*ones;
 
-        int points = carPattern.rows();
-        Eigen::Matrix2f rotate, translate;
-        Eigen::MatrixXf pos;
-        Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(2, points);
-        float val, sum, x = 0, y = 0;
-        float totSum = 0.;
-        for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
+        val = 0.;
+        sum = 0.;
+        for (int p = 0; p < points; p++)
         {
-            // Rotate and translate pattern according to hypothesis
-            rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
-                sin(yawPoints[n]), cos(yawPoints[n]);
-            translate << posXPoints[n], 0,
-                posYPoints[n], 0;
-            pos = rotate*carPattern.transpose() + translate*ones;
-
-            val = 0.;
-            sum = 0.;
-            for (int p = 0; p < points; p++)
+            // Update ROI
+            ROI.x = pos(0, p);
+            ROI.y = pos(1, p);
+            //std::cout << "checking: [" << ROI.x << ", " << ROI.y << std::endl;
+            if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
             {
-                // Update ROI
-                ROI.x = pos(0, p);
-                ROI.y = pos(1, p);
-                //std::cout << "checking: [" << ROI.x << ", " << ROI.y << std::endl;
-                if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
+                imgROI = img(ROI);
+                cv::Scalar mean = cv::mean(imgROI);
+
+                // Throws the hypothesis if no point found.This gives some speedup.
+                if (mean.val[0] == 0)
                 {
-                    imgROI = img(ROI);
-                    cv::Scalar mean = cv::mean(imgROI);
-
-                    // Throws the hypothesis if no point found.This gives some speedup.
-                    if (mean.val[0] == 0)
-                    {
-                        //totSum = 0;
-                        sum = 0;
-                        break;
-                    }
-                    else
-                    {
-                        sum += mean.val[0];
-                    }
-
-
+                    //totSum = 0;
+                    sum = 0;
+                    break;
+                }
+                else
+                {
+                    sum += mean.val[0];
                 }
             }
-            totSum += sum;
-            cumulativeWeights[n] = totSum; // save weights cumulative sum for later normalization
         }
-
-
-
+        totSum += sum;
+        cumulativeWeights[n] = totSum; // save weights cumulative sum for later normalization
     }
+}
 
-    void ParticleFilter::resample(void)
+
+
+void ParticleFilter::resample(void)
+{
+    // randomly, uniformally, sample from the cummulative distribution of the probability distribution generated by the
+    // weighted vector 'weight'.
+    float randNo;
+    int index = 0;
+    sumStates[0] = 0;
+    sumStates[1] = 0;
+    sumStates[2] = 0;
+    sumStates[3] = 0;
+    sumStates[4] = 0;
+    if (cumulativeWeights[NUMBER_OF_PARTICLES - 1] != 0)
     {
-        // randomly, uniformally, sample from the cummulative distribution of the probability distribution generated by the
-        // weighted vector 'weight'.
-        float randNo;
-        int index = 0;
-        sumStates[0] = 0;
-        sumStates[1] = 0;
-        sumStates[2] = 0;
-        sumStates[3] = 0;
-        sumStates[4] = 0;
-        if (cumulativeWeights[NUMBER_OF_PARTICLES - 1] != 0)
+        // Normalize weights to form a cumulative summed probability distribution
+        for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
         {
-            // Normalize weights to form a cumulative summed probability distribution
-            for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-            {
-                cumulativeWeights[i] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
-            }
-
-            for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-            {
-                randNo = rand() / ((float)RAND_MAX);
-                index = findFirst(randNo);
-                posX[i] = posXPoints[index];
-                sumStates[0] += posXPoints[index];
-
-                posY[i] = posYPoints[index];
-                sumStates[1] += posYPoints[index];
-
-                yaw[i] = yawPoints[index];
-                sumStates[3] += yawPoints[index];
-            }
+            cumulativeWeights[i] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
         }
-        else
+
+        for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
         {
-            noCar = true;
-            /*
-            // try to save the situation with model
-            for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-            {
+            randNo = rand() / ((float)RAND_MAX);
+            index = findFirst(randNo);
+            posX[i] = posXPoints[index];
+            sumStates[0] += posXPoints[index];
+
+            posY[i] = posYPoints[index];
+            sumStates[1] += posYPoints[index];
+
+            vel[i] = velPoints[index];
+            sumStates[2] += velPoints[index];
+
+            yaw[i] = yawPoints[index];
+            sumStates[3] += yawPoints[index];
+
+            angvel[i] = angvelPoints[index];
+            sumStates[4] += angvelPoints[index];
+        }
+    }
+    else
+    {
+        noCar = true;
+
+        // try to save the situation with model
+        for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+        {
             posX[i] = posXPoints[i];
             sumStates[0] += posXPoints[i];
 
             posY[i] = posYPoints[i];
             sumStates[1] += posYPoints[i];
 
+            vel[i] = velPoints[i];
+            sumStates[2] += velPoints[i];
+
             yaw[i] = yawPoints[i];
-            sumStates[2] += yawPoints[i];
-            }
-            */
-        }
-    }
+            sumStates[3] += yawPoints[i];
 
-    void ParticleFilter::systematicResample(void)
+            angvel[i] = angvelPoints[i];
+            sumStates[4] += angvelPoints[i];
+        }
+
+    }
+}
+
+void ParticleFilter::systematicResample(void)
+{
+    // randomly, uniformally, sample from the cummulative distribution of the probability distribution generated by the
+    // weighted vector 'weight'.
+    float ordNum[NUMBER_OF_PARTICLES];
+    sumStates[0] = 0;
+    sumStates[1] = 0;
+    sumStates[2] = 0;
+    sumStates[3] = 0;
+    sumStates[4] = 0;
+    int k = 0;
+
+    if (cumulativeWeights[NUMBER_OF_PARTICLES - 1] != 0)
     {
-        // randomly, uniformally, sample from the cummulative distribution of the probability distribution generated by the
-        // weighted vector 'weight'.
-        float ordNum[NUMBER_OF_PARTICLES];
-        sumStates[0] = 0;
-        sumStates[1] = 0;
-        sumStates[2] = 0;
-        sumStates[3] = 0;
-        sumStates[4] = 0;
-        int k = 0;
+        ordNum[0] = (rand() / ((float)RAND_MAX))/NUMBER_OF_PARTICLES;
 
-        if (cumulativeWeights[NUMBER_OF_PARTICLES - 1] != 0)
+        // Normalize weights to form a cumulative summed probability distribution
+        for (int i = 0; i < NUMBER_OF_PARTICLES - 1; ++i)
         {
-            ordNum[0] = (rand() / ((float)RAND_MAX))/NUMBER_OF_PARTICLES;
-
-            // Normalize weights to form a cumulative summed probability distribution
-            for (int i = 0; i < NUMBER_OF_PARTICLES - 1; ++i)
-            {
-                cumulativeWeights[i] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
-                ordNum[i + 1] = ((i + 1) + (rand() / ((float)RAND_MAX))) / NUMBER_OF_PARTICLES;
-            }
-            cumulativeWeights[NUMBER_OF_PARTICLES - 1] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
-
-            k = 0;
-
-            for(int j = 0; j < NUMBER_OF_PARTICLES - 1; j++){
-
-                while(cumulativeWeights[k] < ordNum[j])
-                    k++;
-                posX[j] = posXPoints[k];
-                posY[j] = posYPoints[k];
-                yaw[j] = yawPoints[k];
-            }
-
+            cumulativeWeights[i] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
+            ordNum[i + 1] = ((i + 1) + (rand() / ((float)RAND_MAX))) / NUMBER_OF_PARTICLES;
         }
-        else
-        {
-            noCar = true;
-            /*
-             // try to save the situation with model
-             for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-             {
-             posX[i] = posXPoints[i];
-             sumStates[0] += posXPoints[i];
+        cumulativeWeights[NUMBER_OF_PARTICLES - 1] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
 
-             posY[i] = posYPoints[i];
-             sumStates[1] += posYPoints[i];
+        k = 0;
 
-             yaw[i] = yawPoints[i];
-             sumStates[2] += yawPoints[i];
-             }
-             */
+        for(int j = 0; j < NUMBER_OF_PARTICLES - 1; j++){
+
+            while(cumulativeWeights[k] < ordNum[j])
+                k++;
+
+            posX[j] = posXPoints[k];
+            sumStates[0] += posXPoints[k];
+            posY[j] = posYPoints[k];
+            sumStates[1] += posYPoints[k];
+            vel[j] = velPoints[k];
+            sumStates[2] += velPoints[k];
+            yaw[j] = yawPoints[k];
+            sumStates[3] += yawPoints[k];
+            angvel[j] = angvelPoints[k];
+            sumStates[4] += angvelPoints[k];
         }
+
     }
-
-    int ParticleFilter::findFirst(const float value)
+    else
     {
-        for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-        {
-            if (cumulativeWeights[i] >= value)
-            {
-                return i;
-            }
-        }
-        std::cout << "Class ParticleFilter:	Error in findFirst()" << std::endl;
-        //std::cout << "Class ParticleFilter:	Trying to find > " << value << "in array with max " << cumulativeWeights[NUMBER_OF_PARTICLES - 1] << std::endl;
-        return -1;
-    }
+        noCar = true;
+        /*
+         // try to save the situation with model
+         for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+         {
+         posX[i] = posXPoints[i];
+         sumStates[0] += posXPoints[i];
 
-    void ParticleFilter::logStates(std::ofstream *logFile)
+         posY[i] = posYPoints[i];
+         sumStates[1] += posYPoints[i];
+
+         yaw[i] = yawPoints[i];
+         sumStates[2] += yawPoints[i];
+         }
+         */
+    }
+}
+
+int ParticleFilter::findFirst(const float value)
+{
+    for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
     {
-        *logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
+        if (cumulativeWeights[i] >= value)
+        {
+            return i;
+        }
     }
+    std::cout << "Class ParticleFilter:	Error in findFirst()" << std::endl;
+    //std::cout << "Class ParticleFilter:	Trying to find > " << value << "in array with max " << cumulativeWeights[NUMBER_OF_PARTICLES - 1] << std::endl;
+    return -1;
+}
 
-    void ParticleFilter::extensiveSearch(cv::Mat img)
+void ParticleFilter::logStates(std::ofstream *logFile)
+{
+    *logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
+}
+
+void ParticleFilter::extensiveSearch(cv::Mat img)
     {
         // Detect contrasting image features for seeding states
         cv::vector<cv::vector<cv::Point> > contours;
@@ -306,6 +346,8 @@
                 index = rand() % blobs.size(); // pick one of the probable points;
                 posX[i] = blobs[index].x;
                 posY[i] = blobs[index].y;
+                vel[i] = 0.3;
+                angvel[i] = vel[i];
             }
         }
         else // Look over entire image
@@ -315,19 +357,12 @@
                 posX[i] = (rand() / ((float)RAND_MAX))*img.cols; // pick any posX
                 posY[i] = (rand() / ((float)RAND_MAX))*img.rows; // pick any posY
                 yaw[i] = (rand() / ((float)RAND_MAX))*M_PI * 2; // pick any angle
+                vel[i] = 0.3;
+                angvel[i] = vel[i];
             }
         }
         noCar = false; // To break extensive search. This will be tried on next image search.
     }
-
-void ParticleFilter::addMeasurement2(const cv::Mat img)
-{
-    img.copyTo(m_img);
-    // Set measurement boolean to true (we just recieved new measurements).
-    m_newMeasurement = true;
-}
-
-
 
 void ParticleFilter::addInputSignals(float gas, float turn)
 {
@@ -342,7 +377,6 @@ std::vector<float> ParticleFilter::getState(void)
     {
         state[i] = sumStates[i]/NUMBER_OF_PARTICLES;
     }
-    state[2] = 0.25;
     return state;
 }
 
@@ -355,9 +389,10 @@ void ParticleFilter::updateFilter()
     }
     else
     {
-        propagate();
+        //propagate();
+        propagateCT();
         update(m_img);
-        resample();
+        systematicResample();
     }
     drawThreadData.sumStates = getSumStates();
 }
@@ -376,3 +411,7 @@ void ParticleFilter::addImageMeasurement(cv::Mat img)
     m_newMeasurement = true;
 }
 
+bool ParticleFilter::hasNewMeasurement(void)
+{
+    return m_newMeasurement;
+}
