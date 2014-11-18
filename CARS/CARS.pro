@@ -37,12 +37,15 @@ LIBS += -LC:\\OpenCV2.4.9\\opencv\\build\\x64\\vc12\\lib \
 }
 
 # Include path for threading building blocks
-#INCLUDEPATH += C:\\tbb43_20141023oss\\include
-#LIBS += -LC:\\tbb43_20141023oss\\lib\\ia32\\vc12 \
-#-ltbb \
-#-ltbbmalloc \
-#-ltbbmalloc_proxy \
+INCLUDEPATH += "C:\\tbb43_20141023oss\\include"
+LIBS += -LC:\\tbb43_20141023oss\\lib\\ia32\\vc12 \
+-ltbb \
+-ltbbmalloc \
+-ltbbmalloc_proxy
 
+#LIBS += -ltbb\
+#        -ltbbmalloc \
+#        -ltbbmalloc_proxy
 
 # Library files for FlyCapture2.
 CONFIG( debug, debug|release ) {

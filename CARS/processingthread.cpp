@@ -3,7 +3,7 @@
 #include "definitions.h"
 #include "classes.h"
 #include "functions.h"
-
+#include <QDebug>
 
 #include <iomanip>
 #include <fstream>
@@ -162,8 +162,12 @@ void ProcessingThread::run()
             if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
             {
                 float yaw = carData[j].state[3];
+                float vel = carData[j].state[2];
+                float angvel = carData[j].state[4];
                 sensor.cameraToWorldCoordinates(carData[j].state);
+                carData[j].state[2] = vel;
                 carData[j].state[3] = yaw;
+                carData[j].state[4] = angvel;
             }
             //std::cout << carData[j].state[0] << std::endl << carData[j].state[1] << std::endl << carData[j].state[3] << std::endl;
         }

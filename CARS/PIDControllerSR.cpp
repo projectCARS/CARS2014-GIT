@@ -357,8 +357,8 @@ float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 void PIDControllerSR::updateSpeedRef(std::vector<float> &state, int refInd, int lateralError)
 {
     float bigError, smallError, old_vRef;
-    bigError = (0.1)*(0.1);            // lateralError is squerad distance [m^2] //TODO: välj ett lämpligt avstånd att jämföra mot
-    smallError = (0.03)*(0.03);          // smallError must be smaller then bigError
+    bigError = (0.1f)*(0.1f);            // lateralError is squerad distance [m^2] //TODO: välj ett lämpligt avstånd att jämföra mot
+    smallError = (0.03f)*(0.03f);          // smallError must be smaller then bigError
 
     // if car is outside big error. Dont update speed ref. When car is back on track(within small error) restart updating speed ref.
     if (lateralError>bigError)
@@ -373,10 +373,10 @@ void PIDControllerSR::updateSpeedRef(std::vector<float> &state, int refInd, int 
         old_vRef = m_vRef[refInd];
         if (lateralError<smallError)       //it the error is small -> drive faster next time
         {
-            m_vRef[refInd] =old_vRef*1.05;    //go 5% faster
+            m_vRef[refInd] =old_vRef*1.01;    //go 5% faster
         } else                      // drive slower
         {
-            m_vRef[refInd] = old_vRef*0.95;    //go 5% slower
+            m_vRef[refInd] = old_vRef*0.99;    //go 5% slower
         }
         //TODO: how should update be done? Update several values. How to make sure that v_ref is always smooth?
     }

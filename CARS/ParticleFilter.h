@@ -7,7 +7,10 @@
 #include "CTModel.h"
 #include <Eigen/Dense>
 #include "definitions.h"
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
 
+using namespace tbb;
 
 class ParticleFilter : public Filter
 {
@@ -15,11 +18,16 @@ private:
     float posX[NUMBER_OF_PARTICLES];
     float posY[NUMBER_OF_PARTICLES];
     float yaw[NUMBER_OF_PARTICLES];
+    float vel[NUMBER_OF_PARTICLES];
+    float angvel[NUMBER_OF_PARTICLES];
     float posXPoints[NUMBER_OF_PARTICLES];
     float posYPoints[NUMBER_OF_PARTICLES];
     float yawPoints[NUMBER_OF_PARTICLES];
+    float velPoints[NUMBER_OF_PARTICLES];
+    float angvelPoints[NUMBER_OF_PARTICLES];
     float weights[NUMBER_OF_PARTICLES];
     float cumulativeWeights[NUMBER_OF_PARTICLES];
+
     float sumStates[5];
 
     Eigen::MatrixXf carPattern;
@@ -28,6 +36,8 @@ private:
     bool noCar;
 
     cv::Mat m_img;
+
+    double T = 1/140;
 
     MotionModel *M;
 
@@ -45,18 +55,17 @@ public:
     void setState(float state[3]);
     void extensiveSearch(cv::Mat img);
     void propagate(void);
+    void propagateCT(void);
     void update(const cv::Mat img);
+    //void parallelUpdate(const cv::Mat img);
+
     void resample(void);
     void systematicResample(void);
-
 
     void logStates(std::ofstream *logFile);
     bool carGone(void){ return noCar; }
 
     void markCar(const float state[3], cv::Mat img);
-
-
-
 
     float *getPosX(void){ return posX; }
     float *getPosY(void){ return posY; }
@@ -77,7 +86,6 @@ public:
     virtual bool hasNewMeasurement(void);
 
     virtual void addImageMeasurement(cv::Mat img);
-
 
 };
 
