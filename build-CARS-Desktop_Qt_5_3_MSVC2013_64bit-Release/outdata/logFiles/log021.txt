@@ -1,1 +1,0 @@
-sysTime carID xPos yPos speed yaw yawVel xPosRaw yPosRaw yawRaw gas turn
