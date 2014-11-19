@@ -199,14 +199,13 @@ void ProcessingThread::run()
         // Tell controller thread that new data have been written.
         SetEvent(hControllerThreadEvent1);
 
+        // Update lap times
+        updateLapData(carData[0]);
+
         // Enter critical section and send data to draw thread.
         EnterCriticalSection(&csDrawThreadData);
         drawThreadData.carData = carData;
         LeaveCriticalSection(&csDrawThreadData);
-
-        // Update lap times
-        updateLapData(carData[2].state);
-
 
         // Estimate FPS in processing thread.
         if ((loopCounter % fpsInterval) == 0)
@@ -271,6 +270,7 @@ void ProcessingThread::drawStatesToImage(const std::vector<CarData> &oldCarData,
     {
         if (carData[j].active)
         {
+
             // Extract position and convert to pixel coordinates.
             // x coordinate.
             positionPix1[0] = oldCarData[j].state[0] * PIXELS_PER_METER;

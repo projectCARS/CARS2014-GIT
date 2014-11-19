@@ -43,9 +43,8 @@ LIBS += -LC:\\tbb43_20141023oss\\lib\\ia32\\vc12 \
 -ltbbmalloc \
 -ltbbmalloc_proxy
 
-#LIBS += -ltbb\
-#        -ltbbmalloc \
-#        -ltbbmalloc_proxy
+QMAKE_CXXFLAGS += -openmp
+#LIBS += -lgomp -lpthread
 
 # Library files for FlyCapture2.
 CONFIG( debug, debug|release ) {

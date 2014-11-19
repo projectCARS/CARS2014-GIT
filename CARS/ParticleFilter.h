@@ -9,6 +9,7 @@
 #include "definitions.h"
 #include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
+#include "omp.h"
 
 using namespace tbb;
 
@@ -26,6 +27,8 @@ private:
     float velPoints[NUMBER_OF_PARTICLES];
     float angvelPoints[NUMBER_OF_PARTICLES];
     float weights[NUMBER_OF_PARTICLES];
+
+    float noncumulativeWeights[NUMBER_OF_PARTICLES];
     float cumulativeWeights[NUMBER_OF_PARTICLES];
 
     float sumStates[5];
@@ -57,6 +60,7 @@ public:
     void propagate(void);
     void propagateCT(void);
     void update(const cv::Mat img);
+    void parallelUpdate(const cv::Mat img);
     //void parallelUpdate(const cv::Mat img);
 
     void resample(void);

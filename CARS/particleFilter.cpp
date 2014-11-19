@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include <math.h>
 #include <QDebug>
+#include <omp.h>
 
 
 
@@ -56,8 +57,7 @@ void ParticleFilter::propagate(void)
         float speed = expectedSpeed + 20 * gaussianNoise();
         yawPoints[i] = yaw[i] + M_PI / 5 * gaussianNoise(); // angle
         posXPoints[i] = posX[i] + speed*sin(yawPoints[i]);
-        posYPoints[i] = posY[i] - speed*cos(yawPoints[i]); // note negative Y - direction with pixel coordinates
-        velPoints[i] = speed;
+        posYPoints[i] = posY[i] - speed*cos(yawPoints[i]);
 
     }
 }
@@ -148,6 +148,63 @@ void ParticleFilter::update(const cv::Mat img)
     }
 }
 
+// Parallelized version of update
+void ParticleFilter::parallelUpdate(const cv::Mat img)
+{
+    // Add border values around each point controlled
+    cv::Rect ROI = cv::Rect(0, 0, limit, limit);
+    cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
+
+    int points = carPattern.rows();
+    Eigen::Matrix2f rotate, translate;
+    Eigen::MatrixXf pos;
+    Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(2, points);
+    float val, sum;
+    float totSum = 0.;
+
+#pragma omp parallel for private(ROI, rotate, translate, pos, sum, val)
+    for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
+    {
+        // Rotate and translate pattern according to hypothesis
+        rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
+            sin(yawPoints[n]), cos(yawPoints[n]);
+        translate << posXPoints[n], 0,
+            posYPoints[n], 0;
+        pos = rotate*carPattern.transpose() + translate*ones;
+
+        val = 0.;
+        sum = 0.;
+        for (int p = 0; p < points; p++)
+        {
+            // Update ROI
+            ROI.x = pos(0, p);
+            ROI.y = pos(1, p);
+            //std::cout << "checking: [" << ROI.x << ", " << ROI.y << std::endl;
+            if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
+            {
+                imgROI = img(ROI);
+                cv::Scalar mean = cv::mean(imgROI);
+
+                // Throws the hypothesis if no point found.This gives some speedup.
+                if (mean.val[0] == 0)
+                {
+                    //totSum = 0;
+                    sum = 0;
+                    break;
+                }
+                else
+                {
+                    sum += mean.val[0];
+                }
+            }
+        }
+        totSum += sum;
+        noncumulativeWeights[n] = sum; // save weights cumulative sum for later normalization
+    }
+
+    for(int i = 1; i < NUMBER_OF_PARTICLES; i++)
+        cumulativeWeights[i] = noncumulativeWeights[i - 1] + noncumulativeWeights[i];
+}
 
 
 void ParticleFilter::resample(void)
@@ -261,7 +318,7 @@ void ParticleFilter::systematicResample(void)
     }
     else
     {
-        noCar = true;
+        noCar = false;
         /*
          // try to save the situation with model
          for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
@@ -390,7 +447,8 @@ void ParticleFilter::updateFilter()
     else
     {
         //propagate();
-        propagateCT();
+        propagate();
+        //parallelUpdate(m_img);
         update(m_img);
         systematicResample();
     }

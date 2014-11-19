@@ -10,12 +10,12 @@
 
 
 
-void updateLapData(std::vector<float> States)
+void updateLapData(CarData &cardata)
 {
     float carX, carY, dist;
-    carX = States[0];
-    carY = States[1];
-    if (!lapData.firstLapStarted)
+    carX = cardata.state[0];
+    carY = cardata.state[1];
+    if (!cardata.lapData.firstLapStarted)
     {
         if (carY<.5 && carX > 1.3 && carX < 1.7)
         {
@@ -24,9 +24,9 @@ void updateLapData(std::vector<float> States)
             dist = abs(carX-Qx);
             if (dist<0.02)
             {
-                lapData.lapTimer.restart();
-                lapData.firstLapStarted = true;
-                lapData.bestTime = 1000;
+                cardata.lapData.lapTimer.restart();
+                cardata.lapData.firstLapStarted = true;
+                cardata.lapData.bestTime = 1000;
                 qDebug() << "start first lap";
             }
         }
@@ -34,26 +34,25 @@ void updateLapData(std::vector<float> States)
     }
     else
     {
-        lapData.lapTime = lapData.lapTimer.elapsed();
-        lapData.lapTime /= 1000;
+        cardata.lapData.lapTime = cardata.lapData.lapTimer.elapsed();
+        cardata.lapData.lapTime /= 1000;
         if (carY<.5 && carX > 1.3 && carX < 1.7) //is car near finishing line?
         {
             //find distance to finnishing line
             float Qx = 1.5;
             dist = abs(carX-Qx);
             //is dist very small(and timer big) save lap time and reset timer
-            if (dist < 0.02 && lapData.lapTime > 3)
+            if (dist < 0.02 && cardata.lapData.lapTime > 3)
             {
-                lapData.firstLapDone = true;
-                lapData.lastLapTime = lapData.lapTime;
-                lapData.lapTimer.restart();
-                qDebug() << "lapTime: " << lapData.lapTime;
-                if (lapData.lapTime<lapData.bestTime)
+                cardata.lapData.firstLapDone = true;
+                cardata.lapData.lastLapTime = cardata.lapData.lapTime;
+                cardata.lapData.lapTimer.restart();
+                qDebug() << "lapTime: " << cardata.lapData.lapTime;
+                if (cardata.lapData.lapTime < cardata.lapData.bestTime)
                 {
-                    lapData.bestTime = lapData.lapTime;
-                    std::cout << "bestTime: " << lapData.bestTime << std::endl;
+                    cardata.lapData.bestTime = cardata.lapData.lapTime;
+                    std::cout << "bestTime: " << cardata.lapData.bestTime << std::endl;
                 }
-
             }
             //update LapData with information
         }

@@ -40,6 +40,7 @@ private:
     int m_t1;
 
     std::vector<CarData> m_carData;
+    std::vector<int> m_carTimerID;
     int m_loopCounter;
     cv::Mat m_tmpMat;
     int m_numCars;

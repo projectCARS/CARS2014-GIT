@@ -119,6 +119,21 @@ struct Signal
     float turn;
 };
 
+// Struct to store lap data.
+struct LapData
+{
+    //int checkPoint = 730;
+    //int check1, check2;
+    //clock_t startTime, t2;
+    float currTime;             // used to get time for log file.
+
+    QElapsedTimer lapTimer;
+    float lapTime, bestTime, lastLapTime;
+    bool firstLapStarted = false;
+    bool firstLapDone = false;
+    //std::vector<float> bestTimes;
+};
+
 // Struct used by processing thread to send data to other threads.
 struct CarData
 {
@@ -129,6 +144,7 @@ struct CarData
     CarMode::Enum mode;
     FilterType::Enum filter;
     std::vector<float> state;
+    LapData lapData;
 };
 
 // Perhaps: struct IOControllerData ?
@@ -146,6 +162,7 @@ struct RawData
 struct DrawThreadData
 {
     std::vector<cv::Mat> background;
+    std::vector<int> carTimerID;
 
     cv::Mat image;
     cv::Mat processedImage;
@@ -153,21 +170,6 @@ struct DrawThreadData
     std::vector<CarData> carData;
     float *sumStates;
     Eigen::MatrixXf pattern;
-};
-
-// Struct to store lap data.
-struct LapData
-{
-    //int checkPoint = 730;
-    //int check1, check2;
-    //clock_t startTime, t2;
-    float currTime;             // used to get time for log file.
-
-    QElapsedTimer lapTimer;
-    float lapTime, bestTime, lastLapTime;
-    bool firstLapStarted = false;
-    bool firstLapDone = false;
-    //std::vector<float> bestTimes;
 };
 
 // The main thread uses this struct to communicate with the regulator thread.
