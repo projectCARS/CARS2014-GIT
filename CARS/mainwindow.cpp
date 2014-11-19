@@ -269,6 +269,21 @@ void MainWindow::updateFrame(void)
     // have not had time to resize it.
     if (m_carData.size() != 0)
     {
+        if(lapData.firstLapStarted){
+            char output[4];
+            sprintf(output,"%.1f",lapData.lapTime);
+            cv::putText(m_tmpMat, "Car 0", cv::Point(770, 65), 1, 2, cv::Scalar(255,150 ,0), 2, 8, false );
+            cv::putText(m_tmpMat, output, cv::Point(770, 110), 1, 3, cv::Scalar(255, 255, 255), 2, 8, false );
+            if(lapData.firstLapDone)
+            {
+                char output2[4];
+                sprintf(output2,"%.2f",lapData.lastLapTime);
+                char output3[4];
+                sprintf(output3,"%.2f",lapData.bestTime);
+                cv::putText(m_tmpMat, output2, cv::Point(770, 150), 1, 3, cv::Scalar(0, 255, 255),2,8, false );
+                cv::putText(m_tmpMat, output3, cv::Point(770, 190), 1, 3, cv::Scalar(120, 255, 0),2,8, false );
+            }
+        }
         //drawCar(drawThreadData.pattern, drawThreadData.sumStates[0] / NUMBER_OF_PARTICLES, drawThreadData.sumStates[1] / NUMBER_OF_PARTICLES, drawThreadData.sumStates[2] / NUMBER_OF_PARTICLES, drawThreadData.image);
         // Draw car on track. The variable j represents car id.
         for (int j = 0; j < m_numCars; j++)

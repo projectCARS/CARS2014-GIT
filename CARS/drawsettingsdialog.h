@@ -19,6 +19,7 @@ private slots:
     void on_pathCheckBox_clicked();
     void on_circleCheckBox_clicked();
     void on_rectangleCheckBox_clicked();
+    void on_timerCheckBox_clicked();
     void updateSettings(int id);
 
     void on_carTracksCheckBox_clicked();

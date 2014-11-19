@@ -4,12 +4,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <Eigen/Dense>
-<<<<<<< HEAD
+
 #include <QElapsedTimer>
 
-=======
+
 #include <windows.h>
->>>>>>> origin/master
+
 
 // This file contains definitions, macros, etc.
 #pragma once
@@ -99,6 +99,7 @@ namespace CarSpecificDrawSettings
         Circle                  = 1 << 1,
         Rectangle               = 1 << 2,
         CarTracks               = 1 << 3,
+        Timer                   = 1 << 4,
     };
 }
 
@@ -164,7 +165,8 @@ struct LapData
 
     QElapsedTimer lapTimer;
     float lapTime, bestTime, lastLapTime;
-    bool lapRunning;
+    bool firstLapStarted = false;
+    bool firstLapDone = false;
     //std::vector<float> bestTimes;
 };
 

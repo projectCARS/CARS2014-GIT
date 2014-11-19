@@ -10,7 +10,7 @@ DrawSettingsDialog::DrawSettingsDialog(QWidget *parent) :
     ui(new Ui::DrawSettingsDialog)
 {
     ui->setupUi(this);
-    setFixedSize(336, 301);
+    setFixedSize(336, 320);
 
     // Read background image from file.
     if (m_settings.contains("draw_settings/background"))
@@ -89,6 +89,7 @@ DrawSettingsDialog::~DrawSettingsDialog()
 
 void DrawSettingsDialog::updateSettings(int id)
 {
+    ui->timerCheckBox->setChecked(m_carSpecificDrawSettings[id] & CarSpecificDrawSettings::Timer);
     ui->pathCheckBox->setChecked(m_carSpecificDrawSettings[id] & CarSpecificDrawSettings::Path);
     ui->circleCheckBox->setChecked(m_carSpecificDrawSettings[id] & CarSpecificDrawSettings::Circle);
     ui->rectangleCheckBox->setChecked(m_carSpecificDrawSettings[id] & CarSpecificDrawSettings::Rectangle);
@@ -113,6 +114,20 @@ void DrawSettingsDialog::saveDrawSettings(void)
         m_settings.beginGroup(QString("draw_settings/id%1").arg(i));
         m_settings.setValue("car_specific_draw_settings", (unsigned int)m_carSpecificDrawSettings[i]);
         m_settings.endGroup();
+    }
+}
+
+void DrawSettingsDialog::on_timerCheckBox_clicked()
+{
+    if (ui->timerCheckBox->isChecked())
+    {
+        // Set the bit if check box is checked.
+        m_carSpecificDrawSettings[ui->idComboBox->currentIndex()] |= CarSpecificDrawSettings::Timer;
+    }
+    else
+    {
+        // Clear the bit if check box is not checked.
+        m_carSpecificDrawSettings[ui->idComboBox->currentIndex()] &= ~CarSpecificDrawSettings::Timer;
     }
 }
 

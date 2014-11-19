@@ -49,7 +49,7 @@ void ProcessingThread::run()
 
     // Initiate vectors in structs.
     drawThreadData.carData.resize(m_numCars);
-    lapData.bestTimes.reserve(10);
+    //lapData.bestTimes.reserve(10);
     controllerThreadData.carData.resize(m_numCars);
 
     // Deciding which log file to write to
@@ -92,8 +92,6 @@ void ProcessingThread::run()
 
     // Initiate timer for lap times
     lapData.lapTimer.start();
-    lapData.lapRunning = false;
-
 
     time.start();
     while(1)
@@ -207,7 +205,7 @@ void ProcessingThread::run()
         LeaveCriticalSection(&csDrawThreadData);
 
         // Update lap times
-        updateLapData(oldCarData.state, carData.state);
+        updateLapData(carData[2].state);
 
 
         // Estimate FPS in processing thread.
