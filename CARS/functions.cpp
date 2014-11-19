@@ -15,11 +15,12 @@ void updateLapData(std::vector<float> States)
     float carX, carY, dist;
     carX = States[0];
     carY = States[1];
+    //Dont do anything until car has passed start line for the first time.
     if (!lapData.firstLapStarted)
     {
-        if (carY<.5 && carX > 1.3 && carX < 1.7)
+        if (carY<.5 && carX > 1.3 && carX < 1.7) //only proced if car is near the finish line
         {
-            //coordinates for point(Q) on finising line closest to car. Qx=1.5 and Qy=carY
+            //coordinates for point(Q) on finish line closest to car. Qx=1.5 and Qy=carY
             float Qx = 1.5;
             dist = abs(carX-Qx);
             if (dist<0.02)
@@ -34,8 +35,8 @@ void updateLapData(std::vector<float> States)
     }
     else
     {
-        lapData.lapTime = lapData.lapTimer.elapsed();
-        lapData.lapTime /= 1000;
+        lapData.lapTime = lapData.lapTimer.elapsed()/1000.0;
+        //lapData.lapTime /= 1000;
         if (carY<.5 && carX > 1.3 && carX < 1.7) //is car near finishing line?
         {
             //find distance to finnishing line
@@ -54,8 +55,7 @@ void updateLapData(std::vector<float> States)
                     std::cout << "bestTime: " << lapData.bestTime << std::endl;
                 }
 
-            }
-            //update LapData with information
+            }      
         }
     }
 
