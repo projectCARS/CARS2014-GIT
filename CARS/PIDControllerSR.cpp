@@ -18,62 +18,62 @@ PIDControllerSR::PIDControllerSR(int ID)
     m_prevAngError = 0;
 
     switch (m_ID) {
-        case 0:
-            m_turnPID.resize(3);
-            m_speedPID.resize(3);
+    case 0:
+        m_turnPID.resize(3);
+        m_speedPID.resize(3);
 #ifdef safeMode
-            #define minSpeed 0.5
-            #define maxSpeed 1.6
+#define minSpeed 0.5
+#define maxSpeed 1.6
 
-            m_turnPID[0] = 1.5;		//P
-            m_turnPID[1] = 0.0;		//I
-            m_turnPID[2] = 0.0;		//D
+        m_turnPID[0] = 1.5;		//P
+        m_turnPID[1] = 0.0;		//I
+        m_turnPID[2] = 0.0;		//D
 
-            m_speedPID[0] = 0.8;	//P     0.2;
-            m_speedPID[1] = 0.01;	//I
-            m_speedPID[2] = 0.008;	//D
+        m_speedPID[0] = 0.8;	//P     0.2;
+        m_speedPID[1] = 0.01;	//I
+        m_speedPID[2] = 0.008;	//D
 #endif
 
-        #ifdef fullForce
-            #define minSpeed 0.8
-            #define maxSpeed 1.8
+#ifdef fullForce
+#define minSpeed 0.8
+#define maxSpeed 1.8
 
-            m_turnPID[0] = 1.3;		//P
-            m_turnPID[1] = 0.;		//I
-            m_turnPID[2] = 0.;		//D
+        m_turnPID[0] = 1.3;		//P
+        m_turnPID[1] = 0.;		//I
+        m_turnPID[2] = 0.;		//D
 
-            m_speedPID[0] = 0.15;	//P     0.2;
-            m_speedPID[1] = 0.05;	//I
-            m_speedPID[2] = 0.001;	//D
-        #endif
+        m_speedPID[0] = 0.15;	//P     0.2;
+        m_speedPID[1] = 0.05;	//I
+        m_speedPID[2] = 0.001;	//D
+#endif
 
 
-            break;
-        case 1:
-            m_turnPID.resize(3);
-            m_turnPID[0] = 1.3;		//P
-            m_turnPID[1] = 0;		//I
-            m_turnPID[2] = 0;		//D
+        break;
+    case 1:
+        m_turnPID.resize(3);
+        m_turnPID[0] = 1.3;		//P
+        m_turnPID[1] = 0;		//I
+        m_turnPID[2] = 0;		//D
 
-            m_speedPID.resize(3);
-            m_speedPID[0] = 0.6;	//P     0.2;
-            m_speedPID[1] = 0.001;	//I
-            m_speedPID[2] = 0.001;	//D
-            break;
-        case 2:
-            m_turnPID.resize(3);
-            m_turnPID[0] = 1.3;		//P
-            m_turnPID[1] = 0;		//I
-            m_turnPID[2] = 0;		//D
+        m_speedPID.resize(3);
+        m_speedPID[0] = 0.6;	//P     0.2;
+        m_speedPID[1] = 0.001;	//I
+        m_speedPID[2] = 0.001;	//D
+        break;
+    case 2:
+        m_turnPID.resize(3);
+        m_turnPID[0] = 1.3;		//P
+        m_turnPID[1] = 0;		//I
+        m_turnPID[2] = 0;		//D
 
-            m_speedPID.resize(3);
-            m_speedPID[0] = 0.6;	//P     0.2;
-            m_speedPID[1] = 0.001;	//I
-            m_speedPID[2] = 0.001;	//D
-            break;
-        default:
-            m_turnGain = 1;
-            break;
+        m_speedPID.resize(3);
+        m_speedPID[0] = 0.6;	//P     0.2;
+        m_speedPID[1] = 0.001;	//I
+        m_speedPID[2] = 0.001;	//D
+        break;
+    default:
+        m_turnGain = 1;
+        break;
     }
 
     // Deciding which log file to write to
@@ -115,7 +115,7 @@ void PIDControllerSR::calcSignals(std::vector<float> &state, float &gas, float &
     turn = calcTurnSignal(state, m_refIndCircle);
 
     //update speed reference vector
-    updateSpeedRef(state, m_refIndClosest, m_dist_lateral);
+    //updateSpeedRef(state, m_refIndClosest, m_dist_lateral);
 }
 
 
@@ -147,8 +147,8 @@ float PIDControllerSR::calcGasSignal(std::vector<float> &state, float refSpeed){
 
 
     float signal = P * m_speedPID[0] +
-                   I * m_speedPID[1] +
-                   D * m_speedPID[2];
+            I * m_speedPID[1] +
+            D * m_speedPID[2];
 
     m_prevAngError = error;
     m_prevI = I;
@@ -356,39 +356,48 @@ float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 
 void PIDControllerSR::updateSpeedRef(std::vector<float> &state, int refInd, int lateralError)
 {
-    float bigError, smallError, old_vRef;
-
-    bigError = (0.1);            // lateralError                  //TODO: välj ett lämpligt avstånd att jämföra mot
-    smallError = (0.03);          // smallError must be smaller then bigError
-
-
-    // if car is outside big error. Dont update speed ref. When car is back on track(within small error) restart updating speed ref.
-    if (lateralError>bigError)
-        m_onPath = false;
-    else if (lateralError<smallError)
-        m_onPath = true;
-
-    //check if of the on_track bool is true, if so update
-    if (m_onPath)
+    if (refInd == m_oldRefInd)
     {
-        //update speed ref based on lateralError
-        old_vRef = m_vRef[refInd];
-        if (lateralError<smallError)       //it the error is small -> drive faster next time
-        {
-            m_vRef[refInd] =old_vRef*1.01;    //go 5% faster
-        } else                      // drive slower
-        {
-            m_vRef[refInd] = old_vRef*0.99;    //go 5% slower
-        }
-        //TODO: how should update be done? Update several values. How to make sure that v_ref is always smooth?
+        //dummy. Dont do anything if the same index turns up twice
     }
+    else
+    {
+        m_oldRefInd = refInd;
+        float bigError, smallError, old_vRef;
+        int index;
 
-    double currTime = (double)timeSR.elapsed()/1000.0;
-    //"sysTime carID xPos yPos speed lateralError || refInd vRef[refInd]_before vRef[refInd]_after \n";
-    (logFileSR) << currTime << " " << m_ID << " " << state[0] << " " << state[1] << " " << state[2] << " " << lateralError << " ";
-    (logFileSR) << refInd << " " << old_vRef << " " << m_vRef[refInd] << " ";
-    (logFileSR) << "\n";
+        bigError = 0.1;            // lateralError                  //TODO: välj ett lämpligt avstånd att jämföra mot
+        smallError = 0.03;          // smallError must be smaller then bigError
 
+        // if car is outside big error. Dont update speed ref. When car is back on track(within small error) restart updating speed ref.
+        if (lateralError>bigError)
+            m_onPath = false;
+        else if (lateralError<smallError)
+            m_onPath = true;
+
+        //check if of the on_track bool is true, if so update
+        if (m_onPath)
+        {
+            //update speed ref based on lateralError, but do it in a point behind you
+            index = (gRefLen + refInd-10) % gRefLen;
+            old_vRef = m_vRef[Index];
+            if (lateralError<smallError)       //it the error is small -> drive faster next time
+            {
+                m_vRef[Index] =old_vRef*1.01;    //go 1% faster
+            } else                      // drive slower
+            {
+                m_vRef[Index] = old_vRef*0.96;    //go 4% slower
+            }
+            //TODO: how should update be done? Update several values. How to make sure that v_ref is always smooth?
+        }
+
+        double currTime = (double)timeSR.elapsed()/1000.0;
+        //"sysTime carID xPos yPos speed lateralError || refInd vRef[refInd]_before vRef[refInd]_after \n";
+        (logFileSR) << currTime << " " << m_ID << " " << state[0] << " " << state[1] << " " << state[2] << " " << lateralError << " ";
+        (logFileSR) << refInd << " " << old_vRef << " " << m_vRef[refInd] << " ";
+        (logFileSR) << "\n";
+
+    }
 
 
 }

@@ -29,7 +29,6 @@ void ControllerThread::loadControllerSettings()
             m_controllers.push_back(new PIDController(m_numCars));
             break;
         case ControllerType::PIDControllerSR:
-            qDebug() << "case PIDControllerSR";
             m_controllers.push_back(new PIDControllerSR(m_numCars));
             break;
         default:
@@ -37,7 +36,7 @@ void ControllerThread::loadControllerSettings()
         }
         m_settings.endGroup();
         m_numCars++;
-        qDebug() << m_numCars;
+        //qDebug() << m_numCars;
     }
 
     // If no controller settings are found, create a default controller.
