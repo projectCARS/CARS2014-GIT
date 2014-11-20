@@ -280,25 +280,24 @@ void MainWindow::updateFrame(void)
         for (int j = 0; j < m_numCars; j++)
         {
             // Draw Timer for each car to screen
-            if(m_carSpecificDrawSettings[j] & CarSpecificDrawSettings::Path)
+            if(m_carSpecificDrawSettings[j] & CarSpecificDrawSettings::Timer)
             {
                 if(m_carData[j].lapData.firstLapStarted){
                     char output[4];
                     sprintf(output,"%.1f",m_carData[j].lapData.lapTime);
                     char carID[4];
                     sprintf(carID,"Car %i",j);
-                    cv::putText(m_tmpMat, carID, cv::Point((770 -numTimers*150), 65), 1, 2, cv::Scalar(255,150 ,0), 2, 8, false );
-                    cv::putText(m_tmpMat, output, cv::Point((770 -numTimers*150), 110), 1, 3, cv::Scalar(255, 255, 255), 2, 8, false );
+                    cv::putText(m_tmpMat, carID, cv::Point((750 -numTimers*150), 65), 1, 2, cv::Scalar(255,150 ,0), 2, 8, false );
+                    cv::putText(m_tmpMat, output, cv::Point((750 -numTimers*150), 110), 1, 3, cv::Scalar(255, 255, 255), 2, 8, false );
 
                     if(m_carData[j].lapData.firstLapDone)
                     {
-                        qDebug("First lap done - drawing");
                         char output2[4];
                         sprintf(output2,"%.2f", m_carData[j].lapData.lastLapTime);
                         char output3[4];
                         sprintf(output3,"%.2f", m_carData[j].lapData.bestTime);
-                        cv::putText(m_tmpMat, output2, cv::Point((770 -numTimers*150), 150), 1, 3, cv::Scalar(0, 255, 255),2,8, false );
-                        cv::putText(m_tmpMat, output3, cv::Point((770 -numTimers*150), 190), 1, 3, cv::Scalar(120, 255, 0),2,8, false );
+                        cv::putText(m_tmpMat, output2, cv::Point((750 -numTimers*150), 150), 1, 3, cv::Scalar(0, 255, 255),2,8, false );
+                        cv::putText(m_tmpMat, output3, cv::Point((750 -numTimers*150), 190), 1, 3, cv::Scalar(120, 255, 0),2,8, false );
                     }
                 }
                 numTimers++;

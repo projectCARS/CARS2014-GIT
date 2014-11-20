@@ -46,6 +46,11 @@ LIBS += -LC:\\tbb43_20141023oss\\lib\\ia32\\vc12 \
 QMAKE_CXXFLAGS += -openmp
 #LIBS += -lgomp -lpthread
 
+QMAKE_CXXFLAGS_RELEASE -= -O
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE += -O2
+
+
 # Library files for FlyCapture2.
 CONFIG( debug, debug|release ) {
 LIBS += -L"C:\\Program Files\\Point Grey Research\\FlyCapture2\\lib64" \

@@ -200,7 +200,10 @@ void ProcessingThread::run()
         SetEvent(hControllerThreadEvent1);
 
         // Update lap times
-        updateLapData(carData[0]);
+        for(int j = 0; j < m_cars.size(); j++){
+            if(m_carSpecificDrawSettings[j] & CarSpecificDrawSettings::Timer)
+                updateLapData(carData[j]);
+        }
 
         // Enter critical section and send data to draw thread.
         EnterCriticalSection(&csDrawThreadData);
@@ -411,11 +414,11 @@ std::vector<CarMeasurement> ProcessingThread::findCars(const std::vector<float> 
     const int nrOfIdDots = 2;			//Number of id dots on each car (=2 for 3 cars, =4 for 15 cars
     const int useAdvancedCarSeparation = 1;//=0 No, =1 yes. removes cars that interfere with other cars... (little risky)
 
-    const float idPointRadius = 0.025;	//Radius, within we look for id-points
-    const float m_long = 0.0725;			//The long side of the triangle we look for
-    const float m_short = 0.0335;		//The short side of the triangle we look for
-    const float m_devLong = 0.007;		//Deviation
-    const float m_devShort = 0.007;     //Deviation
+    const float idPointRadius = 0.025f;	//Radius, within we look for id-points
+    const float m_long = 0.0725f;			//The long side of the triangle we look for
+    const float m_short = 0.0335f;		//The short side of the triangle we look for
+    const float m_devLong = 0.007f;		//Deviation
+    const float m_devShort = 0.007f;     //Deviation
 
     // Variables.
     int calcNrOfCars = (int)(pow(2, nrOfIdDots) - 1);

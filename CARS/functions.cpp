@@ -15,11 +15,13 @@ void updateLapData(CarData &cardata)
     float carX, carY, dist;
     carX = cardata.state[0];
     carY = cardata.state[1];
+
+    //Dont do anything until car has passed start line for the first time.
     if (!cardata.lapData.firstLapStarted)
     {
-        if (carY<.5 && carX > 1.3 && carX < 1.7)
+        if (carY<.5 && carX > 1.3 && carX < 1.7) //only proced if car is near the finish line
         {
-            //coordinates for point(Q) on finising line closest to car. Qx=1.5 and Qy=carY
+            //coordinates for point(Q) on finish line closest to car. Qx=1.5 and Qy=carY
             float Qx = 1.5;
             dist = abs(carX-Qx);
             if (dist<0.02)
@@ -36,6 +38,8 @@ void updateLapData(CarData &cardata)
     {
         cardata.lapData.lapTime = cardata.lapData.lapTimer.elapsed();
         cardata.lapData.lapTime /= 1000;
+        lapData.lapTime = lapData.lapTimer.elapsed()/1000.0;
+        //lapData.lapTime /= 1000;
         if (carY<.5 && carX > 1.3 && carX < 1.7) //is car near finishing line?
         {
             //find distance to finnishing line
@@ -55,9 +59,10 @@ void updateLapData(CarData &cardata)
                 }
             }
             //update LapData with information
+
+
         }
     }
-
 }
 
 // Used in class Calibrator

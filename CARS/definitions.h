@@ -33,7 +33,7 @@ using Eigen::VectorXd;
 #define TRACK_WIDTH 0.445
 
 // Number of particles to use in the particle filter
-#define NUMBER_OF_PARTICLES     1000
+#define NUMBER_OF_PARTICLES     2000
 
 // Controls which parameters are used in PIDController.
 #define safeMode

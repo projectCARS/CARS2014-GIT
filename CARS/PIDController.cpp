@@ -20,13 +20,13 @@ PIDController::PIDController(int ID)
             #define minSpeed 0.5
             #define maxSpeed 1.6
 
-            m_turnPID[0] = 1.5;		//P
-            m_turnPID[1] = 0.0;		//I
-            m_turnPID[2] = 0.0;		//D
+            m_turnPID[0] = 1.5f;		//P
+            m_turnPID[1] = 0.0f;		//I
+            m_turnPID[2] = 0.0f;		//D
 
-            m_speedPID[0] = 0.8;	//P     0.2;
-            m_speedPID[1] = 0.01;	//I
-            m_speedPID[2] = 0.008;	//D
+            m_speedPID[0] = 0.8f;	//P     0.2;
+            m_speedPID[1] = 0.01f;	//I
+            m_speedPID[2] = 0.008f;	//D
 #endif
 
         #ifdef fullForce
@@ -46,25 +46,25 @@ PIDController::PIDController(int ID)
             break;
         case 1:
             m_turnPID.resize(3);
-            m_turnPID[0] = 1.3;		//P
+            m_turnPID[0] = 1.3f;		//P
             m_turnPID[1] = 0;		//I
             m_turnPID[2] = 0;		//D
 
             m_speedPID.resize(3);
-            m_speedPID[0] = 0.6;	//P     0.2;
-            m_speedPID[1] = 0.001;	//I
-            m_speedPID[2] = 0.001;	//D
+            m_speedPID[0] = 0.6f;	//P     0.2;
+            m_speedPID[1] = 0.001f;	//I
+            m_speedPID[2] = 0.001f;	//D
             break;
         case 2:
             m_turnPID.resize(3);
-            m_turnPID[0] = 1.3;		//P
+            m_turnPID[0] = 1.3f;		//P
             m_turnPID[1] = 0;		//I
             m_turnPID[2] = 0;		//D
 
             m_speedPID.resize(3);
-            m_speedPID[0] = 0.6;	//P     0.2;
-            m_speedPID[1] = 0.001;	//I
-            m_speedPID[2] = 0.001;	//D
+            m_speedPID[0] = 0.6f;	//P     0.2;
+            m_speedPID[1] = 0.001f;	//I
+            m_speedPID[2] = 0.001f;	//D
             break;
         default:
             m_turnGain = 1;
@@ -108,7 +108,7 @@ float PIDController::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
     end = std::chrono::system_clock::now();
     float dt = (float)T.count();
     if (dt < 0.0001 || dt > 0.1) {
-        dt = 0.007;
+        dt = 0.007f;
         m_prevI = 0;
     }
 
@@ -227,11 +227,11 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 	// Handel discontinuity of arctan.
 	if (diffAngle > M_PI)
 	{
-		diffAngle -= 2.0 * M_PI;
+        diffAngle -= 2.0f * M_PI;
 	}
 	else if (diffAngle < -M_PI)
 	{
-		diffAngle += 2.0 * M_PI;
+        diffAngle += 2.0f * M_PI;
 	}
 	/* Calculate input voltage. Note that -M.PI <= diffAngle <= M_PI.
     It is assumed here that when diffAngle > 0 the controller
@@ -284,11 +284,11 @@ float PIDController::calcRefSpeed(std::vector<float> &state, int refInd)
     // Handel discontinuity of arctan.
     if (diffAngle > M_PI)
     {
-        diffAngle -= 2.0 * M_PI;
+        diffAngle -= 2.0f * M_PI;
     }
     else if (diffAngle < -M_PI)
     {
-        diffAngle += 2.0 * M_PI;
+        diffAngle += 2.0f * M_PI;
     }
     /* Calculate input voltage. Note that -M.PI <= diffAngle <= M_PI.
     It is assumed here that when diffAngle > 0 the controller
