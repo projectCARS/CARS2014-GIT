@@ -31,6 +31,7 @@ private:
     float m_refGas;
 
     bool m_onPath;
+    float m_oldRefInd;
     std::vector<float> m_vRef;
 
     std::chrono::time_point<std::chrono::system_clock> start, end;

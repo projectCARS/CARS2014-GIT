@@ -556,10 +556,10 @@ void MainWindow::loadReference()
     {
         // x pixel coordinate.
         file >> gRef[i * 2];
-        gRef[i * 2] = gRef[i * 2] / PIXELS_PER_METER;
+        gRef[i * 2] = gRef[i * 2];
         // y pixel coordinate.
         file >> gRef[i * 2 + 1];
-        gRef[i * 2 + 1] = gRef[i * 2 + 1] / PIXELS_PER_METER;
+        gRef[i * 2 + 1] = gRef[i * 2 + 1];
         // v_i - speed reference at point (x_i,y_i)
         file >> vRef[i];  //speed must be stored in global coordinates in reference.txt
 
