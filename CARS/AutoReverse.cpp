@@ -50,7 +50,7 @@ float AutoReverse::backingSequence(std::vector<float> &state)
 	else if (m_backingCounter <= 350)
 	{
 		m_backingCounter++;
-		signal = -0.1;						//Slow back
+        signal = -0.1f;						//Slow back
 	}
 	else
 	{

@@ -29,9 +29,9 @@ PIDControllerSR::PIDControllerSR(int ID)
             m_turnPID[1] = 0.0;		//I
             m_turnPID[2] = 0.0;		//D
 
-            m_speedPID[0] = 0.8;	//P     0.2;
-            m_speedPID[1] = 0.01;	//I
-            m_speedPID[2] = 0.008;	//D
+            m_speedPID[0] = 0.8f;	//P     0.2;
+            m_speedPID[1] = 0.01f;	//I
+            m_speedPID[2] = 0.008f;	//D
 #endif
 
         #ifdef fullForce
@@ -51,25 +51,25 @@ PIDControllerSR::PIDControllerSR(int ID)
             break;
         case 1:
             m_turnPID.resize(3);
-            m_turnPID[0] = 1.3;		//P
+            m_turnPID[0] = 1.3f;		//P
             m_turnPID[1] = 0;		//I
             m_turnPID[2] = 0;		//D
 
             m_speedPID.resize(3);
-            m_speedPID[0] = 0.6;	//P     0.2;
-            m_speedPID[1] = 0.001;	//I
-            m_speedPID[2] = 0.001;	//D
+            m_speedPID[0] = 0.6f;	//P     0.2;
+            m_speedPID[1] = 0.001f;	//I
+            m_speedPID[2] = 0.001f;	//D
             break;
         case 2:
             m_turnPID.resize(3);
-            m_turnPID[0] = 1.3;		//P
+            m_turnPID[0] = 1.3f;		//P
             m_turnPID[1] = 0;		//I
             m_turnPID[2] = 0;		//D
 
             m_speedPID.resize(3);
-            m_speedPID[0] = 0.6;	//P     0.2;
-            m_speedPID[1] = 0.001;	//I
-            m_speedPID[2] = 0.001;	//D
+            m_speedPID[0] = 0.6f;	//P     0.2;
+            m_speedPID[1] = 0.001f;	//I
+            m_speedPID[2] = 0.001f;	//D
             break;
         default:
             m_turnGain = 1;
@@ -136,7 +136,7 @@ float PIDControllerSR::calcGasSignal(std::vector<float> &state, float refSpeed){
     end = std::chrono::system_clock::now();
     float dt = (float)T.count();
     if (dt < 0.0001 || dt > 0.1) {
-        dt = 0.007;
+        dt = 0.007f;
         m_prevI = 0;
     }
 
@@ -300,11 +300,11 @@ float PIDControllerSR::calcTurnSignal(std::vector<float> &state, int refInd)
     // Handel discontinuity of arctan.
     if (diffAngle > M_PI)
     {
-        diffAngle -= 2.0 * M_PI;
+        diffAngle -= 2.0f * M_PI;
     }
     else if (diffAngle < -M_PI)
     {
-        diffAngle += 2.0 * M_PI;
+        diffAngle += 2.0f * M_PI;
     }
     /* Calculate input voltage. Note that -M.PI <= diffAngle <= M_PI.
     It is assumed here that when diffAngle > 0 the controller
@@ -358,8 +358,8 @@ void PIDControllerSR::updateSpeedRef(std::vector<float> &state, int refInd, int 
 {
     float bigError, smallError, old_vRef;
 
-    bigError = (0.1);            // lateralError                  //TODO: välj ett lämpligt avstånd att jämföra mot
-    smallError = (0.03);          // smallError must be smaller then bigError
+    bigError = (0.1f);            // lateralError                  //TODO: välj ett lämpligt avstånd att jämföra mot
+    smallError = (0.03f);          // smallError must be smaller then bigError
 
 
     // if car is outside big error. Dont update speed ref. When car is back on track(within small error) restart updating speed ref.

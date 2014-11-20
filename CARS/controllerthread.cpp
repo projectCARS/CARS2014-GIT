@@ -176,7 +176,7 @@ void ControllerThread::run()
     {
         if (carData[i].active && (carData[i].mode == CarMode::Auto))
         {
-            signal[i].gas = -0.9;
+            signal[i].gas = -0.9f;
             signal[i].turn = 0;
             ioControls[i].sendSignals(signal[i].gas, signal[i].turn);
         }

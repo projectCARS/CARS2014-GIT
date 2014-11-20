@@ -488,7 +488,7 @@ void Calibrator::nonLinearUndistort(float input[2], float output[2])
     double  cx = cameraMatrix.at<double>(0, 2);
     double  fy = cameraMatrix.at<double>(1, 1);
     double  cy = cameraMatrix.at<double>(1, 2);
-    double z = 1.;
+    //double z = 1.;
 
     double x = (input[0] - cx) / fx;
     double y = (input[1] - cy) / fy;

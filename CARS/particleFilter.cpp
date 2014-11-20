@@ -97,6 +97,8 @@ float ParticleFilter::gaussianNoise(void)
 
 void ParticleFilter::update(const cv::Mat img)
 {
+    double tStart = 0;
+    double tEnd = 0;
     // Add border values around each point controlled
     cv::Rect ROI = cv::Rect(0, 0, limit, limit);
     cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
@@ -107,6 +109,8 @@ void ParticleFilter::update(const cv::Mat img)
     Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(2, points);
     float val, sum;
     float totSum = 0.;
+
+    tStart = omp_get_wtime();
 
     for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
@@ -143,9 +147,14 @@ void ParticleFilter::update(const cv::Mat img)
                 }
             }
         }
+        //if(sum != 0)
+            //std::cout << sum << std::endl;
         totSum += sum;
         cumulativeWeights[n] = totSum; // save weights cumulative sum for later normalization
     }
+
+    tEnd = omp_get_wtime();
+    //std::cout << "For time: " << tEnd - tStart << std::endl;
 }
 
 // Parallelized version of update
@@ -154,17 +163,22 @@ void ParticleFilter::parallelUpdate(const cv::Mat img)
     // Add border values around each point controlled
     cv::Rect ROI = cv::Rect(0, 0, limit, limit);
     cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
+    double tStart = 0;
+    double tEnd = 0;
 
     int points = carPattern.rows();
     Eigen::Matrix2f rotate, translate;
     Eigen::MatrixXf pos;
     Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(2, points);
-    float val, sum;
-    float totSum = 0.;
+    float val = 0;
+    float sum = 0;
+    //std::cout << points << std::endl;
+    tStart = omp_get_wtime();
 
-#pragma omp parallel for private(ROI, rotate, translate, pos, sum, val)
+#pragma omp parallel for private(ROI, imgROI, rotate, translate, pos, sum, val) //shared(noncumulativeWeights)
     for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
+        //std::cout << points << std::endl;
         // Rotate and translate pattern according to hypothesis
         rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
             sin(yawPoints[n]), cos(yawPoints[n]);
@@ -176,18 +190,24 @@ void ParticleFilter::parallelUpdate(const cv::Mat img)
         sum = 0.;
         for (int p = 0; p < points; p++)
         {
+            //std::cout << img.cols << std::endl;
             // Update ROI
             ROI.x = pos(0, p);
             ROI.y = pos(1, p);
             //std::cout << "checking: [" << ROI.x << ", " << ROI.y << std::endl;
             if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
             {
-                imgROI = img(ROI);
+                #pragma omp critical
+                {
+                    imgROI = img(ROI);
+                }
+                //std::cout << img.cols << std::endl;
                 cv::Scalar mean = cv::mean(imgROI);
 
                 // Throws the hypothesis if no point found.This gives some speedup.
                 if (mean.val[0] == 0)
                 {
+                    //std::cout << img.rows;
                     //totSum = 0;
                     sum = 0;
                     break;
@@ -198,12 +218,27 @@ void ParticleFilter::parallelUpdate(const cv::Mat img)
                 }
             }
         }
-        totSum += sum;
-        noncumulativeWeights[n] = sum; // save weights cumulative sum for later normalization
+        //totSum += sum;
+        #pragma omp critical
+        {
+            noncumulativeWeights[n] = sum; // save weights cumulative sum for later normalization
+        }
+        if(sum != 0)
+            std::cout << sum << std::endl;
+        //std::cout << noncumulativeWeights[n] << std::endl;
+        //std::cout << omp_get_thread_num() << std::endl;
+    }
+    cumulativeWeights[0] = noncumulativeWeights[0];
+    for (int i = 1; i < NUMBER_OF_PARTICLES; i++)
+    {
+        cumulativeWeights[i] = cumulativeWeights[i - 1] + noncumulativeWeights[i];
+        //std::cout << cumulativeWeights[i] << std::endl;
     }
 
-    for(int i = 1; i < NUMBER_OF_PARTICLES; i++)
-        cumulativeWeights[i] = noncumulativeWeights[i - 1] + noncumulativeWeights[i];
+    tEnd = omp_get_wtime();
+
+   //std::cout << "Parallel for time: " << tEnd - tStart << std::endl;
+
 }
 
 
@@ -403,7 +438,7 @@ void ParticleFilter::extensiveSearch(cv::Mat img)
                 index = rand() % blobs.size(); // pick one of the probable points;
                 posX[i] = blobs[index].x;
                 posY[i] = blobs[index].y;
-                vel[i] = 0.3;
+                vel[i] = 0.3f;
                 angvel[i] = vel[i];
             }
         }
@@ -423,8 +458,7 @@ void ParticleFilter::extensiveSearch(cv::Mat img)
 
 void ParticleFilter::addInputSignals(float gas, float turn)
 {
-    //Add control signals to filter.
-   // float u = gas;
+    //Dummy
 }
 
 std::vector<float> ParticleFilter::getState(void)
@@ -457,10 +491,7 @@ void ParticleFilter::updateFilter()
 
 void ParticleFilter::addMeasurement(float x, float y, float theta)
 {
-    /* Add measurements to the filter. We assume here that all motion models
-        measure x, y and theta. */
-    // Set measurement boolean to true (we just recieved new measurements).
-    m_newMeasurement = true;
+    //Dummy
 }
 
 void ParticleFilter::addImageMeasurement(cv::Mat img)

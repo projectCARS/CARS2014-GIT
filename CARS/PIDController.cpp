@@ -17,8 +17,8 @@ PIDController::PIDController(int ID)
             m_turnPID.resize(3);
             m_speedPID.resize(3);
 #ifdef safeMode
-            #define minSpeed 0.5
-            #define maxSpeed 1.6
+            #define minSpeed 0.5f
+            #define maxSpeed 1.6f
 
             m_turnPID[0] = 1.5f;		//P
             m_turnPID[1] = 0.0f;		//I

@@ -23,7 +23,8 @@ void ProcessingThread::run()
     VirtualSensor sensor;
     // Timing.
     QTime time;
-    int t1;
+    double ompTimeStart = 0;
+    int t1 = 0;
    //double t2,t3,t4 = 0;
     //clock_t timerTest1, timerTest2;
     double timeDiff, currTime;
@@ -92,7 +93,7 @@ void ProcessingThread::run()
 
     // Initiate timer for lap times
     lapData.lapTimer.start();
-
+    ompTimeStart = omp_get_wtime();
     time.start();
     while(1)
     {
@@ -213,8 +214,11 @@ void ProcessingThread::run()
         // Estimate FPS in processing thread.
         if ((loopCounter % fpsInterval) == 0)
         {
+            //Calculate duration of one iteration using OMP
+            timeDiff = (double)(omp_get_wtime()-ompTimeStart) / fpsInterval * 1000;
+            ompTimeStart = omp_get_wtime();
             // Calculate duration of one iteration in ms.
-            timeDiff = (double)(time.elapsed()-t1) / fpsInterval;
+            //timeDiff = (double)(time.elapsed()-t1) / fpsInterval;
             std::cout << "FPS main: " << 1000.0/timeDiff << std::endl;
             t1 = time.elapsed();
         }
