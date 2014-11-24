@@ -7,6 +7,7 @@
 #include "IOControl.h"
 #include "PIDController.h"
 #include "PIDControllerSR.h"
+#include "PIDadaptiveGain.h"
 #include "AutoReverse.h"
 #include "Car.h"
 #include "Filter.h"

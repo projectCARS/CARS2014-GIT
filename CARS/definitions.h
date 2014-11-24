@@ -79,6 +79,7 @@ namespace ControllerType
     {
         PIDController,
         PIDControllerSR,
+        PIDadaptiveGain,
     };
 }
 

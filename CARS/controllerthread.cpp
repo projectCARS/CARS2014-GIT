@@ -31,6 +31,9 @@ void ControllerThread::loadControllerSettings()
         case ControllerType::PIDControllerSR:
             m_controllers.push_back(new PIDControllerSR(m_numCars));
             break;
+        case ControllerType::PIDadaptiveGain:
+            m_controllers.push_back(new PIDadaptiveGain(m_numCars));
+            break;
         default:
             qDebug() << "Error: Controller type not implemented, in loadControllerSettings(), controllerthread.cpp";
         }
