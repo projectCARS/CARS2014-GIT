@@ -533,42 +533,6 @@ void MainWindow::on_drawSettingsButton_clicked()
 
 void MainWindow::on_raceButton_clicked()
 {
-    m_loopCounter = 0;
-    // Load the number of cars from file.
-    loadNumCars();
-    // Load reference curve from file.
-    loadReference();
-    // Start threads.
-
-    // Load draw settings. Must be done before initFrame().
-    loadDrawSettings();
-
-    // Initialization.
-    initFrame();
-
-    // Enable and disable buttons.
-    ui->startButton->setEnabled(false);
-    ui->stopButton->setEnabled(true);
-    ui->referenceButton->setEnabled(false);
-    ui->carSettingsButton->setEnabled(false);
-    ui->drawSettingsButton->setEnabled(false);
-    ui->calibrateCameraButton->setEnabled(false);
-    ui->raceButton->setEnabled(false);
-
-    // Start timer used to draw images.
-    // Tell the GUI thread to redraw images as fast as possible by passing the value 0.
-    m_timer->start(0);
-
-    // FPS timer.
-    m_fpsTime.restart();
-
-    EnterCriticalSection(&csDrawThreadData);
-    for (int i = 0; i < m_numCars; i++)
-    {
-      cv::rectangle(DrawThreadData.background, cv::Point((750), 150), cv::Point((740), 140), cv::Scalar(255, 255, 255), 1, 8,0);
-    }
-    LeaveCriticalSection(&csDrawThreadData);
-
     raceDialog dialog;
     dialog.setModal(true);
     dialog.exec();

@@ -214,6 +214,13 @@ void ProcessingThread::run()
                 updateLapData(carData[j]);
         }
 
+
+        /*// Update Race conditions
+        for(int i = 0; i < m_cars.size(); i++){
+
+            updateRaceData(carData);
+        }
+        */
         // Enter critical section and send data to draw thread.
         EnterCriticalSection(&csDrawThreadData);
         drawThreadData.carData = carData;

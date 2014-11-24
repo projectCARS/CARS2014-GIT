@@ -479,7 +479,7 @@ std::vector<float> ParticleFilter::getState(void)
 
 void ParticleFilter::updateFilter()
 {
-    double time1 = 0, time2 = 0, time3 = 0, time4 = 0;
+    //double time1 = 0, time2 = 0, time3 = 0, time4 = 0;
     if (carGone())
     {
         std::cout << "Class ParticleFilter:	Could not find any matching hypotheses. Attempting extensive search" << std::endl;

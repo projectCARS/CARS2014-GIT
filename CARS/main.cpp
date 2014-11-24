@@ -8,6 +8,7 @@
 #include "processingthread.h"
 #include "controllerthread.h"
 #include "cargroupbox.h"
+#include "racegroupbox.h"
 #include "carsettingsdialog.h"
 #include "drawsettingsdialog.h"
 

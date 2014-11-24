@@ -87,7 +87,8 @@ SOURCES += main.cpp\
     PIDControllerSR.cpp \
     particleFilter.cpp \
     racedialog.cpp \
-    PIDadaptiveGain.cpp
+    PIDadaptiveGain.cpp \
+    racegroupbox.cpp
 
 HEADERS  += mainwindow.h \
     processingthread.h \
@@ -117,14 +118,16 @@ HEADERS  += mainwindow.h \
     PIDControllerSR.h \
     ParticleFilter.h \
     racedialog.h \
-    PIDadaptiveGain.h
+    PIDadaptiveGain.h \
+    racegroupbox.h
 
 FORMS    += mainwindow.ui \
     referencedialog.ui \
     cargroupbox.ui \
     carsettingsdialog.ui \
     drawsettingsdialog.ui \
-    racedialog.ui
+    racedialog.ui \
+    racegroupbox.ui
 
 #RESOURCES += \
 #    CARS.qrc
