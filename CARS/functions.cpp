@@ -36,10 +36,7 @@ void updateLapData(CarData &cardata)
     }
     else
     {
-        cardata.lapData.lapTime = cardata.lapData.lapTimer.elapsed();
-        cardata.lapData.lapTime /= 1000;
-        lapData.lapTime = lapData.lapTimer.elapsed()/1000.0;
-        //lapData.lapTime /= 1000;
+        cardata.lapData.lapTime = cardata.lapData.lapTimer.elapsed()/1000.0;
         if (carY<.5 && carX > 1.3 && carX < 1.7) //is car near finishing line?
         {
             //find distance to finnishing line

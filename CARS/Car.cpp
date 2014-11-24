@@ -22,7 +22,7 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
     storage.release();
     cv::cv2eigen(tmp, carPattern);
     drawThreadData.pattern = carPattern;
-    float speed = 20;
+    float speed = 10;
 
 	// Initialize filter.
 	switch (filterType)

@@ -33,7 +33,7 @@ using Eigen::VectorXd;
 #define TRACK_WIDTH 0.445
 
 // Number of particles to use in the particle filter
-#define NUMBER_OF_PARTICLES     2000
+#define NUMBER_OF_PARTICLES     10000
 
 // Controls which parameters are used in PIDController.
 #define safeMode
@@ -41,7 +41,7 @@ using Eigen::VectorXd;
 
 // ---------- Globals ----------
 // Radius of circle (squared) surrounding the car. Used in controller.
-const double gCarRadius = (TRACK_WIDTH / 2 + 0.05)*(TRACK_WIDTH / 2 + 0.05)*0.8;
+const double gCarRadius = (TRACK_WIDTH / 2 + 0.05)*(TRACK_WIDTH / 2 + 0.05)*0.8; //default 0.8;
 
 // ---------- Enums ----------
 namespace CarMode

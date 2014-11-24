@@ -25,7 +25,7 @@ PIDControllerSR::PIDControllerSR(int ID)
             #define minSpeed 0.5
             #define maxSpeed 1.6
 
-            m_turnPID[0] = 1.5;		//P
+            m_turnPID[0] = 1.5f;	//P
             m_turnPID[1] = 0.0;		//I
             m_turnPID[2] = 0.0;		//D
 
@@ -92,7 +92,7 @@ PIDControllerSR::PIDControllerSR(int ID)
         fileNo++;
     }
     logFileSR.open(str.str());
-    logFileSR << "sysTime carID xPos yPos speed yaw yawVel xPosRaw yPosRaw yawRaw gas turn\n";
+    logFileSR << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
     std::cout << "PIDControllerSR object:		Writing log to " << str.str() << std::endl;
 
 }
@@ -116,6 +116,7 @@ void PIDControllerSR::calcSignals(std::vector<float> &state, float &gas, float &
 
     //update speed reference vector
     updateSpeedRef(state, m_refIndClosest, m_dist_lateral);
+    //qDebug() << m_vRef[0] << m_vRef[10] << m_vRef[20] << m_vRef[30] << m_vRef[40] << m_vRef[50];
 }
 
 
@@ -340,12 +341,15 @@ float PIDControllerSR::calcTurnSignal(std::vector<float> &state, int refInd)
 float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 {
     float refSpeed = 0;
-    refSpeed = m_vRef[refInd];  //TODO: take mean of several values? maybe 5????
-
-    if(refSpeed > state[2] + 0.5)
+    refSpeed = m_vRef[refInd]*1.3 + 0.4;  //TODO: take mean of several values? maybe 5????
+    //qDebug() << refSpeed;
+    //refSpeed = m_vRef[refInd];
+    if(refSpeed > state[2] + 0.54)
     {
-        refSpeed = state[2] + 0.5;
+        refSpeed = state[2] + 0.54;
+        qDebug() << "limited";
     }
+
 
     // Return refSpeed.
     return refSpeed;

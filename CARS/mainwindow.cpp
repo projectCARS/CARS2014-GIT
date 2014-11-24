@@ -3,6 +3,7 @@
 #include "ui_mainwindow.h"
 #include "referencedialog.h"
 #include "drawsettingsdialog.h"
+#include "racedialog.h"
 
 #include "functions.h"
 #include "definitions.h"
@@ -117,6 +118,7 @@ void MainWindow::startThreads(void)
     ui->carSettingsButton->setEnabled(false);
     ui->drawSettingsButton->setEnabled(false);
     ui->calibrateCameraButton->setEnabled(false);
+    ui->raceButton->setEnabled(false);
 
     // Start timer used to draw images.
     // Tell the GUI thread to redraw images as fast as possible by passing the value 0.
@@ -159,6 +161,7 @@ void MainWindow::stopThreads(void)
     ui->carSettingsButton->setEnabled(true);
     ui->drawSettingsButton->setEnabled(true);
     ui->calibrateCameraButton->setEnabled(true);
+    ui->raceButton->setEnabled(true);
 
     // Stop timer used to draw images.
     m_timer->stop();
@@ -273,9 +276,6 @@ void MainWindow::updateFrame(void)
     if (m_carData.size() != 0)
     {
 
-
-
-        //drawCar(drawThreadData.pattern, drawThreadData.sumStates[0] / NUMBER_OF_PARTICLES, drawThreadData.sumStates[1] / NUMBER_OF_PARTICLES, drawThreadData.sumStates[2] / NUMBER_OF_PARTICLES, drawThreadData.image);
         // Draw car on track. The variable j represents car id.
         for (int j = 0; j < m_numCars; j++)
         {
@@ -530,6 +530,50 @@ void MainWindow::on_drawSettingsButton_clicked()
     dialog.exec();
 }
 
+
+void MainWindow::on_raceButton_clicked()
+{
+    m_loopCounter = 0;
+    // Load the number of cars from file.
+    loadNumCars();
+    // Load reference curve from file.
+    loadReference();
+    // Start threads.
+
+    // Load draw settings. Must be done before initFrame().
+    loadDrawSettings();
+
+    // Initialization.
+    initFrame();
+
+    // Enable and disable buttons.
+    ui->startButton->setEnabled(false);
+    ui->stopButton->setEnabled(true);
+    ui->referenceButton->setEnabled(false);
+    ui->carSettingsButton->setEnabled(false);
+    ui->drawSettingsButton->setEnabled(false);
+    ui->calibrateCameraButton->setEnabled(false);
+    ui->raceButton->setEnabled(false);
+
+    // Start timer used to draw images.
+    // Tell the GUI thread to redraw images as fast as possible by passing the value 0.
+    m_timer->start(0);
+
+    // FPS timer.
+    m_fpsTime.restart();
+
+    EnterCriticalSection(&csDrawThreadData);
+    for (int i = 0; i < m_numCars; i++)
+    {
+      cv::rectangle(DrawThreadData.background, cv::Point((750), 150), cv::Point((740), 140), cv::Scalar(255, 255, 255), 1, 8,0);
+    }
+    LeaveCriticalSection(&csDrawThreadData);
+
+    raceDialog dialog;
+    dialog.setModal(true);
+    dialog.exec();
+}
+
 void MainWindow::loadReference()
 {	// Counter that counts the number of points on the reference curve.
     int numPoints = 0;
@@ -647,3 +691,4 @@ void MainWindow::on_calibrateCameraButton_clicked()
     storage << "cameraToWorldMatrix" << cameraToWorldMatrix;
     storage.release();
 }
+

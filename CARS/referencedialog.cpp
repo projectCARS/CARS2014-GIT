@@ -125,11 +125,11 @@ void ReferenceDialog::loadReference()
     {
         // x pixel coordinate.
         file >> m_ref[i * 2];
-        m_ref[i * 2] = m_ref[i * 2];
+        m_ref[i * 2] = m_ref[i * 2]*600;
         // y pixel coordinate.
         file >> m_ref[i * 2 + 1];
-        m_ref[i * 2 + 1] = m_ref[i * 2 + 1];
-        // take care of speed reference. NOT USED
+        m_ref[i * 2 + 1] = m_ref[i * 2 + 1]*600;
+        // extract speed reference. NOT USED in this class
         file >> m_vRef[i];
         numPoints++;
     }

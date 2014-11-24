@@ -7,6 +7,7 @@
 #include "controllerthread.h"
 #include "cargroupbox.h"
 #include "carsettingsdialog.h"
+#include "racedialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -71,6 +72,7 @@ private slots:
     void on_carSettingsButton_clicked();
     void on_drawSettingsButton_clicked();
     void on_calibrateCameraButton_clicked();
+    void on_raceButton_clicked();
 };
 
 #endif // MAINWINDOW_H

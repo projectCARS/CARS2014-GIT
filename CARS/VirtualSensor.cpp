@@ -57,9 +57,15 @@ void VirtualSensor::grabThresholdImage()
 {
 #ifdef CAMERA_IS_AVALIABLE
     // Grab image from camera.
+
+    //double t0 = omp_get_wtime();
+
     m_pgrCamera.grabImage(&m_rawData);
     // Create cv::Mat object. Data is not copied - pData is simply stored in tempMat.
     cv::Mat tempMat = cv::Mat(m_rawData.rows, m_rawData.cols, CV_8UC1, m_rawData.pData, cv::Mat::AUTO_STEP);
+
+    //std::cout << "img grab time : " << omp_get_wtime() - t0 << std::endl;
+
     if (tempMat.empty())
     {
         std::cout << "Error: Failed to aquire image from camera. Try replugging the camera." << std::endl;
@@ -69,23 +75,36 @@ void VirtualSensor::grabThresholdImage()
     cv::Mat tempMat = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 #endif
     // Enter critical section and copy image to struct drawThreadData.
+
+    //double t = omp_get_wtime();
+
     EnterCriticalSection(&csDrawThreadData);
     tempMat.copyTo(drawThreadData.image);
     LeaveCriticalSection(&csDrawThreadData);
     tempMat = tempMat - mask * .5;
 
-    int lowerThresh = 140;
+    //std::cout << "copy time : " << omp_get_wtime() - t << std::endl;
+
+    int lowerThresh = 100;
     int upperThresh = 255;
     int gaussSize = 3;
+
+    //t = omp_get_wtime();
 
     cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
     cv::GaussianBlur(tempMat, tempMat, cv::Size(gaussSize, gaussSize), 0, 0); //(3,3)
     cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
-    // Enter critical section and copy the processed image (tempMat) to processedImage.
 
+    //std::cout << "threshold time : " << omp_get_wtime() - t << std::endl;
+
+    //t = omp_get_wtime();
+
+    // Enter critical section and copy the processed image (tempMat) to processedImage.
     EnterCriticalSection(&csDrawThreadData);
     tempMat.copyTo(drawThreadData.processedImage);
     LeaveCriticalSection(&csDrawThreadData);
+
+    //std::cout << "copy again time : " << omp_get_wtime() - t << std::endl;
 }
 
 std::vector<float> VirtualSensor::detectMarkers()
