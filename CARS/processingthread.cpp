@@ -41,6 +41,7 @@ void ProcessingThread::run()
     std::vector<CarMeasurement> carMeasurements;
     // Reserve memory for m_numCars cars.
     carMeasurements.reserve(m_numCars);
+    RaceSettings raceSettings;
     std::vector<CarData> carData(m_numCars);
     std::vector<CarData> oldCarData(m_numCars);
     std::vector<Signal> signal(m_numCars);
@@ -209,18 +210,25 @@ void ProcessingThread::run()
         SetEvent(hControllerThreadEvent1);
 
         // Update lap times
-        for(int j = 0; j < m_cars.size(); j++){
-            if(m_carSpecificDrawSettings[j] & CarSpecificDrawSettings::Timer)
-                updateLapData(carData[j]);
-        }
-
-
-        /*// Update Race conditions
         for(int i = 0; i < m_cars.size(); i++){
-
-            updateRaceData(carData[j]);
+            if(m_carSpecificDrawSettings[i] & CarSpecificDrawSettings::Timer)
+                updateLapData(carData[i]);
         }
-        */
+
+
+        // Update Race conditions
+        for(int i = 0; i < m_cars.size(); i++){
+            if(std::find(raceSettings.carID.begin(), raceSettings.carID.end(), i) != raceSettings.carID.end()) {
+                if(updateRaceData(carData[i], raceSettings))
+                {
+                    EnterCriticalSection(&csControllerThreadData);
+                    drawThreadData.raceData = raceSettings;
+                    LeaveCriticalSection(&csControllerThreadData);
+                    //STOPrace();
+                }
+            }
+        }
+
         // Enter critical section and send data to draw thread.
         EnterCriticalSection(&csDrawThreadData);
         drawThreadData.carData = carData;

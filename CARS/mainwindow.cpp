@@ -263,6 +263,7 @@ void MainWindow::updateFrame(void)
     EnterCriticalSection(&csDrawThreadData);
     // Get background image.
     drawThreadData.background[m_loopCounter%drawThreadData.background.size()].copyTo(m_tmpMat);
+    raceSettings = drawThreadData.raceData;
     LeaveCriticalSection(&csDrawThreadData);
 
     EnterCriticalSection(&csDrawThreadData);
@@ -275,7 +276,6 @@ void MainWindow::updateFrame(void)
     // have not had time to resize it.
     if (m_carData.size() != 0)
     {
-
         // Draw car on track. The variable j represents car id.
         for (int j = 0; j < m_numCars; j++)
         {
@@ -287,8 +287,8 @@ void MainWindow::updateFrame(void)
                     sprintf(output,"%.1f",m_carData[j].lapData.lapTime);
                     char carID[4];
                     sprintf(carID,"Car %i",j);
-                    cv::putText(m_tmpMat, carID, cv::Point((750 -numTimers*150), 65), 1, 2, cv::Scalar(255,150 ,0), 2, 8, false );
-                    cv::putText(m_tmpMat, output, cv::Point((750 -numTimers*150), 110), 1, 3, cv::Scalar(255, 255, 255), 2, 8, false );
+                    cv::putText(m_tmpMat, carID, cv::Point((750 -numTimers * 150), 65), 1, 2, cv::Scalar(255,150 ,0), 2, 8, false );
+                    cv::putText(m_tmpMat, output, cv::Point((750 -numTimers * 150), 110), 1, 3, cv::Scalar(255, 255, 255), 2, 8, false );
 
                     if(m_carData[j].lapData.firstLapDone)
                     {
@@ -296,14 +296,23 @@ void MainWindow::updateFrame(void)
                         sprintf(output2,"%.2f", m_carData[j].lapData.lastLapTime);
                         char output3[4];
                         sprintf(output3,"%.2f", m_carData[j].lapData.bestTime);
-                        cv::putText(m_tmpMat, output2, cv::Point((750 -numTimers*150), 150), 1, 3, cv::Scalar(0, 255, 255),2,8, false );
-                        cv::putText(m_tmpMat, output3, cv::Point((750 -numTimers*150), 190), 1, 3, cv::Scalar(120, 255, 0),2,8, false );
+                        cv::putText(m_tmpMat, output2, cv::Point((750 -numTimers * 150), 150), 1, 3, cv::Scalar(0, 255, 255),2,8, false );
+                        cv::putText(m_tmpMat, output3, cv::Point((750 -numTimers * 150), 190), 1, 3, cv::Scalar(120, 255, 0),2,8, false );
                     }
                 }
                 numTimers++;
             }
 
+            // Draw Start boxes
+            if(raceSettings.doRace && raceSettings.raceStarted)
+            {
+                for (int i = 0; i <= 2; i++)
+                {
+                    cv::rectangle(m_tmpMat, cv::Point(750, 65 + 30*i), cv::Point(735, 55 + 30*i), cv::Scalar(255, 255, 255), 1, 8, 0);
+                }
+            }
 
+            // Draw Car information to the track
             if ((m_carData[j].active) && (m_carData[j].state.size() != 0))
             {
                 // Extract position and angle.

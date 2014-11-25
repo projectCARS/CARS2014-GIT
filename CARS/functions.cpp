@@ -8,8 +8,18 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/nonfree/features2d.hpp"*/
 
+// Returns true if the race is over
+bool updateRaceData(CarData &cardata, RaceSettings &raceSettings)
+{
+    if (cardata.lapData.lapNumber >= raceSettings.numberOfLaps){
+        raceSettings.winnerID = cardata.id;
+        raceSettings.raceDone = true;
+        return true;
+    }
+    return false;
+}
 
-
+// Updates the lapdata struct in the car
 void updateLapData(CarData &cardata)
 {
     float carX, carY, dist;
@@ -45,6 +55,7 @@ void updateLapData(CarData &cardata)
             //is dist very small(and timer big) save lap time and reset timer
             if (dist < 0.02 && cardata.lapData.lapTime > 3)
             {
+                cardata.lapData.lapNumber++;
                 cardata.lapData.firstLapDone = true;
                 cardata.lapData.lastLapTime = cardata.lapData.lapTime;
                 cardata.lapData.lapTimer.restart();

@@ -2,7 +2,9 @@
 
 #include "definitions.h"
 
+bool updateRaceData(CarData &cardata, RaceSettings &raceSettings);
 void updateLapData(CarData &cardata);
+
 
 void logData(float sysTime, std::vector<CarData> carData, std::vector<CarMeasurement> carMeasurements, std::vector<Signal> signal, std::ofstream *logFile);
 

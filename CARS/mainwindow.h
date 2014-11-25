@@ -53,6 +53,9 @@ private:
     unsigned int m_generalDrawSettings;
     std::vector<unsigned int> m_carSpecificDrawSettings;
 
+    //Race Settings
+    RaceSettings raceSettings;
+
     QImage matToQImage(const cv::Mat &mat);
     // Reads draw settings from file.
     void loadDrawSettings(void);

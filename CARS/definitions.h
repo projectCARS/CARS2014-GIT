@@ -124,7 +124,10 @@ struct Signal
 struct RaceSettings
 {
     bool doRace = false;
-    int numberOfLaps;
+    bool raceStarted = false;
+    bool raceDone = false;
+    int winnerID;
+    int numberOfLaps = 10;
     std::vector<int> carID;
 };
 
@@ -140,6 +143,7 @@ struct LapData
     float lapTime, bestTime, lastLapTime;
     bool firstLapStarted = false;
     bool firstLapDone = false;
+    int lapNumber = 0;
     //std::vector<float> bestTimes;
 };
 
@@ -193,7 +197,7 @@ struct ControllerThreadData
 // ---------- External declarations ----------
 extern struct DrawThreadData drawThreadData;
 extern struct ControllerThreadData controllerThreadData;
-extern struct RaceSettings raceSettings;
+//extern struct RaceSettings raceSettings;
 // Critical section that is used during communication between main thread and draw thread.
 extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData;
 extern HANDLE hDrawThreadEvent;
