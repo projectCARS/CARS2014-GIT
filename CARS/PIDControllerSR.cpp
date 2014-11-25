@@ -340,7 +340,7 @@ float PIDControllerSR::calcTurnSignal(std::vector<float> &state, int refInd)
 // Calculate/Get reference speed
 float PIDControllerSR::calcRefSpeed(std::vector<float> &state, int refInd)
 {
-    float refSpeed = 0;
+    float refSpeed;
     refSpeed = m_vRef[refInd]*1.3 + 0.4;  //TODO: take mean of several values? maybe 5????
     //qDebug() << refSpeed;
     //refSpeed = m_vRef[refInd];

@@ -39,7 +39,7 @@ private:
     double m_gain, m_gainBest;
     double m_offset;
     std::vector<float> m_LapError;
-    bool m_checkPoint;
+    bool m_checkPoint, m_firstLapDone;
     QElapsedTimer timer;
     float m_lLap, m_bLap;
 
@@ -73,7 +73,7 @@ private:
     // Calcultes reference speed for regulation
     float calcRefSpeed(std::vector<float> &state, int refInd, double gain, double offset);
     // Update speed reference gain(m_gain and possibly m_offset)
-    void updateSpeedReferenceGain(std::vector<float> &error);
+    void updateSpeedReferenceGain();
     //
     bool lapDone(std::vector<float> &state);
 };

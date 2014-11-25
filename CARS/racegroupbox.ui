@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>134</width>
+    <width>273</width>
     <height>80</height>
    </rect>
   </property>
@@ -64,7 +64,7 @@
     <string>Take part in race</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox">
+  <widget class="QCheckBox" name="raceCheckBox">
    <property name="geometry">
     <rect>
      <x>100</x>
@@ -75,6 +75,19 @@
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButton">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>40</y>
+     <width>82</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>RadioButton</string>
    </property>
   </widget>
  </widget>

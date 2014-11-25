@@ -15,8 +15,9 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_gain = 1.0f;
     m_offset = 0.4f;
     m_checkPoint = false;
+    m_firstLapDone = false;
     timer.start();
-    m_bLap = 1000f;
+    m_bLap = 1000.0;
 
     m_prevI = 0;
     m_prevD = 0;
@@ -73,8 +74,8 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
         }
         fileNo++;
     }
-    logFileSR.open(str.str());
-    logFileSR << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
+    logFileSRgain.open(str.str());
+    logFileSRgain << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
     std::cout << "PIDadaptiveGain object:		Writing log to " << str.str() << std::endl;
 
 }
@@ -98,7 +99,11 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
 
     //update gain
     if (lapDone(state))
+    {
+        qDebug()  << m_gain;
         updateSpeedReferenceGain();
+        qDebug()  << m_gain;
+    }
     //qDebug() << m_vRef[0] << m_vRef[10] << m_vRef[20] << m_vRef[30] << m_vRef[40] << m_vRef[50];
 }
 
@@ -340,12 +345,14 @@ float PIDadaptiveGain::calcRefSpeed(std::vector<float> &state, int refInd, doubl
 // Update speed reference vector
 
 
-void PIDadaptiveGain::updateSpeedReferenceGain(std::vector<float> &error)
+void PIDadaptiveGain::updateSpeedReferenceGain()
 {
-    if (LapData.firstLapDone)
+    if (m_firstLapDone)
     {
-        m_lLap = timer.elapsed();
+        m_lLap = timer.elapsed()/1000.0;
         timer.restart();
+        qDebug() <<"last: " << m_lLap << "best: " << m_bLap;
+
         if (m_lLap<m_bLap)
         {
             m_bLap = m_lLap;
@@ -353,11 +360,16 @@ void PIDadaptiveGain::updateSpeedReferenceGain(std::vector<float> &error)
         }
         else
         {
-            m_gain = m_gain - 0.1;
+            //m_gain = m_gain - 0.1;
         }
+        qDebug() << "gr";
     }
     else
+    {
         timer.restart();
+        m_firstLapDone = true;
+    }
+   // qDebug() << "Gain: " <<m_gain;
 
     /*
     double currTime = (double)timeSRgain.elapsed()/1000.0;
@@ -372,15 +384,19 @@ bool PIDadaptiveGain::lapDone(std::vector<float> &state)
 {
     float carX, carY;
     bool result = false;
+    carX = state[0];
+    carY = state[1];
 
     if (!m_checkPoint && carX>2)
     {
+        qDebug() << "set check true";
         m_checkPoint = true;
     }
     else if (m_checkPoint && carY<.5 && carX>1.48 && carX<1.52)
     {
         m_checkPoint = false;
         result = true;
+        qDebug() << "lapDone = true";
     }
     return result;
 }

@@ -22,7 +22,7 @@ raceDialog::raceDialog(QWidget *parent) :
 
     while (m_settings.contains(QString("car/id%1/mode").arg(m_numCars)))
     {
-        //addRaceGroupBox();
+        addRaceGroupBox();
     }
 }
 

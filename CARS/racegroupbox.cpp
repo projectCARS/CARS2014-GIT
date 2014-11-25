@@ -7,11 +7,14 @@ RaceGroupBox::RaceGroupBox(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    m_buttonGroup = new QButtonGroup(this);
+    m_buttonGroup->addButton(ui->radioButton, 1);
+
     // Create a button group and set to exclusive.
 
     QSizePolicy policy = sizePolicy();
-    policy.setHorizontalPolicy(QSizePolicy::Fixed);
-    policy.setVerticalPolicy(QSizePolicy::Fixed);
+    policy.setHorizontalPolicy(QSizePolicy::Preferred);
+    policy.setVerticalPolicy(QSizePolicy::Preferred);
     setSizePolicy(policy);
 }
 
@@ -22,7 +25,7 @@ RaceGroupBox::~RaceGroupBox()
 
 void RaceGroupBox::setId(int id)
 {
-    //ui->idLabel->setText(QString("%1").arg(id));
+    ui->idLabel->setText(QString("%1").arg(id));
 }
 
 int RaceGroupBox::getId()

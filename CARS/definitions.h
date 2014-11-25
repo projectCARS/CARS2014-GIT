@@ -121,8 +121,9 @@ struct Signal
 };
 
 // Struct to store race data.
-struct RaceData
+struct RaceSettings
 {
+    bool doRace = false;
     int numberOfLaps;
     std::vector<int> carID;
 };
@@ -176,7 +177,7 @@ struct DrawThreadData
     cv::Mat processedImage;
     //cv::Mat evaluatedImage;
     std::vector<CarData> carData;
-    RaceData raceData;
+    RaceSettings raceData;
     float *sumStates;
     Eigen::MatrixXf pattern;
 };
@@ -192,6 +193,7 @@ struct ControllerThreadData
 // ---------- External declarations ----------
 extern struct DrawThreadData drawThreadData;
 extern struct ControllerThreadData controllerThreadData;
+extern struct RaceSettings raceSettings;
 // Critical section that is used during communication between main thread and draw thread.
 extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData;
 extern HANDLE hDrawThreadEvent;

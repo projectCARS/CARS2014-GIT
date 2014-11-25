@@ -218,7 +218,7 @@ void ProcessingThread::run()
         /*// Update Race conditions
         for(int i = 0; i < m_cars.size(); i++){
 
-            updateRaceData(carData);
+            updateRaceData(carData[j]);
         }
         */
         // Enter critical section and send data to draw thread.

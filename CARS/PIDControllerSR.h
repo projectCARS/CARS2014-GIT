@@ -4,10 +4,8 @@
 #include <fstream>
 
 #include <QElapsedTimer>
-//#include <QTime> //for timeSR
-
 #include "qtheaders.h"
-#include <QElapsedTimer>
+
 
 
 class PIDControllerSR : public Controller
