@@ -5,12 +5,10 @@
 #include "Controller.h"
 #include <chrono>
 #include <fstream>
-
 #include <QElapsedTimer>
-//#include <QTime> //for timeSR
-
 #include "qtheaders.h"
-#include <QElapsedTimer>
+#include <stdlib.h>
+#include <time.h>
 
 
 class PIDadaptiveGain : public Controller
@@ -36,7 +34,7 @@ private:
     bool m_onPath;
     float m_oldRefInd;
     std::vector<float> m_vRef;
-    double m_gain, m_gainBest;
+    double m_gain, m_bGain, m_gainBest;
     double m_offset;
     std::vector<float> m_LapError;
     bool m_checkPoint, m_firstLapDone;

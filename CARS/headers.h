@@ -24,12 +24,11 @@
 #include <Eigen/Core>
 #include <chrono>
 #include <sys/stat.h>							// To check for file existense
-#include <Eigen/Dense>							//for inverse
-#include <iomanip>								//For writing to indexed images (calibration chessboards)
-#include <vector>								//Used in Calibrator
+#include <Eigen/Dense>							// for inverse
+#include <iomanip>								// For writing to indexed images (calibration chessboards)
+#include <vector>								// Used in Calibrator
 #include "opencv2/calib3d/calib3d.hpp"			// Used in Calibrator
 #include <opencv2/core/eigen.hpp>				// To convert between eigen and openCV
-
-#include <QDebug>
+#include <QDebug>                               // For debug output, qDebug() << "text";
 
 #endif // HEADERS_H

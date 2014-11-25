@@ -12,52 +12,35 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_startInd = 0;
     m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;      //m_vRef is uniqe to each car
-    m_gain = 1.0f;
+    m_gain = .8f;
     m_offset = 0.4f;
     m_checkPoint = false;
     m_firstLapDone = false;
     timer.start();
     m_bLap = 1000.0;
 
+    srand(time(NULL));
+
     m_prevI = 0;
     m_prevD = 0;
     m_prevAngError = 0;
 
-    switch (m_ID) {
-    case 0:
-        m_turnPID.resize(3);
-        m_speedPID.resize(3);
+
+    m_turnPID.resize(3);
+    m_speedPID.resize(3);
 #ifdef safeMode
 #define minSpeed 0.5
 #define maxSpeed 1.6
 
-        m_turnPID[0] = 1.5f;	//P
-        m_turnPID[1] = 0.0;		//I
-        m_turnPID[2] = 0.0;		//D
+    m_turnPID[0] = 1.5f;	//P
+    m_turnPID[1] = 0.0;		//I
+    m_turnPID[2] = 0.0;		//D
 
-        m_speedPID[0] = 0.8f;	//P     0.2;
-        m_speedPID[1] = 0.01f;	//I
-        m_speedPID[2] = 0.008f;	//D
+    m_speedPID[0] = 0.8f;	//P     0.2;
+    m_speedPID[1] = 0.01f;	//I
+    m_speedPID[2] = 0.008f;	//D
 #endif
 
-#ifdef fullForce
-#define minSpeed 0.8
-#define maxSpeed 1.8
-
-        m_turnPID[0] = 1.3;		//P
-        m_turnPID[1] = 0.;		//I
-        m_turnPID[2] = 0.;		//D
-
-        m_speedPID[0] = 0.15;	//P     0.2;
-        m_speedPID[1] = 0.05;	//I
-        m_speedPID[2] = 0.001;	//D
-#endif
-
-        break;
-    default:
-        ; //dummy
-        break;
-    }
 
     // Deciding which log file to write to
     timeSRgain.start();
@@ -100,9 +83,7 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     //update gain
     if (lapDone(state))
     {
-        qDebug()  << m_gain;
         updateSpeedReferenceGain();
-        qDebug()  << m_gain;
     }
     //qDebug() << m_vRef[0] << m_vRef[10] << m_vRef[20] << m_vRef[30] << m_vRef[40] << m_vRef[50];
 }
@@ -356,20 +337,21 @@ void PIDadaptiveGain::updateSpeedReferenceGain()
         if (m_lLap<m_bLap)
         {
             m_bLap = m_lLap;
-            m_gain = m_gain + 0.05;
+            m_bGain = m_gain;
+            m_gain = m_bGain + 0.05*(rand()-0.5);
         }
         else
         {
-            //m_gain = m_gain - 0.1;
+            m_gain = m_bGain + 0.05*(rand()-0.5);
         }
-        qDebug() << "gr";
+        qDebug() << "bestGain: " << m_bGain << "new gain: " << m_gain;
     }
     else
     {
         timer.restart();
         m_firstLapDone = true;
     }
-   // qDebug() << "Gain: " <<m_gain;
+    // qDebug() << "Gain: " <<m_gain;
 
     /*
     double currTime = (double)timeSRgain.elapsed()/1000.0;
