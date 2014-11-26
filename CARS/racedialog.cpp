@@ -18,9 +18,6 @@ raceDialog::raceDialog(QWidget *parent) :
     ui->scrollAreaContentsLayout->setAlignment(Qt::AlignTop);
     ui->lapNumberLabel->setText(QString("%1").arg(lapNumber));
 
-    // ****************************** REMOVE LATER
-    m_settings.setValue("race_settings/do_race", true);
-    // *******************************
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
     m_numCars = 0;

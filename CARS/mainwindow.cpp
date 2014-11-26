@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->stopButton, SIGNAL(clicked()), this, SLOT(stopThreads()));
     connect(ui->referenceButton, SIGNAL(clicked()), this, SLOT(openReferenceDialog()));
 
+    ui->startRaceButton->setEnabled(false);
+
     m_timer = new QTimer(this);
     // Draw images to screen when the timer signals timeout.
     connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
@@ -120,6 +122,8 @@ void MainWindow::startThreads(void)
     ui->drawSettingsButton->setEnabled(false);
     ui->calibrateCameraButton->setEnabled(false);
     ui->raceButton->setEnabled(false);
+    ui->startRaceButton->setEnabled(false);
+    ui->initRace->setEnabled(false);
 
     // Start timer used to draw images.
     // Tell the GUI thread to redraw images as fast as possible by passing the value 0.
@@ -142,6 +146,7 @@ void MainWindow::initializeRace()
     loadDrawSettings();
     raceSettings.doRace = m_settings.value("race_settings/do_race").toBool();
     int j = 0;
+    raceSettings.carID.clear();
     while(m_settings.contains(QString("race_settings/id%1/race").arg(j)))
     {
             m_settings.beginGroup(QString("race_settings/id%1").arg(j));
@@ -205,6 +210,8 @@ void MainWindow::initializeRace()
     ui->drawSettingsButton->setEnabled(false);
     ui->calibrateCameraButton->setEnabled(false);
     ui->raceButton->setEnabled(false);
+    ui->startRaceButton->setEnabled(true);
+    ui->initRace->setEnabled(false);
 
     // Draw Start boxes
     int numStartBoxes = 0;
@@ -229,6 +236,7 @@ void MainWindow::initializeRace()
     LeaveCriticalSection(&csDrawThreadData);
     // Wait so that OpenCV have time to draw images.
     cv::waitKey(20);
+
 }
 
 // Connect this tosecond race start button
@@ -236,6 +244,8 @@ void MainWindow::startRace()
 {
 
     displayCountdown();
+
+    ui->startRaceButton->setEnabled(false);
 
     raceSettings.raceStarted = true;
     m_processingThread->start();
@@ -248,13 +258,19 @@ void MainWindow::startRace()
     m_fpsTime.restart();
 }
 
+// Function that displays the countdown before a race starts
 void MainWindow::displayCountdown(void)
 {
-    for(int i = 3; i > 1; i --)
+    for(int i = 3; i > 0; i --)
     {
+        EnterCriticalSection(&csDrawThreadData);
+        // Get background image.
+        drawThreadData.background[m_loopCounter%drawThreadData.background.size()].copyTo(m_tmpMat);
+        LeaveCriticalSection(&csDrawThreadData);
+
         char output[1];
         sprintf(output,"%i", i);
-        cv::putText(m_tmpMat, output, cv::Point(500, 500), 1, 8, cv::Scalar(255, 255, 50),2,8, false );
+        cv::putText(m_tmpMat, output, cv::Point(600, 500), 1, 8, cv::Scalar(255, 255, 50),2,8, false );
 
         cv::imshow("ProjectorWindow", m_tmpMat);
         // Display image from camera.
@@ -305,6 +321,8 @@ void MainWindow::stopThreads(void)
     ui->drawSettingsButton->setEnabled(true);
     ui->calibrateCameraButton->setEnabled(true);
     ui->raceButton->setEnabled(true);
+    ui->initRace->setEnabled(true);
+    ui->startRaceButton->setEnabled(true);
 
     // Stop timer used to draw images.
     m_timer->stop();
@@ -415,14 +433,15 @@ void MainWindow::updateFrame(void)
     m_carTimerID = drawThreadData.carTimerID;
     LeaveCriticalSection(&csDrawThreadData);
 
-    // Only draw cars if carData is not empty. carData could be empty if the processingthread
-    // have not had time to resize it.
+
     if(raceSettings.raceDone)
     {
         char output[4];
         sprintf(output,"THE WINNER IS CAR %i", raceSettings.winnerID);
-        cv::putText(m_tmpMat, output, cv::Point(300, 600), 1, 6, cv::Scalar(255, 255, 50),2,8, false );
+        cv::putText(m_tmpMat, output, cv::Point(300, 550), 1, 5, cv::Scalar(255, 200, 0),2,8, false);
     }
+    // Only draw cars if carData is not empty. carData could be empty if the processingthread
+    // have not had time to resize it.
     else if (m_carData.size() != 0)
     {
         // Draw Start boxes
@@ -831,4 +850,9 @@ void MainWindow::on_calibrateCameraButton_clicked()
 void MainWindow::on_initRace_clicked()
 {
     initializeRace();
+}
+
+void MainWindow::on_startRaceButton_clicked()
+{
+    startRace();
 }

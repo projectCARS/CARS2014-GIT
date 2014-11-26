@@ -38,14 +38,6 @@ void ProcessingThread::run()
     // Load race settings from file
     loadRaceSettings();
 
-    for(int i = 0; i < raceSettings.carID.size(); i++){
-
-        if(raceSettings.carID[i] == 1)
-            std::cout << "Car " << i << " is racing " << std::endl;
-    }
-
-    qDebug("car size %i", raceSettings.carID.size());
-
     std::vector<float> markers;
     // Reserve memory for m_numCars cars with 6 markers.
     markers.reserve(m_numCars*6);
@@ -235,7 +227,6 @@ void ProcessingThread::run()
                 if(!raceSettings.raceDone && updateRaceData(carData[i], raceSettings))
                 {
                     qDebug("Race is over!! A winner is Car %i", raceSettings.winnerID);
-
                 }
         }
 

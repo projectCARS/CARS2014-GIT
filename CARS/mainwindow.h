@@ -80,6 +80,7 @@ private slots:
     void on_calibrateCameraButton_clicked();
     void on_raceButton_clicked();
     void on_initRace_clicked();
+    void on_startRaceButton_clicked();
 };
 
 #endif // MAINWINDOW_H

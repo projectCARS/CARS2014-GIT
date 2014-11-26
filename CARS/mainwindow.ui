@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>830</width>
+    <width>948</width>
     <height>404</height>
    </rect>
   </property>
@@ -100,7 +100,7 @@
       <item>
        <widget class="QPushButton" name="raceButton">
         <property name="text">
-         <string>RACE !</string>
+         <string>Race Settings</string>
         </property>
        </widget>
       </item>
@@ -108,6 +108,13 @@
        <widget class="QPushButton" name="initRace">
         <property name="text">
          <string>Initialize Race</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="startRaceButton">
+        <property name="text">
+         <string>Start Race</string>
         </property>
        </widget>
       </item>
@@ -143,7 +150,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>830</width>
+     <width>948</width>
      <height>21</height>
     </rect>
    </property>
