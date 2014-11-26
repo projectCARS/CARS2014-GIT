@@ -338,11 +338,11 @@ void PIDadaptiveGain::updateSpeedReferenceGain()
         {
             m_bLap = m_lLap;
             m_bGain = m_gain;
-            m_gain = m_bGain + 0.05*(rand()-0.5);
+            m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.5);
         }
         else
         {
-            m_gain = m_bGain + 0.05*(rand()-0.5);
+            m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.5);
         }
         qDebug() << "bestGain: " << m_bGain << "new gain: " << m_gain;
     }

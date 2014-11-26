@@ -107,6 +107,7 @@ void MainWindow::startThreads(void)
 
     // Load draw settings. Must be done before initFrame().
     loadDrawSettings();
+    raceSettings.doRace = m_settings.value("race_settings/do_race").toBool();
 
     // Initialization.
     initFrame();
@@ -127,6 +128,148 @@ void MainWindow::startThreads(void)
     // FPS timer.
     m_fpsTime.restart();
 }
+
+// Connect this to first race start button
+void MainWindow::initializeRace()
+{
+    m_loopCounter = 0;
+    // Load the number of cars from file.
+    loadNumCars();
+    // Load reference curve from file.
+    loadReference();
+
+    // Load draw settings. Must be done before initFrame().
+    loadDrawSettings();
+    raceSettings.doRace = m_settings.value("race_settings/do_race").toBool();
+    int j = 0;
+    while(m_settings.contains(QString("race_settings/id%1/race").arg(j)))
+    {
+            m_settings.beginGroup(QString("race_settings/id%1").arg(j));
+            raceSettings.carID.push_back(m_settings.value("race").toInt());
+            m_settings.endGroup();
+        j++;
+    }
+
+    // Initialization.
+    EnterCriticalSection(&csDrawThreadData);
+    // Save image to file.
+    if (!drawThreadData.image.empty())
+    {
+        std::cout << "Draw thread:		Saving first frame in 'Startup_frame.jpg'" << std::endl;
+        imwrite("outdata/Startup_frame.jpg", drawThreadData.image);
+    }
+    LeaveCriticalSection(&csDrawThreadData);
+
+    // Initialize background images.
+    EnterCriticalSection(&csDrawThreadData);
+    // Remove old images.
+    drawThreadData.background.resize(0);
+
+    // Show animations if enabled.
+    if (m_generalDrawSettings & GeneralDrawSettings::Animations)
+    {
+        for (int i = 1;; i++)
+        {
+            std::stringstream str;
+            str << "indata/background/texture" << std::setw(2) << std::setw(4) << std::setfill('0') << i << ".jpg";
+            if (fileExists(str.str()))
+            {
+                cv::Mat img = cv::imread(str.str(), 1);
+
+                drawThreadData.background.push_back(img);
+
+            }
+            else
+            {
+                std::cout << "Draw thread:		Found " << i - 1 << " background images." << std::endl;
+                break;
+            }
+        }
+    }
+    else
+    {
+        // Read static map from file.
+        cv::Mat img = cv::imread(m_backgroundPath.toStdString(), CV_8S);
+        //cv::Mat img = cv::imread("indata/texture3.jpg", CV_8S);
+        drawThreadData.background.push_back(img);
+    }
+    // Get background image.
+    drawThreadData.background[m_loopCounter%drawThreadData.background.size()].copyTo(m_tmpMat);
+    LeaveCriticalSection(&csDrawThreadData);
+
+    // Enable and disable buttons.
+    ui->startButton->setEnabled(false);
+    ui->stopButton->setEnabled(true);
+    ui->referenceButton->setEnabled(false);
+    ui->carSettingsButton->setEnabled(false);
+    ui->drawSettingsButton->setEnabled(false);
+    ui->calibrateCameraButton->setEnabled(false);
+    ui->raceButton->setEnabled(false);
+
+    // Draw Start boxes
+    int numStartBoxes = 0;
+    for (int i = 0; i < raceSettings.carID.size(); i++)
+    {
+        if(raceSettings.carID[i] == 1){
+            char output[4];
+            sprintf(output,"Car%i", i);
+            cv::rectangle(m_tmpMat, cv::Point(800, 30 + 60*numStartBoxes), cv::Point(880, 65 + 60*numStartBoxes), cv::Scalar(255, 255, 255), 1, 8, 0);
+            cv::putText(m_tmpMat, output, cv::Point(805, 60 + 60*numStartBoxes), 1, 2, cv::Scalar(255, 255, 50),2,8, false );
+            numStartBoxes++;
+        }
+    }
+
+    cv::imshow("ProjectorWindow", m_tmpMat);
+    // Display image from camera.
+    EnterCriticalSection(&csDrawThreadData);
+    if (!drawThreadData.image.empty())
+    {
+        cv::imshow("GUIWindow", drawThreadData.image);
+    }
+    LeaveCriticalSection(&csDrawThreadData);
+    // Wait so that OpenCV have time to draw images.
+    cv::waitKey(20);
+}
+
+// Connect this tosecond race start button
+void MainWindow::startRace()
+{
+
+    displayCountdown();
+
+    raceSettings.raceStarted = true;
+    m_processingThread->start();
+    m_controllerThread->start();
+    qDebug() << "Threads started.";
+
+    m_timer->start(0);
+
+    // FPS timer.
+    m_fpsTime.restart();
+}
+
+void MainWindow::displayCountdown(void)
+{
+    for(int i = 3; i > 1; i --)
+    {
+        char output[1];
+        sprintf(output,"%i", i);
+        cv::putText(m_tmpMat, output, cv::Point(500, 500), 1, 8, cv::Scalar(255, 255, 50),2,8, false );
+
+        cv::imshow("ProjectorWindow", m_tmpMat);
+        // Display image from camera.
+        EnterCriticalSection(&csDrawThreadData);
+        if (!drawThreadData.image.empty())
+        {
+            cv::imshow("GUIWindow", drawThreadData.image);
+        }
+        LeaveCriticalSection(&csDrawThreadData);
+        // Wait so that OpenCV have time to draw images.
+        cv::waitKey(20);
+        Sleep(1000);
+    }
+}
+
 
 void MainWindow::stopThreads(void)
 {
@@ -274,8 +417,30 @@ void MainWindow::updateFrame(void)
 
     // Only draw cars if carData is not empty. carData could be empty if the processingthread
     // have not had time to resize it.
-    if (m_carData.size() != 0)
+    if(raceSettings.raceDone)
     {
+        char output[4];
+        sprintf(output,"THE WINNER IS CAR %i", raceSettings.winnerID);
+        cv::putText(m_tmpMat, output, cv::Point(300, 600), 1, 6, cv::Scalar(255, 255, 50),2,8, false );
+    }
+    else if (m_carData.size() != 0)
+    {
+        // Draw Start boxes
+        if(!raceSettings.doRace)//raceSettings.doRace && !raceSettings.raceStarted)
+        {
+            int numStartBoxes = 0;
+            for (int i = 0; i < raceSettings.carID.size(); i++)
+            {
+                if(raceSettings.carID[i] == 1){
+                    char output[4];
+                    sprintf(output,"Car%i", i);
+                    cv::rectangle(m_tmpMat, cv::Point(800, 30 + 60*numStartBoxes), cv::Point(880, 65 + 60*numStartBoxes), cv::Scalar(255, 255, 255), 1, 8, 0);
+                    cv::putText(m_tmpMat, output, cv::Point(805, 60 + 60*numStartBoxes), 1, 2, cv::Scalar(255, 255, 50),2,8, false );
+                    numStartBoxes++;
+                }
+            }
+        }
+
         // Draw car on track. The variable j represents car id.
         for (int j = 0; j < m_numCars; j++)
         {
@@ -301,15 +466,6 @@ void MainWindow::updateFrame(void)
                     }
                 }
                 numTimers++;
-            }
-
-            // Draw Start boxes
-            if(raceSettings.doRace && raceSettings.raceStarted)
-            {
-                for (int i = 0; i <= 2; i++)
-                {
-                    cv::rectangle(m_tmpMat, cv::Point(750, 65 + 30*i), cv::Point(735, 55 + 30*i), cv::Scalar(255, 255, 255), 1, 8, 0);
-                }
             }
 
             // Draw Car information to the track
@@ -441,6 +597,12 @@ void MainWindow::updateFrame(void)
 
     // Wait so that OpenCV have time to draw images.
     cv::waitKey(20);
+
+    if(raceSettings.raceDone)
+    {
+        Sleep(1000);
+        stopThreads();
+    }
 
     // The images can be displayed using Qt, but that seems to be slower than using OpenCV.
     /*
@@ -665,3 +827,8 @@ void MainWindow::on_calibrateCameraButton_clicked()
     storage.release();
 }
 
+
+void MainWindow::on_initRace_clicked()
+{
+    initializeRace();
+}

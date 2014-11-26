@@ -30,6 +30,9 @@ private:
     // Vector with cars.
     std::vector<Car> m_cars;
 
+    // Struct containing race settings
+    RaceSettings raceSettings;
+
     // Variables containing draw settings.
     unsigned int m_generalDrawSettings;
     std::vector<unsigned int> m_carSpecificDrawSettings;
@@ -39,6 +42,8 @@ private:
     void loadCarSettings(void);
     // Reads draw settings from file.
     void loadDrawSettings(void);
+    // Read race settings from file
+    void loadRaceSettings(void);
     /* Draw states to image. This function needs to be called for each estimation
     of the state vector (in order to obtain a smooth line on the image). */
     void drawStatesToImage(const std::vector<CarData> &oldCarData, const std::vector<CarData> &carData, cv::Mat &evaluatedImage, std::vector<Signal> signal);

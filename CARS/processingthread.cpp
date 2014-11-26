@@ -3,6 +3,7 @@
 #include "definitions.h"
 #include "classes.h"
 #include "functions.h"
+#include <algorithm>
 #include <QDebug>
 
 #include <iomanip>
@@ -34,6 +35,16 @@ void ProcessingThread::run()
     loadCarSettings();
     // Load draw settings from file
     loadDrawSettings();
+    // Load race settings from file
+    loadRaceSettings();
+
+    for(int i = 0; i < raceSettings.carID.size(); i++){
+
+        if(raceSettings.carID[i] == 1)
+            std::cout << "Car " << i << " is racing " << std::endl;
+    }
+
+    qDebug("car size %i", raceSettings.carID.size());
 
     std::vector<float> markers;
     // Reserve memory for m_numCars cars with 6 markers.
@@ -41,7 +52,6 @@ void ProcessingThread::run()
     std::vector<CarMeasurement> carMeasurements;
     // Reserve memory for m_numCars cars.
     carMeasurements.reserve(m_numCars);
-    RaceSettings raceSettings;
     std::vector<CarData> carData(m_numCars);
     std::vector<CarData> oldCarData(m_numCars);
     std::vector<Signal> signal(m_numCars);
@@ -95,6 +105,7 @@ void ProcessingThread::run()
    // lapData.lapTimer.start();
     ompTimeStart = omp_get_wtime();
     time.start();
+
     while(1)
     {
         // Check if thread should stop running.
@@ -215,23 +226,22 @@ void ProcessingThread::run()
                 updateLapData(carData[i]);
         }
 
+        // Enter critical section and send data to draw thread.
+
 
         // Update Race conditions
-        for(int i = 0; i < m_cars.size(); i++){
-            if(std::find(raceSettings.carID.begin(), raceSettings.carID.end(), i) != raceSettings.carID.end()) {
-                if(updateRaceData(carData[i], raceSettings))
+        for(int i = 0; i < raceSettings.carID.size(); i++)
+        {
+                if(!raceSettings.raceDone && updateRaceData(carData[i], raceSettings))
                 {
-                    EnterCriticalSection(&csControllerThreadData);
-                    drawThreadData.raceData = raceSettings;
-                    LeaveCriticalSection(&csControllerThreadData);
-                    //STOPrace();
+                    qDebug("Race is over!! A winner is Car %i", raceSettings.winnerID);
+
                 }
-            }
         }
 
-        // Enter critical section and send data to draw thread.
         EnterCriticalSection(&csDrawThreadData);
         drawThreadData.carData = carData;
+        drawThreadData.raceData = raceSettings;
         LeaveCriticalSection(&csDrawThreadData);
 
         // Estimate FPS in processing thread.
@@ -433,6 +443,32 @@ void ProcessingThread::loadDrawSettings(void)
 
         numCarsRead++;
     }
+}
+
+void ProcessingThread::loadRaceSettings()
+{
+    raceSettings.carID.clear();
+    raceSettings.raceDone = false;
+    if(m_settings.contains("race_settings/number_of_laps"))
+    {
+        qDebug("settings exist");
+        raceSettings.numberOfLaps = m_settings.value("race_settings/number_of_laps").toInt();
+        raceSettings.doRace = (bool)m_settings.value("race_settings/do_race").toBool();
+
+        int j = 0;
+        while(m_settings.contains(QString("race_settings/id%1/race").arg(j)))
+        {
+                m_settings.beginGroup(QString("race_settings/id%1").arg(j));
+                raceSettings.carID.push_back(m_settings.value("race").toInt());
+                m_settings.endGroup();
+            j++;
+        }
+    }
+    else
+    {
+        raceSettings.doRace = false;
+    }
+
 }
 
 // Finds car patterns among markers.

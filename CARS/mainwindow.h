@@ -66,6 +66,9 @@ private slots:
     // Reads reference curve from file.
     void loadReference(void);
     void initFrame(void);
+    void initializeRace(void);
+    void startRace(void);
+    void displayCountdown(void);
     void updateFrame(void);
     void startThreads(void);
     void stopThreads(void);
@@ -76,6 +79,7 @@ private slots:
     void on_drawSettingsButton_clicked();
     void on_calibrateCameraButton_clicked();
     void on_raceButton_clicked();
+    void on_initRace_clicked();
 };
 
 #endif // MAINWINDOW_H

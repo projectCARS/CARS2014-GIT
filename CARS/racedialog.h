@@ -27,16 +27,25 @@ private slots:
 
     void on_carSettingsButton_clicked();
 
+    void on_decreaseLapsButton_clicked();
+
+    void on_increaseLapsButton_clicked();
+
 private:
     Ui::raceDialog *ui;
 
     void addRaceGroupBox(void);
     std::vector<RaceGroupBox*> m_raceGroupBoxes;
+    std::vector<int> m_raceCarID;
+    int lapNumber = 5;
+
     QSettings m_settings;
-    int m_numCars;
+    int m_numCars = 0;
 
     void closeEvent(QCloseEvent *event);
+    void saveRaceSettings(void);
 
 };
+
 
 #endif // RACEDIALOG_H

@@ -55,6 +55,15 @@ namespace CarMode
     };
 }
 
+namespace Racemode
+{
+    enum Enum
+    {
+        On,
+        Off,
+    };
+}
+
 namespace FilterType
 {
     enum Enum

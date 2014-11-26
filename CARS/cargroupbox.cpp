@@ -52,6 +52,7 @@ int CarGroupBox::getId()
 {
     bool succeeded;
     int id = ui->idLabel->text().toInt(&succeeded,10);
+
     return id;
 }
 
