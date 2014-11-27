@@ -53,6 +53,7 @@ void VirtualSensor::stopSensor(void)
 #endif
 }
 
+
 void VirtualSensor::grabThresholdImage()
 {
 #ifdef CAMERA_IS_AVALIABLE
@@ -129,7 +130,7 @@ std::vector<float> VirtualSensor::detectMarkers()
     LeaveCriticalSection(&csDrawThreadData);
     tempMat = tempMat - mask * .5;
 
-    int lowerThresh = 140;
+    int lowerThresh = 100; // 140 original
     int upperThresh = 255;
     int gaussSize = 3;
 
@@ -216,32 +217,32 @@ void VirtualSensor::cameraToWorldCoordinates(std::vector<float> &data)// float c
 
 void VirtualSensor::nonLinearUndistort(float input[2], float output[2])
 {
-	double k1, k2, p1, p2, k3, fx, cx, fy, cy, z, x, y, r2, dx, dy, scale, xBis, yBis;
-	// Following a somewhat standardized notation for distortion coefficients, the matrix elements are as follows:
-	k1 = distCoeffs.at<double>(0, 0);
-	k2 = distCoeffs.at<double>(0, 1);
-	p1 = distCoeffs.at<double>(0, 2);
-	p2 = distCoeffs.at<double>(0, 3);
-	k3 = distCoeffs.at<double>(0, 4);
-	fx = cameraMatrix.at<double>(0, 0);
-	cx = cameraMatrix.at<double>(0, 2);
-	fy = cameraMatrix.at<double>(1, 1);
-	cy = cameraMatrix.at<double>(1, 2);
-	z = 1.;
+    double k1, k2, p1, p2, k3, fx, cx, fy, cy, z, x, y, r2, dx, dy, scale, xBis, yBis;
+    // Following a somewhat standardized notation for distortion coefficients, the matrix elements are as follows:
+    k1 = distCoeffs.at<double>(0, 0);
+    k2 = distCoeffs.at<double>(0, 1);
+    p1 = distCoeffs.at<double>(0, 2);
+    p2 = distCoeffs.at<double>(0, 3);
+    k3 = distCoeffs.at<double>(0, 4);
+    fx = cameraMatrix.at<double>(0, 0);
+    cx = cameraMatrix.at<double>(0, 2);
+    fy = cameraMatrix.at<double>(1, 1);
+    cy = cameraMatrix.at<double>(1, 2);
+    z = 1.;
 
-	x = (input[0] - cx) / fx;
-	y = (input[1] - cy) / fy;
-	r2 = x*x + y*y;
+    x = (input[0] - cx) / fx;
+    y = (input[1] - cy) / fy;
+    r2 = x*x + y*y;
 
-	dx = 2 * p1*x*y + p2*(r2 + 2 * x*x);
-	dy = p1*(r2 + 2 * y*y) + 2 * p2*x*y;
-	scale = (1 + k1*r2 + k2*r2*r2 + k3*r2*r2*r2);
+    dx = 2 * p1*x*y + p2*(r2 + 2 * x*x);
+    dy = p1*(r2 + 2 * y*y) + 2 * p2*x*y;
+    scale = (1 + k1*r2 + k2*r2*r2 + k3*r2*r2*r2);
 
-	xBis = x*scale + dx;
-	yBis = y*scale + dy;
+    xBis = x*scale + dx;
+    yBis = y*scale + dy;
 
-	output[0] = xBis*fx + cx;
-	output[1] = yBis*fy + cy;
+    output[0] = xBis*fx + cx;
+    output[1] = yBis*fy + cy;
 }
 
 void VirtualSensor::imageToMarkers2(cv::Mat &img, std::vector<float> &allMarkers)

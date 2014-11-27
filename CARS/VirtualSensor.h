@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include "PGRCamera.h"
 
 class VirtualSensor
 {

@@ -5,7 +5,9 @@
 
 #include "Filter.h"
 #include "CTModel.h"
+#include "VirtualSensor.h"
 #include <Eigen/Dense>
+#include "functions.h"
 #include "definitions.h"
 #include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
@@ -40,7 +42,22 @@ private:
 
     cv::Mat m_img;
 
+    // Used to convert to world coordinates
+    cv::Mat distCoeffs;
+    cv::Mat cameraMatrix;
+    cv::Mat cameraToWorldMatrix;
+    Eigen::Matrix3f cameraToWorldMatrix_Eigen;
+    cv::Mat worldToCameraMatrix;
+    Eigen::Matrix3f worldToCameraMatrix_Eigen;
+
+    float m_x = 0, m_y = 0, m_theta = 0;
+    float m_gas, m_turn;
+
+    bool imageMode = true;
+
     double T = 1/140;
+
+    VirtualSensor vs;
 
     MotionModel *M;
 
@@ -61,7 +78,11 @@ public:
     void propagateCT(void);
     void update(const cv::Mat img);
     void parallelUpdate(const cv::Mat img);
-    //void parallelUpdate(const cv::Mat img);
+    void noImgUpdate(float x, float y, float theta);
+
+    void nonLinearUndistort(float input[2], float output[2]);
+    void cameraToWorldCoordinates(float cameraPoint[2], float worldPoint[2]);
+    void worldToCameraCoordinates(float worldPoint[2], float cameraPoint[2]);
 
     void resample(void);
     void systematicResample(void);

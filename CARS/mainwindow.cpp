@@ -97,6 +97,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::startThreads(void)
 {
+    raceSettings.doRace = m_settings.value("race_settings/do_race").toBool();
+    raceSettings.raceDone = false;
     m_loopCounter = 0;
     // Load the number of cars from file.
     loadNumCars();
@@ -109,7 +111,7 @@ void MainWindow::startThreads(void)
 
     // Load draw settings. Must be done before initFrame().
     loadDrawSettings();
-    raceSettings.doRace = m_settings.value("race_settings/do_race").toBool();
+
 
     // Initialization.
     initFrame();
@@ -144,7 +146,8 @@ void MainWindow::initializeRace()
 
     // Load draw settings. Must be done before initFrame().
     loadDrawSettings();
-    raceSettings.doRace = m_settings.value("race_settings/do_race").toBool();
+    raceSettings.doRace = true;
+    m_settings.setValue("race_settings/do_race", true);
     int j = 0;
     raceSettings.carID.clear();
     while(m_settings.contains(QString("race_settings/id%1/race").arg(j)))
@@ -204,7 +207,7 @@ void MainWindow::initializeRace()
 
     // Enable and disable buttons.
     ui->startButton->setEnabled(false);
-    ui->stopButton->setEnabled(true);
+    ui->stopButton->setEnabled(false);
     ui->referenceButton->setEnabled(false);
     ui->carSettingsButton->setEnabled(false);
     ui->drawSettingsButton->setEnabled(false);
@@ -220,8 +223,8 @@ void MainWindow::initializeRace()
         if(raceSettings.carID[i] == 1){
             char output[4];
             sprintf(output,"Car%i", i);
-            cv::rectangle(m_tmpMat, cv::Point(800, 30 + 60*numStartBoxes), cv::Point(880, 65 + 60*numStartBoxes), cv::Scalar(255, 255, 255), 1, 8, 0);
-            cv::putText(m_tmpMat, output, cv::Point(805, 60 + 60*numStartBoxes), 1, 2, cv::Scalar(255, 255, 50),2,8, false );
+            cv::rectangle(m_tmpMat, cv::Point(900, 33 + 57*numStartBoxes), cv::Point(990, 68 + 57*numStartBoxes), cv::Scalar(255, 255, 255), 1, 8, 0);
+            cv::putText(m_tmpMat, output, cv::Point(905, 62 + 57*numStartBoxes), 1, 2, cv::Scalar(255, 255, 50),2,8, false );
             numStartBoxes++;
         }
     }
@@ -242,10 +245,14 @@ void MainWindow::initializeRace()
 // Connect this tosecond race start button
 void MainWindow::startRace()
 {
+    EnterCriticalSection(&csDrawThreadData);
+    drawThreadData.raceData.raceDone = false;
+    LeaveCriticalSection(&csDrawThreadData);
 
     displayCountdown();
 
     ui->startRaceButton->setEnabled(false);
+    ui->stopButton->setEnabled(true);
 
     raceSettings.raceStarted = true;
     m_processingThread->start();
@@ -323,6 +330,13 @@ void MainWindow::stopThreads(void)
     ui->raceButton->setEnabled(true);
     ui->initRace->setEnabled(true);
     ui->startRaceButton->setEnabled(true);
+
+    raceSettings.doRace = false;
+    raceSettings.raceDone = false;
+    m_settings.setValue("race_settings/do_race", false);
+    EnterCriticalSection(&csDrawThreadData);
+    drawThreadData.raceData = raceSettings;
+    LeaveCriticalSection(&csDrawThreadData);
 
     // Stop timer used to draw images.
     m_timer->stop();
@@ -434,7 +448,7 @@ void MainWindow::updateFrame(void)
     LeaveCriticalSection(&csDrawThreadData);
 
 
-    if(raceSettings.raceDone)
+    if(raceSettings.doRace && raceSettings.raceDone)
     {
         char output[4];
         sprintf(output,"THE WINNER IS CAR %i", raceSettings.winnerID);
@@ -444,22 +458,6 @@ void MainWindow::updateFrame(void)
     // have not had time to resize it.
     else if (m_carData.size() != 0)
     {
-        // Draw Start boxes
-        if(!raceSettings.doRace)//raceSettings.doRace && !raceSettings.raceStarted)
-        {
-            int numStartBoxes = 0;
-            for (int i = 0; i < raceSettings.carID.size(); i++)
-            {
-                if(raceSettings.carID[i] == 1){
-                    char output[4];
-                    sprintf(output,"Car%i", i);
-                    cv::rectangle(m_tmpMat, cv::Point(800, 30 + 60*numStartBoxes), cv::Point(880, 65 + 60*numStartBoxes), cv::Scalar(255, 255, 255), 1, 8, 0);
-                    cv::putText(m_tmpMat, output, cv::Point(805, 60 + 60*numStartBoxes), 1, 2, cv::Scalar(255, 255, 50),2,8, false );
-                    numStartBoxes++;
-                }
-            }
-        }
-
         // Draw car on track. The variable j represents car id.
         for (int j = 0; j < m_numCars; j++)
         {
@@ -617,9 +615,9 @@ void MainWindow::updateFrame(void)
     // Wait so that OpenCV have time to draw images.
     cv::waitKey(20);
 
-    if(raceSettings.raceDone)
+    // End the loop if a race is finished
+    if(raceSettings.raceDone == true)
     {
-        Sleep(1000);
         stopThreads();
     }
 

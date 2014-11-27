@@ -450,6 +450,7 @@ void Calibrator::cameraToWorldCoordinates(float cameraPoint[2], float worldPoint
     worldPoint[0] = worldPoint_Eigen[0];
     worldPoint[1] = worldPoint_Eigen[1];
 }
+
 void Calibrator::worldToCameraCoordinates(float worldPoint[2], float cameraPoint[2])
 {
     // Note that worldToCameraCoordinates does NOT utilize the non-linear transformation distCoeffs

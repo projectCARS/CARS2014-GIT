@@ -127,11 +127,17 @@ void ProcessingThread::run()
         {
             t1 = omp_get_wtime();
             // Add a thresholded image to drawthreadData struct
-            sensor.grabThresholdImage();
+            markers = sensor.detectMarkers();
+            // Calculate position, angle and id.
+            carMeasurements = findCars(markers);
+
+            //sensor.grabThresholdImage(); //Use this if particle filter is set to use ImageMode
             t2 = omp_get_wtime();
             EnterCriticalSection(&csDrawThreadData);
             m_cars[0].addImageMeasurement(drawThreadData.processedImage);
             LeaveCriticalSection(&csDrawThreadData);
+            if(carMeasurements.size() > 0)
+                m_cars[0].addMeasurement(carMeasurements[0].x, carMeasurements[0].y, carMeasurements[0].theta);
 
             //std::cout << "Measurement Update : " << omp_get_wtime() - t1 << std::endl;
 
@@ -212,24 +218,26 @@ void ProcessingThread::run()
         // Tell controller thread that new data have been written.
         SetEvent(hControllerThreadEvent1);
 
+
         // Update lap times
         for(int i = 0; i < m_cars.size(); i++){
             if(m_carSpecificDrawSettings[i] & CarSpecificDrawSettings::Timer)
                 updateLapData(carData[i]);
         }
 
-        // Enter critical section and send data to draw thread.
-
-
         // Update Race conditions
-        for(int i = 0; i < raceSettings.carID.size(); i++)
+        if(raceSettings.doRace)
         {
-                if(!raceSettings.raceDone && updateRaceData(carData[i], raceSettings))
-                {
-                    qDebug("Race is over!! A winner is Car %i", raceSettings.winnerID);
-                }
+            for(int i = 0; i < raceSettings.carID.size(); i++)
+            {
+                    if(!raceSettings.raceDone && updateRaceData(carData[i], raceSettings))
+                    {
+                        qDebug("Race is over!! A winner is Car %i", raceSettings.winnerID);
+                    }
+            }
         }
 
+        // Enter critical section and send data to draw thread.
         EnterCriticalSection(&csDrawThreadData);
         drawThreadData.carData = carData;
         drawThreadData.raceData = raceSettings;
@@ -440,14 +448,16 @@ void ProcessingThread::loadRaceSettings()
 {
     raceSettings.carID.clear();
     raceSettings.raceDone = false;
+    raceSettings.doRace = false;
     if(m_settings.contains("race_settings/number_of_laps"))
     {
         qDebug("settings exist");
         raceSettings.numberOfLaps = m_settings.value("race_settings/number_of_laps").toInt();
         raceSettings.doRace = (bool)m_settings.value("race_settings/do_race").toBool();
+        std::cout << raceSettings.doRace;
 
         int j = 0;
-        while(m_settings.contains(QString("race_settings/id%1/race").arg(j)))
+        while(m_settings.contains(QString("race_settings/id%1/race").arg(j)) && j < m_numCars)
         {
                 m_settings.beginGroup(QString("race_settings/id%1").arg(j));
                 raceSettings.carID.push_back(m_settings.value("race").toInt());
@@ -647,6 +657,9 @@ std::vector<CarMeasurement> ProcessingThread::findCars(const std::vector<float> 
                     carMeasurement.y = centerY;
                     carMeasurement.theta = headingInDegrees;
                     carMeasurements.push_back(carMeasurement);
+                    //std::cout << "theta : " << carMeasurement.theta << std::endl;
+                    //std::cout << "x : " << carMeasurement.x << std::endl;
+                    //std::cout << "y : " << carMeasurement.y << std::endl;
                 }
                 else
                 {
@@ -658,6 +671,7 @@ std::vector<CarMeasurement> ProcessingThread::findCars(const std::vector<float> 
                         carMeasurement.y = centerY;
                         carMeasurement.theta = headingInDegrees;
                         carMeasurements.push_back(carMeasurement);
+                        std::cout << "theta : " << carMeasurement.theta << std::endl;
                     }
                 }
             }
@@ -695,10 +709,12 @@ std::vector<CarMeasurement> ProcessingThread::findCars(const std::vector<float> 
                     carMeasurement.y = centerY;
                     carMeasurement.theta = headingInDegrees;
                     carMeasurements.push_back(carMeasurement);
+
                 }
             }
         }
     }
+
     return carMeasurements;
 }
 

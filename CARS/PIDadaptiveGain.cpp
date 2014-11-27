@@ -12,7 +12,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_startInd = 0;
     m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;      //m_vRef is uniqe to each car
-    m_gain = .8f;
+    m_gain = .6f;
     m_offset = 0.4f;
     m_checkPoint = false;
     m_firstLapDone = false;
