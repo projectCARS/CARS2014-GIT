@@ -25,6 +25,32 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_prevD = 0;
     m_prevAngError = 0;
 
+    //used for section
+    m_numOfInterval = 30;
+    m_intervalLength = gRefLen / m_numOfInterval ;
+    m_length2mid = (int) ( m_intervalLength / 2 );
+
+    m_intervalStartIndexes.resize(0);
+    m_intervalStartIndexes.resize(m_numOfInterval);
+    m_refSpeedShortDrive.resize(0);
+    m_refSpeedShortDrive.resize(m_numOfInterval);
+    m_refSpeedShortBest.resize(0);
+    m_refSpeedShortBest.resize(m_numOfInterval);
+    m_times.resize(0);
+    m_times.resize(m_numOfInterval);
+    m_timesBest.resize(0);
+    m_timesBest.resize(m_numOfInterval);
+
+    for (int i = 0; i<m_numOfInterval ; i++ )
+    {
+        m_intervalStartIndexes[i] = (int) (i * m_intervalLength);
+        m_refSpeedShortDrive[i] = m_vRef[m_intervalStartIndexes[i] + m_length2mid ];
+    }
+    m_refSpeedShortBest = m_refSpeedShortDrive;
+
+
+
+    //end of used for section
 
     m_turnPID.resize(3);
     m_speedPID.resize(3);
@@ -85,7 +111,65 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     {
         updateSpeedReferenceGain();
     }
-    //qDebug() << m_vRef[0] << m_vRef[10] << m_vRef[20] << m_vRef[30] << m_vRef[40] << m_vRef[50];
+
+    //update value in section
+    m_IndexSection = findClosestSection(state);
+    if ( newSectionEntered(state,m_IndexSection) )
+    {
+        updateSpeedReference(m_IndexSection);
+    }
+
+}
+
+
+int PIDadaptiveGain::findClosestSection(std::vector<float> &state)
+{
+    float carX, carY;
+    float dist1,dist2, diffX, diffY;
+    int j, index;
+
+    dist1 = 1000;  // A big number
+
+    //sweep all points on update path, find shortest distance and correspoding index
+    for (int i = 0; i < m_numOfInterval ; i++)
+    {
+        j = m_intervalStartIndexes[i];
+        diffX = gRef[2 * j] - carX;
+        diffY = gRef[2 * j + 1] - carY;
+        dist2 = diffX*diffX + diffY*diffY;
+        if (dist2<dist1)    //if new distance is shorter save distance and corresponding index.
+        {
+            dist1 = dist2;
+            index = i;
+        }
+    } // index is now refering to index in m_intervalStartIndexes vector correspodning to the closest start of section
+      // equvialent to the section that has its start closest to the car
+    return index;
+}
+
+bool PIDadaptiveGain::newSectionEntered(std::vector<float> &state, int IndexCurrent)
+{
+    if ( m_IndexSectionOld == IndexCurrent )
+    {
+        return false;
+    }
+    else
+    {
+        m_IndexSectionOld = IndexCurrent;
+        return true;
+    }
+}
+
+void PIDadaptiveGain::updateSpeedReference(int m_IndexSection)
+{
+if (true ) // if kört ett helt varv och börja varv 2
+{
+    ;
+    // sista uppdateringen
+    //gör spline
+}
+    //uppdatera curernt section
+
 }
 
 

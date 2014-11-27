@@ -41,6 +41,20 @@ private:
     QElapsedTimer timer;
     float m_lLap, m_bLap;
 
+    int m_IndexSection;
+    int m_IndexSectionOld;
+
+
+    //for sectionn
+    int m_numOfInterval;
+    float m_intervalLength;
+    int m_length2mid;
+    std::vector<int> m_intervalStartIndexes;
+    std::vector<int> m_refSpeedShortDrive;
+    std::vector<int> m_refSpeedShortBest;
+    std::vector<float> m_times;
+    std::vector<float> m_timesBest;
+    //end for section
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
@@ -73,6 +87,13 @@ private:
     // Update speed reference gain(m_gain and possibly m_offset)
     void updateSpeedReferenceGain();
     //
+    void updateSpeedReference(int m_IndexSection);
+    //
     bool lapDone(std::vector<float> &state);
+    //
+    int findClosestSection(std::vector<float> &state);
+    //
+    bool newSectionEntered(std::vector<float> &state, int IndexCurrent);
+
 };
 #endif // PIDADAPTIVEGAIN_H
