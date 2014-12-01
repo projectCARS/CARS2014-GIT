@@ -38,6 +38,7 @@ private:
     Eigen::MatrixXf carPattern;
     float expectedSpeed;
     int limit;
+    int noNegatives = 0;
     bool noCar;
 
     cv::Mat m_img;
@@ -75,14 +76,15 @@ public:
     void setState(float state[3]);
     void extensiveSearch(cv::Mat img);
     void propagate(void);
+    void propagateWorldCoordinates(void);
     void propagateCT(void);
+    void propagateST(void);
     void update(const cv::Mat img);
     void parallelUpdate(const cv::Mat img);
     void noImgUpdate(float x, float y, float theta);
 
     void nonLinearUndistort(float input[2], float output[2]);
     void cameraToWorldCoordinates(float cameraPoint[2], float worldPoint[2]);
-    void worldToCameraCoordinates(float worldPoint[2], float cameraPoint[2]);
 
     void resample(void);
     void systematicResample(void);

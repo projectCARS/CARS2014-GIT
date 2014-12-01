@@ -138,9 +138,6 @@ void ProcessingThread::run()
             LeaveCriticalSection(&csDrawThreadData);
             if(carMeasurements.size() > 0)
                 m_cars[0].addMeasurement(carMeasurements[0].x, carMeasurements[0].y, carMeasurements[0].theta);
-
-            //std::cout << "Measurement Update : " << omp_get_wtime() - t1 << std::endl;
-
         }
 
         // Add measurements to cars.
@@ -181,17 +178,19 @@ void ProcessingThread::run()
             carData[j].mode = m_cars[j].getMode();
             carData[j].state = m_cars[j].getState();
 
-            if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
+            /*if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
             {
-                float yaw = carData[j].state[3];
-                float vel = carData[j].state[2];
-                float angvel = carData[j].state[4];
-                sensor.cameraToWorldCoordinates(carData[j].state);
-                carData[j].state[2] = vel;
-                carData[j].state[3] = yaw;
-                carData[j].state[4] = angvel;
-            }
-            //std::cout << carData[j].state[0] << std::endl << carData[j].state[1] << std::endl << carData[j].state[3] << std::endl;
+                            float yaw = carData[j].state[3];
+                            float vel = carData[j].state[2];
+                            float angvel = carData[j].state[4];
+                            sensor.cameraToWorldCoordinates(carData[j].state);
+                            carData[j].state[2] = vel;
+                            carData[j].state[3] = yaw;
+                            carData[j].state[4] = angvel;
+                            std::cout << yaw << std::endl;
+            }*/
+
+            //std::cout << "\nstate yaw: " << carData[j].state[3] << std::endl;
         }
 
         // Log data. Currently only log data of car with id 0.
@@ -671,7 +670,6 @@ std::vector<CarMeasurement> ProcessingThread::findCars(const std::vector<float> 
                         carMeasurement.y = centerY;
                         carMeasurement.theta = headingInDegrees;
                         carMeasurements.push_back(carMeasurement);
-                        std::cout << "theta : " << carMeasurement.theta << std::endl;
                     }
                 }
             }
