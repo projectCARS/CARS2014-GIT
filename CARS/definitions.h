@@ -79,6 +79,7 @@ namespace MotionModelType
     enum Enum
     {
         CTModel,
+        STModel,
     };
 }
 

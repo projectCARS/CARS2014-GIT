@@ -451,6 +451,7 @@ void Calibrator::cameraToWorldCoordinates(float cameraPoint[2], float worldPoint
     worldPoint[1] = worldPoint_Eigen[1];
 }
 
+// In order to use this, a matrix worldToCamera matrix need to be formed. At (2014-12-02) this does not exist
 void Calibrator::worldToCameraCoordinates(float worldPoint[2], float cameraPoint[2])
 {
     // Note that worldToCameraCoordinates does NOT utilize the non-linear transformation distCoeffs

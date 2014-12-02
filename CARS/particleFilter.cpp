@@ -18,8 +18,10 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
     switch (motionModelType)
     {
         case MotionModelType::CTModel:
+        {
             mType = motionModelType;
             M = new CTModel();
+        }
             break;
         default:
             std::cout << "Error: Motion model type not implemented, in ParticleFilter::ParticleFilter(), ParticleFilter.cpp" << std::endl;
@@ -136,6 +138,19 @@ void ParticleFilter::propagateCTWorldCoordinates(void)
 
 void ParticleFilter::propagateST(void)
 {
+    T = ((double)(omp_get_wtime() - time));
+    time = omp_get_wtime();
+
+    for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
+    {
+        // update points with ST model
+        VxPoints[i] =
+        velPoints[i] = vel[i] + gaussianNoise()*0.05;
+        angvelPoints[i] = angvel[i] + M_PI / 7 * gaussianNoise();
+        yawPoints[i] = yaw[i] + angvel[i]*T;
+        posXPoints[i] = posX[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
+        posYPoints[i] = posY[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
+    }
 
 }
 
@@ -322,7 +337,6 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
             numPartInCritReg++;
         }
 
-        //std::cout << "x: " << posXPoints[n] << " y: " << posYPoints[n] << std::endl;
         if(posXPoints[n] < 0 || posXPoints[n] > 2.5 || posYPoints[n] < 0 || posYPoints[n] > 2.0)
         {
             sum = 0;
@@ -338,8 +352,6 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
             val = 0.;
             sum = 0.;
             angle = yawPoints[n];
-
-            //std::cout << "before: " << yawPoints[n] << std::endl;
 
             sum += sqrt(pow((posXPoints[n] - x), 2.0) + pow((posYPoints[n] - y), 2.0));
             sum = 1.0/sum;
@@ -371,7 +383,7 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
 
             //std::cout << "after: " << angle << std::endl << std::endl;
 
-            // Adjust the sum weight with the difference between the angle state and measurement
+            // Multiply the sum weight with the difference between the angle state and measurement to the power of 20
             if(abs(angle - measAngle) > 0.5 && angle > 0.5)
             {
                 base = 1 - abs((angle - 1) - measAngle);
@@ -392,19 +404,20 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
 
             //std::cout << "base: " << base << " angle : " << angle << " MeasAngle: " << measAngle << " weight: " << weight << " sum : " << sum <<std::endl;
 
+            // In the parallel loop it's not posible to make a cumulative sum, do that outside the loop
             noncumulativeWeights[n] = sum;
         }
     }
 
+    // Form a cumulative formed array of weights
     cumulativeWeights[0] = noncumulativeWeights[0];
     for (int i = 1; i < NUMBER_OF_PARTICLES; i++)
     {
         cumulativeWeights[i] = cumulativeWeights[i - 1] + noncumulativeWeights[i];
     }
-
 }
 
-// Resample the particles uing multinomial resampling
+// Resample the particles using multinomial resampling
 // Not updated to work with non-image mode as of (2014-12-02)
 void ParticleFilter::resample(void)
 {
