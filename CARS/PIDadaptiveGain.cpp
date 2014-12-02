@@ -4,6 +4,8 @@
 #include "PIDadaptiveGain.h"
 #include "functions.h"
 
+#include "interp.h"
+
 #include <fstream>
 
 PIDadaptiveGain::PIDadaptiveGain(int ID)
@@ -26,29 +28,44 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_prevAngError = 0;
 
     //used for section
-    m_numOfInterval = 30;
+    m_numOfInterval = 30.0;
     m_intervalLength = gRefLen / m_numOfInterval ;
     m_length2mid = (int) ( m_intervalLength / 2 );
 
+
     m_intervalStartIndexes.resize(0);
     m_intervalStartIndexes.resize(m_numOfInterval);
-    m_refSpeedShortDrive.resize(0);
-    m_refSpeedShortDrive.resize(m_numOfInterval);
+    m_intervalMidIndexes.resize(0);
+    m_intervalMidIndexes.resize(m_numOfInterval);
+    m_refSpeedShort.resize(0);
+    m_refSpeedShort.resize(m_numOfInterval);
     m_refSpeedShortBest.resize(0);
     m_refSpeedShortBest.resize(m_numOfInterval);
+    m_timerTimes.resize(0);
+    m_timerTimes.resize(m_numOfInterval);
     m_times.resize(0);
     m_times.resize(m_numOfInterval);
     m_timesBest.resize(0);
     m_timesBest.resize(m_numOfInterval);
 
+    /*b.resize(0);
+    c.resize(0);
+    d.resize(0);
+    b.resize(m_numOfInterval);
+    c.resize(m_numOfInterval);
+    d.resize(m_numOfInterval);
+*/
+
     for (int i = 0; i<m_numOfInterval ; i++ )
     {
         m_intervalStartIndexes[i] = (int) (i * m_intervalLength);
-        m_refSpeedShortDrive[i] = m_vRef[m_intervalStartIndexes[i] + m_length2mid ];
+        m_intervalMidIndexes[i] = m_intervalStartIndexes[i] + m_length2mid;
+        m_refSpeedShort[i] = m_vRef[m_intervalMidIndexes[i]];
     }
-    m_refSpeedShortBest = m_refSpeedShortDrive;
+    m_refSpeedShortBest = m_refSpeedShort;
 
-
+    timerSection.start();
+    m_firstLapStarted = false;
 
     //end of used for section
 
@@ -76,15 +93,23 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     {
         str.clear();
         str.str(std::string());
-        str << "outdata/logFiles/logSRgain" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
+        str << "outdata/logFiles/logAdaptiveSection" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
         if (!fileExists(str.str()))
         {
             break;
         }
         fileNo++;
     }
-    logFileSRgain.open(str.str());
-    logFileSRgain << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
+    logFileAdaptive.open(str.str());
+
+    logFileAdaptive << "m_numOfInterval gRefLen m_intervalMidIndexes  m_refSpeedShortBest m_refSpeedShortBest\n";
+    logFileAdaptive << m_numOfInterval << " " << gRefLen << "\n" ;
+    for (int i = 0; i<m_numOfInterval ; i++ )
+    {
+        logFileAdaptive <<  m_intervalMidIndexes[i] << " " << m_refSpeedShort[i] <<"\n";
+    }
+
+   // logFileSRgain << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
     std::cout << "PIDadaptiveGain object:		Writing log to " << str.str() << std::endl;
 
 }
@@ -106,17 +131,22 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     gas = calcGasSignal(state, m_refSpeed);
     turn = calcTurnSignal(state, m_refIndCircle);
 
-    //update gain
+    /*
+    //update gain on speed profile. One gain for the whole lap
     if (lapDone(state))
     {
         updateSpeedReferenceGain();
     }
+    */
 
-    //update value in section
+
+
+    //update speed ref value in section. Number of sections given by: m_numOfInterval
     m_IndexSection = findClosestSection(state);
     if ( newSectionEntered(state,m_IndexSection) )
     {
-        updateSpeedReference(m_IndexSection);
+        updateSectionTimers(m_IndexSection); //if Indexsection == 0, this function calls updateSpeedReference
+        //updateSpeedReference(m_IndexSection);
     }
 
 }
@@ -124,10 +154,12 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
 
 int PIDadaptiveGain::findClosestSection(std::vector<float> &state)
 {
+
     float carX, carY;
     float dist1,dist2, diffX, diffY;
     int j, index;
 
+    carX = state[0]; carY = state[1];
     dist1 = 1000;  // A big number
 
     //sweep all points on update path, find shortest distance and correspoding index
@@ -143,7 +175,8 @@ int PIDadaptiveGain::findClosestSection(std::vector<float> &state)
             index = i;
         }
     } // index is now refering to index in m_intervalStartIndexes vector correspodning to the closest start of section
-      // equvialent to the section that has its start closest to the car
+    // equvialent to the section that has its start closest to the car
+    //qDebug() << "findClosestSection, index:  " << index ;
     return index;
 }
 
@@ -151,25 +184,112 @@ bool PIDadaptiveGain::newSectionEntered(std::vector<float> &state, int IndexCurr
 {
     if ( m_IndexSectionOld == IndexCurrent )
     {
+        //qDebug() <<"newSectionEntered = false";
         return false;
     }
     else
     {
         m_IndexSectionOld = IndexCurrent;
+        //qDebug() <<"newSectionEntered = true";
         return true;
     }
 }
 
-void PIDadaptiveGain::updateSpeedReference(int m_IndexSection)
+void PIDadaptiveGain::updateSectionTimers(int IndexSection)
 {
-if (true ) // if kört ett helt varv och börja varv 2
-{
-    ;
-    // sista uppdateringen
-    //gör spline
-}
-    //uppdatera curernt section
+    qDebug() << "updateSectionTimers( " << IndexSection << " )";
+    if ( m_firstLapDone )
+    {
+        if ( IndexSection == 0)
+        {
+            m_timerTimes[m_numOfInterval-1] = timerSection.elapsed()/1000.0;
+            timerSection.restart();     //restart timer on every new lap
+            updateSpeedReference();
+        }
+        else
+        {
+            m_timerTimes[IndexSection-1] = timerSection.elapsed()/1000.0;
+        }
+    }
+    else if ( m_firstLapStarted )
+    {
+        if ( IndexSection == 0)
+        {
+            m_timerTimes[m_numOfInterval-1] = timerSection.elapsed()/1000.0;
+            timerSection.restart();     //restart timer on every new lap
+            m_firstLapDone = true;
+            qDebug() << "m_firstLapDone = true;";
 
+            //save first laps times as best times
+            m_timesBest[0] = m_timerTimes[0];
+            for (int i = 1; i<m_numOfInterval; i++)
+            {
+                m_timesBest[i] = m_timerTimes[i] - m_timerTimes[i-1];
+            }
+            updateSpeedReference();
+        }
+        else
+        {
+            m_timerTimes[IndexSection-1] = timerSection.elapsed()/1000.0;
+        }
+    }
+    else if ( IndexSection == 0 )
+    {
+        timerSection.restart();
+        m_firstLapStarted = true;
+        qDebug() << "m_firstLapStarted = true;";
+    }
+}
+
+void PIDadaptiveGain::updateSpeedReference()
+{
+    qDebug() << "updateSpeedReference";
+    // make m_times from m_timerTimes
+    m_times[0] = m_timerTimes[0];
+    for (int i = 1; i<m_numOfInterval; i++)
+    {
+        m_times[i] = m_timerTimes[i] - m_timerTimes[i-1];
+    }
+
+    // update m_timesBest and m_refSpeedShortBest;
+    for (int i = 0; i<m_numOfInterval; i++)
+    {
+        if (m_times[i]<m_timesBest[i])
+        {
+            m_timesBest[i] = m_times[i];
+            m_refSpeedShortBest[i] = m_refSpeedShort[i];
+        }
+        // make new m_refSpeedShort
+        m_refSpeedShort[i] = m_refSpeedShortBest[i] + 0.55*(rand()/((float)RAND_MAX)- 0.5);
+    }
+
+    // construct m_vRef from m_refSpeedShort
+    double *x,*f,*b,*c,*d;
+    int n;
+    n = m_numOfInterval;
+    x = new double [n];
+    f = new double [n];
+    b = new double [n];
+    c = new double [n];
+    d = new double [n];
+
+    for (int i = 0; i<m_numOfInterval;i++)
+    {
+        x[i] = (double) m_intervalMidIndexes[i];
+        f[i] = m_refSpeedShort[i];
+       qDebug() << x[i] << " " << f[i];
+    }
+
+    cubic_nak ( n, x, f, b, c, d );
+    for (int i = 0; i<gRefLen; i++)
+    {
+        m_vRef[i] = spline_eval ( n, x, f, b, c, d, (double)i);
+        //qDebug() << m_vRef[i];
+    }
+    for (int i = 0; i<m_numOfInterval; i++)
+    {
+        logFileAdaptive << m_refSpeedShortBest[i] << "\n";
+    }
 }
 
 
@@ -407,9 +527,7 @@ float PIDadaptiveGain::calcRefSpeed(std::vector<float> &state, int refInd, doubl
 }
 
 
-// Update speed reference vector
-
-
+// Update speed reference gain
 void PIDadaptiveGain::updateSpeedReferenceGain()
 {
     if (m_firstLapDone)

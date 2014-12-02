@@ -46,20 +46,30 @@ private:
 
 
     //for sectionn
-    int m_numOfInterval;
+    float m_numOfInterval;
     float m_intervalLength;
     int m_length2mid;
     std::vector<int> m_intervalStartIndexes;
-    std::vector<int> m_refSpeedShortDrive;
-    std::vector<int> m_refSpeedShortBest;
+    std::vector<int> m_intervalMidIndexes;
+    std::vector<float> m_refSpeedShort;
+    std::vector<float> m_refSpeedShortBest;
     std::vector<float> m_times;
+    std::vector<float> m_timerTimes;
     std::vector<float> m_timesBest;
+    QElapsedTimer timerSection;
+    bool m_firstLapStarted;  //section also uses m_firstLapDone declared above
+
+    //used by interp (cubic splines)
+    //std::vector<float> b;
+    //std::vector<float> c;
+    //std::vector<float> d;
+
     //end for section
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
     QElapsedTimer timeSRgain;
-    std::ofstream logFileSRgain;
+    std::ofstream logFileAdaptive;
 
 
 public:
@@ -87,7 +97,9 @@ private:
     // Update speed reference gain(m_gain and possibly m_offset)
     void updateSpeedReferenceGain();
     //
-    void updateSpeedReference(int m_IndexSection);
+    void updateSectionTimers(int IndexSection);
+    //
+    void updateSpeedReference();
     //
     bool lapDone(std::vector<float> &state);
     //

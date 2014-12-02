@@ -89,7 +89,8 @@ SOURCES += main.cpp\
     particleFilter.cpp \
     racedialog.cpp \
     PIDadaptiveGain.cpp \
-    racegroupbox.cpp
+    racegroupbox.cpp \
+    interp.cpp
 
 HEADERS  += mainwindow.h \
     processingthread.h \
@@ -120,7 +121,8 @@ HEADERS  += mainwindow.h \
     ParticleFilter.h \
     racedialog.h \
     PIDadaptiveGain.h \
-    racegroupbox.h
+    racegroupbox.h \
+    interp.h
 
 FORMS    += mainwindow.ui \
     referencedialog.ui \
