@@ -57,11 +57,14 @@ private:
     bool imageMode = true;
 
     double T = 1/140;
+    double time = 0;
 
     int trackConstraints[1200][1500];
+    int numPartInCritReg= 0;
 
     VirtualSensor vs;
 
+    MotionModelType mType;
     MotionModel *M;
 
     VectorXd xhat;
@@ -80,7 +83,9 @@ public:
     void propagate(void);
     void propagateWorldCoordinates(void);
     void propagateCT(void);
+    void propagateCTWorldCoordinates(void);
     void propagateST(void);
+    void propagateSTWorldCoordinates(void);
     void update(const cv::Mat img);
     void parallelUpdate(const cv::Mat img);
     void noImgUpdate(float x, float y, float theta);
