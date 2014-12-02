@@ -71,6 +71,8 @@ private:
 
     bool m_newMeasurement;
 
+
+
     float gaussianNoise(void);
     int findFirst(const float value);
 
