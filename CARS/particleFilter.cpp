@@ -9,6 +9,8 @@
 #include <cmath>
 #include <QDebug>
 #include <omp.h>
+#include <fstream>
+#include <iostream>
 
 
 ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType)
@@ -22,7 +24,8 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
             std::cout << "Error: Motion model type not implemented, in ParticleFilter::ParticleFilter(), ParticleFilter.cpp" << std::endl;
     }
 
-    imageMode = false;
+    imageMode = true;
+    LoadTrack();
 
     carPattern = ID;
     expectedSpeed = speed;
@@ -74,7 +77,6 @@ void ParticleFilter::propagate(void)
         // update points with random walk model
         velPoints[i]  = expectedSpeed + 25 * gaussianNoise();
         yawPoints[i] = yaw[i] + M_PI / 5 * gaussianNoise(); // angle
-        std::cout << yawPoints[i] << std::endl;
         posXPoints[i] = posX[i] + velPoints[i]*sin(yawPoints[i]);
         posYPoints[i] = posY[i] - velPoints[i]*cos(yawPoints[i]);
     }
@@ -210,49 +212,63 @@ omp_set_num_threads(3);
 #pragma omp parallel for private(rotate, translate, pos, sum, val)
     for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
-        // Add border values around each point controlled
-        cv::Rect ROI = cv::Rect(0, 0, limit, limit);
-        cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
-
-        // Rotate and translate pattern according to hypothesis
-        rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
-            sin(yawPoints[n]), cos(yawPoints[n]);
-        translate << posXPoints[n], 0,
-            posYPoints[n], 0;
-        pos = rotate*carPattern.transpose() + translate*ones;
-
-        val = 0.;
-        sum = 0.;
-        for (int p = 0; p < points; p++)
+        if(posXPoints[n] < 0 || posXPoints[n] > 2.5*NUMBER_OF_PARTICLES || posYPoints[n] < 0 || posYPoints[n] > 2.0*NUMBER_OF_PARTICLES)
         {
+            sum = 0;
+            noncumulativeWeights[n] = 0;
+        }
+        else if(trackConstraints[(int)(posYPoints[n])][(int)(posXPoints[n])] == 0)
+        {
+            std::cout << "Y: " << (int)(posYPoints[n]) << "X:  " <<(int)(posXPoints[n]) << " out of bounds guess\n";
+            sum = 0;
+            noncumulativeWeights[n] = sum;
+        }
+        else
+        {
+            // Add border values around each point controlled
+            cv::Rect ROI = cv::Rect(0, 0, limit, limit);
+            cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
 
-            // Update ROI
-            ROI.x = pos(0, p);
-            ROI.y = pos(1, p);
-            //std::cout << "checking: [" << ROI.x << ", " << ROI.y << std::endl;
-            if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
+            // Rotate and translate pattern according to hypothesis
+            rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
+                sin(yawPoints[n]), cos(yawPoints[n]);
+            translate << posXPoints[n], 0,
+                posYPoints[n], 0;
+            pos = rotate*carPattern.transpose() + translate*ones;
+
+            val = 0.;
+            sum = 0.;
+            for (int p = 0; p < points; p++)
             {
-                {
-                    imgROI = img(ROI);
-                }
 
-                cv::Scalar mean = cv::mean(imgROI);
+                // Update ROI
+                ROI.x = pos(0, p);
+                ROI.y = pos(1, p);
 
-                // Throws the hypothesis if no point found. This gives some speedup.
-                if (mean.val[0] == 0)
+                if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
                 {
+                    {
+                        imgROI = img(ROI);
+                    }
 
-                    //totSum = 0;
-                    sum = 0;
-                    break;
-                }
-                else
-                {
-                    sum += mean.val[0];
+                    cv::Scalar mean = cv::mean(imgROI);
+
+                    // Throws the hypothesis if no point found. This gives some speedup.
+                    if (mean.val[0] == 0)
+                    {
+
+                        //totSum = 0;
+                        sum = 0;
+                        break;
+                    }
+                    else
+                    {
+                        sum += mean.val[0];
+                    }
                 }
             }
+            noncumulativeWeights[n] = sum; // save the weights in non-cumulative form in the parallelized loop
         }
-        noncumulativeWeights[n] = sum; // save the weights in non-cumulative form in the parallelized loop
     }
 
     // Form a cumulative sum of the weights
@@ -290,66 +306,77 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
     for(int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
         //std::cout << "x: " << posXPoints[n] << " y: " << posYPoints[n] << std::endl;
-
-
-        val = 0.;
-        sum = 0.;
-        angle = yawPoints[n];
-
-        //std::cout << "before: " << yawPoints[n] << std::endl;
-
-        sum += sqrt(pow((posXPoints[n] - x), 2.0) + pow((posYPoints[n] - y), 2.0));
-        sum = 1.0/sum;
-
-        // convert angle to value between -pi and pi
-        while(abs(angle) > 2.0*M_PI)
+        if(posXPoints[n] < 0 || posXPoints[n] > 2.5 || posYPoints[n] < 0 || posYPoints[n] > 2.0)
         {
-            if(angle > 0)
+            sum = 0;
+            noncumulativeWeights[n] = 0;
+        }
+        else if(trackConstraints[(int)(NUMBER_OF_PARTICLES*posYPoints[n])][(int)(NUMBER_OF_PARTICLES*posXPoints[n])] == 0)
+        {
+            sum = 0;
+            noncumulativeWeights[n] = 0;
+        }
+        else
+        {
+            val = 0.;
+            sum = 0.;
+            angle = yawPoints[n];
+
+            //std::cout << "before: " << yawPoints[n] << std::endl;
+
+            sum += sqrt(pow((posXPoints[n] - x), 2.0) + pow((posYPoints[n] - y), 2.0));
+            sum = 1.0/sum;
+
+            // convert angle to value between -pi and pi
+            while(abs(angle) > 2.0*M_PI)
+            {
+                if(angle > 0)
+                    angle -= 2.0*M_PI;
+                else
+                    angle += 2.0*M_PI;
+            }
+            if(angle > M_PI)
                 angle -= 2.0*M_PI;
-            else
+            else if(angle < (-M_PI))
                 angle += 2.0*M_PI;
+
+            //std::cout << "yawPoints value: " << angle << std::endl;
+
+            // Normalize angles to value between 0 and 1
+            if(angle < 0)
+            {
+                angle = (2*M_PI + angle)/(2.0*M_PI);
+            }
+            else
+            {
+                angle = angle/(2.0*M_PI);
+            }
+
+            //std::cout << "after: " << angle << std::endl << std::endl;
+
+            // Adjust the sum weight with the difference between the angle state and measurement
+            if(abs(angle - measAngle) > 0.5 && angle > 0.5)
+            {
+                base = 1 - abs((angle - 1) - measAngle);
+                weight = pow(base, 20);
+            }
+            else if(abs(angle - measAngle) > 0.5 && measAngle > 0.5)
+            {
+                base = 1 - abs(angle - (measAngle - 1));
+                weight = pow(base, 20);
+            }
+            else
+            {
+                base = 1 - abs(angle - measAngle);
+                weight = pow(base, 20);
+            }
+
+            sum = sum*weight;
+
+            //std::cout << "base: " << base << " angle : " << angle << " MeasAngle: " << measAngle << " weight: " << weight << " sum : " << sum <<std::endl;
+
+            noncumulativeWeights[n] = sum;
         }
-        if(angle > M_PI)
-            angle -= 2.0*M_PI;
-        else if(angle < (-M_PI))
-            angle += 2.0*M_PI;
-
-        //std::cout << "yawPoints value: " << angle << std::endl;
-
-        // Normalize angles to value between 0 and 1
-        if(angle < 0)
-        {
-            angle = (2*M_PI + angle)/(2.0*M_PI);
-        }
-        else
-        {
-            angle = angle/(2.0*M_PI);
-        }
-
-        //std::cout << "after: " << angle << std::endl << std::endl;
-
-        // Adjust the sum weight with the difference between the angle state and measurement
-        if(abs(angle - measAngle) > 0.5 && angle > 0.5)
-        {
-            base = 1 - abs((angle - 1) - measAngle);
-            weight = pow(base, 20);
-        }
-        else if(abs(angle - measAngle) > 0.5 && measAngle > 0.5)
-        {
-            base = 1 - abs(angle - (measAngle - 1));
-            weight = pow(base, 20);
-        }
-        else
-        {
-            base = 1 - abs(angle - measAngle);
-            weight = pow(base, 20);
-        }
-
-        sum = sum*weight;
-
-        //std::cout << "base: " << base << " angle : " << angle << " MeasAngle: " << measAngle << " weight: " << weight << " sum : " << sum <<std::endl;
-
-        noncumulativeWeights[n] = sum;
     }
 
     cumulativeWeights[0] = noncumulativeWeights[0];
@@ -464,17 +491,20 @@ void ParticleFilter::systematicResample(void)
             vel[j] = velPoints[k];
             sumStates[2] += velPoints[k];
             yaw[j] = yawPoints[k];
-            if(yawPoints[k] < 0)
-            {
-                sumStates[3] += (yawPoints[k] + 2*M_PI);
-                //std::cout << "1 " << yawPoints[k] + 2*M_PI << std::endl;
+
+            if(!imageMode){
+                if(yawPoints[k] < 0)
+                {
+                    sumStates[3] += (yawPoints[k] + 2*M_PI);
+                    //std::cout << "1 " << yawPoints[k] + 2*M_PI << std::endl;
+                }
+                else{
+                    sumStates[3] += yawPoints[k];
+                    //std::cout << "2 " << yawPoints[k] << std::endl;
+                }
             }
-            else{
+            else
                 sumStates[3] += yawPoints[k];
-                //std::cout << "2 " << yawPoints[k] << std::endl;
-            }
-            sumStates[3] += yawPoints[k];
-            //std::cout << yawPoints[k] << std::endl;
 
             angvel[j] = angvelPoints[k];
             sumStates[4] += angvelPoints[k];
@@ -495,15 +525,17 @@ void ParticleFilter::systematicResample(void)
             sumStates[2] += velPoints[i];
 
             yaw[i] = yawPoints[i];
-            if(yawPoints < 0)
-            {
-                noNegatives++;
-                sumStates[3] += (yawPoints[k] + 2*M_PI);
-                std::cout << yawPoints[k] + 2*M_PI << std::endl;
-            }
-            else{
-                sumStates[3] += yawPoints[k];
-                std::cout << yawPoints[k] << std::endl;
+            if(!imageMode){
+                if(yawPoints < 0)
+                {
+                    noNegatives++;
+                    sumStates[3] += (yawPoints[k] + 2*M_PI);
+                    //std::cout << yawPoints[k] + 2*M_PI << std::endl;
+                }
+                else{
+                    sumStates[3] += yawPoints[k];
+                    //std::cout << yawPoints[k] << std::endl;
+                }
             }
             sumStates[3] += yawPoints[i];
 
@@ -665,7 +697,6 @@ void ParticleFilter::updateFilter()
         {
             propagateWorldCoordinates();
             noImgUpdate(m_x, m_y, m_theta);
-            //resample();
             systematicResample();
         }
         else
@@ -742,4 +773,21 @@ void ParticleFilter::cameraToWorldCoordinates(float cameraPoint[2], float worldP
     worldPoint_Eigen = worldPoint_Eigen / worldPoint_Eigen[2];
     worldPoint[0] = worldPoint_Eigen[0]/PIXELS_PER_METER;
     worldPoint[1] = worldPoint_Eigen[1]/PIXELS_PER_METER;
+}
+
+void ParticleFilter::LoadTrack() {
+  int x, y;
+  std::ifstream in("track.txt");
+
+  if (!in) {
+    std::cout << "Cannot open file.\n";
+    return;
+  }
+
+  for (y = 0; y < 1200; y++) {
+    for (x = 0; x < 1500; x++) {
+      in >> trackConstraints[y][x];
+    }
+  }
+  in.close();
 }

@@ -218,7 +218,7 @@ void MainWindow::initializeRace()
 
     // Draw Start boxes
     int numStartBoxes = 0;
-    for (int i = 0; i < raceSettings.carID.size(); i++)
+    for (int i = 0; i < m_numCars; i++)
     {
         if(raceSettings.carID[i] == 1){
             char output[4];
@@ -447,13 +447,14 @@ void MainWindow::updateFrame(void)
     m_carTimerID = drawThreadData.carTimerID;
     LeaveCriticalSection(&csDrawThreadData);
 
-
+    // Only draw the winner of the race if the race is done
     if(raceSettings.doRace && raceSettings.raceDone)
     {
         char output[4];
         sprintf(output,"THE WINNER IS CAR %i", raceSettings.winnerID);
         cv::putText(m_tmpMat, output, cv::Point(300, 550), 1, 5, cv::Scalar(255, 200, 0),2,8, false);
     }
+
     // Only draw cars if carData is not empty. carData could be empty if the processingthread
     // have not had time to resize it.
     else if (m_carData.size() != 0)

@@ -178,7 +178,7 @@ void ProcessingThread::run()
             carData[j].mode = m_cars[j].getMode();
             carData[j].state = m_cars[j].getState();
 
-            /*if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
+            if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
             {
                             float yaw = carData[j].state[3];
                             float vel = carData[j].state[2];
@@ -187,8 +187,7 @@ void ProcessingThread::run()
                             carData[j].state[2] = vel;
                             carData[j].state[3] = yaw;
                             carData[j].state[4] = angvel;
-                            std::cout << yaw << std::endl;
-            }*/
+            }
 
             //std::cout << "\nstate yaw: " << carData[j].state[3] << std::endl;
         }
@@ -453,7 +452,6 @@ void ProcessingThread::loadRaceSettings()
         qDebug("settings exist");
         raceSettings.numberOfLaps = m_settings.value("race_settings/number_of_laps").toInt();
         raceSettings.doRace = (bool)m_settings.value("race_settings/do_race").toBool();
-        std::cout << raceSettings.doRace;
 
         int j = 0;
         while(m_settings.contains(QString("race_settings/id%1/race").arg(j)) && j < m_numCars)

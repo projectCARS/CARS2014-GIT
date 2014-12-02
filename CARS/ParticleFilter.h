@@ -58,6 +58,8 @@ private:
 
     double T = 1/140;
 
+    int trackConstraints[1200][1500];
+
     VirtualSensor vs;
 
     MotionModel *M;
@@ -88,6 +90,8 @@ public:
 
     void resample(void);
     void systematicResample(void);
+
+    void LoadTrack();
 
     void logStates(std::ofstream *logFile);
     bool carGone(void){ return noCar; }
