@@ -64,7 +64,7 @@ private:
 
     VirtualSensor vs;
 
-    MotionModelType mType;
+    MotionModelType::Enum mType;
     MotionModel *M;
 
     VectorXd xhat;

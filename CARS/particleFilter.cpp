@@ -144,7 +144,7 @@ void ParticleFilter::propagateST(void)
     for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
         // update points with ST model
-        VxPoints[i] =
+        //VxPoints[i] =
         velPoints[i] = vel[i] + gaussianNoise()*0.05;
         angvelPoints[i] = angvel[i] + M_PI / 7 * gaussianNoise();
         yawPoints[i] = yaw[i] + angvel[i]*T;
@@ -249,52 +249,51 @@ omp_set_num_threads(3);
 #pragma omp parallel for private(rotate, translate, pos, sum, val)
     for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
-        else
+
+        // Add border values around each point controlled
+        cv::Rect ROI = cv::Rect(0, 0, limit, limit);
+        cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
+
+        // Rotate and translate pattern according to hypothesis
+        rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
+            sin(yawPoints[n]), cos(yawPoints[n]);
+        translate << posXPoints[n], 0,
+            posYPoints[n], 0;
+        pos = rotate*carPattern.transpose() + translate*ones;
+
+        val = 0.;
+        sum = 0.;
+        for (int p = 0; p < points; p++)
         {
-            // Add border values around each point controlled
-            cv::Rect ROI = cv::Rect(0, 0, limit, limit);
-            cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
 
-            // Rotate and translate pattern according to hypothesis
-            rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
-                sin(yawPoints[n]), cos(yawPoints[n]);
-            translate << posXPoints[n], 0,
-                posYPoints[n], 0;
-            pos = rotate*carPattern.transpose() + translate*ones;
+            // Update ROI
+            ROI.x = pos(0, p);
+            ROI.y = pos(1, p);
 
-            val = 0.;
-            sum = 0.;
-            for (int p = 0; p < points; p++)
+            if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
             {
-
-                // Update ROI
-                ROI.x = pos(0, p);
-                ROI.y = pos(1, p);
-
-                if (ROI.x - limit > 0 && ROI.x + limit < img.cols && ROI.y - limit > 0 && ROI.y + limit < img.rows)
                 {
-                    {
-                        imgROI = img(ROI);
-                    }
+                    imgROI = img(ROI);
+                }
 
-                    cv::Scalar mean = cv::mean(imgROI);
+                cv::Scalar mean = cv::mean(imgROI);
 
-                    // Throws the hypothesis if no point found. This gives some speedup.
-                    if (mean.val[0] == 0)
-                    {
+                // Throws the hypothesis if no point found. This gives some speedup.
+                if (mean.val[0] == 0)
+                {
 
-                        //totSum = 0;
-                        sum = 0;
-                        break;
-                    }
-                    else
-                    {
-                        sum += mean.val[0];
-                    }
+                    //totSum = 0;
+                    sum = 0;
+                    break;
+                }
+                else
+                {
+                    sum += mean.val[0];
                 }
             }
-            noncumulativeWeights[n] = sum; // save the weights in non-cumulative form in the parallelized loop
         }
+        noncumulativeWeights[n] = sum; // save the weights in non-cumulative form in the parallelized loop
+
     }
 
     // Form a cumulative sum of the weights
@@ -455,7 +454,7 @@ void ParticleFilter::resample(void)
 
             if(!imageMode){
                 // Add 2*PI to the angle if the majority of the particles are close to the turning point around -pi and pi
-                if(yawPoints[k] < 0 && numPartInCritReg < NUMBER_OF_PARTICLES*0.1f)
+                if(yawPoints[index] < 0 && numPartInCritReg < NUMBER_OF_PARTICLES*0.1f)
                 {
                     sumStates[3] += (yawPoints[index] + 2*M_PI);
                     //std::cout << "1 " << yawPoints[k] + 2*M_PI << std::endl;
@@ -772,13 +771,15 @@ void ParticleFilter::updateFilter()
         }
         else // If a new measaurement was not found
         {
-            if(mType == MotionModelType::CTModel){
-                vel[i] = velPoints[i];
-                angvel[i] = angvelPoints[i];
-                yaw[i] = yawPoints[i] + angvel[i]*T;
-                posX[i] = posXPoints[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
-                posY[i] = posYPoints[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
+            for(int i = 0; i < NUMBER_OF_PARTICLES; i++){
+                if(mType == MotionModelType::CTModel){
+                    vel[i] = velPoints[i];
+                    angvel[i] = angvelPoints[i];
+                    yaw[i] = yawPoints[i] + angvel[i]*T;
+                    posX[i] = posXPoints[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
+                    posY[i] = posYPoints[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
 
+                }
             }
         }
     drawThreadData.sumStates = getSumStates();
