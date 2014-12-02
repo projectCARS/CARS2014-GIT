@@ -4,7 +4,7 @@
 #include "PIDadaptiveGain.h"
 #include "functions.h"
 
-#include "interp.h"
+//#include "interp.h"
 
 #include <fstream>
 
@@ -102,7 +102,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     }
     logFileAdaptive.open(str.str());
 
-    logFileAdaptive << "m_numOfInterval gRefLen m_intervalMidIndexes  m_refSpeedShortBest m_refSpeedShortBest\n";
+    logFileAdaptive << "m_numOfInterval gRefLen newline m_intervalMidIndexes  m_refSpeedShort andThen m_refSpeedShortBest  m_times m_timesBest \n ";
     logFileAdaptive << m_numOfInterval << " " << gRefLen << "\n" ;
     for (int i = 0; i<m_numOfInterval ; i++ )
     {
@@ -120,35 +120,44 @@ PIDadaptiveGain::~PIDadaptiveGain()
 
 void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &turn)
 {
+    bool adaptiveGain, section;
+    adaptiveGain = false;
+    section = true;
+
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
     findClosestReferencePoint(state);  //updates m_refIndClosest and m_dist_lateral
 
     //prepare reference speed
-    m_refSpeed = calcRefSpeed(state, m_refIndClosest, m_gain, m_offset);
+    if (adaptiveGain)
+        m_refSpeed = calcRefSpeed(state, m_refIndClosest, m_gain, m_offset);
+    else if (section)
+        m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1, 0);
 
     // Calculate gas and turn signal.
     gas = calcGasSignal(state, m_refSpeed);
     turn = calcTurnSignal(state, m_refIndCircle);
 
-    /*
-    //update gain on speed profile. One gain for the whole lap
-    if (lapDone(state))
+    if (adaptiveGain)
     {
-        updateSpeedReferenceGain();
-    }
-    */
-
-
-
-    //update speed ref value in section. Number of sections given by: m_numOfInterval
-    m_IndexSection = findClosestSection(state);
-    if ( newSectionEntered(state,m_IndexSection) )
-    {
-        updateSectionTimers(m_IndexSection); //if Indexsection == 0, this function calls updateSpeedReference
-        //updateSpeedReference(m_IndexSection);
+        //update gain on speed profile. One gain for the whole lap
+        if (lapDone(state))
+        {
+            updateSpeedReferenceGain();
+        }
     }
 
+
+    if (section)
+    {
+        //update speed ref value in section. Number of sections given by: m_numOfInterval
+        m_IndexSection = findClosestSection(state);
+        if ( newSectionEntered(state,m_IndexSection) )
+        {
+            updateSectionTimers(m_IndexSection); //if Indexsection == 0, this function calls updateSpeedReference
+            //updateSpeedReference(m_IndexSection);
+        }
+    }
 }
 
 
@@ -261,9 +270,12 @@ void PIDadaptiveGain::updateSpeedReference()
         }
         // make new m_refSpeedShort
         m_refSpeedShort[i] = m_refSpeedShortBest[i] + 0.55*(rand()/((float)RAND_MAX)- 0.5);
+        if (m_refSpeedShort[i] < 0.1)   //dont allow negativ and close to zero speed...
+            m_refSpeedShort[i] = 0.1;
     }
 
-    // construct m_vRef from m_refSpeedShort
+
+    // construct m_vRef from m_refSpeedShort with cubic spline - not a knot BC
     double *x,*f,*b,*c,*d;
     int n;
     n = m_numOfInterval;
@@ -277,19 +289,19 @@ void PIDadaptiveGain::updateSpeedReference()
     {
         x[i] = (double) m_intervalMidIndexes[i];
         f[i] = m_refSpeedShort[i];
-       qDebug() << x[i] << " " << f[i];
     }
 
-    cubic_nak ( n, x, f, b, c, d );
+    cubic_nak(n, x, f, b, c, d);
     for (int i = 0; i<gRefLen; i++)
     {
-        m_vRef[i] = spline_eval ( n, x, f, b, c, d, (double)i);
-        //qDebug() << m_vRef[i];
+        m_vRef[i] = spline_eval(n, x, f, b, c, d, (double)i);
     }
+    logFileAdaptive <<  "\n";
     for (int i = 0; i<m_numOfInterval; i++)
     {
-        logFileAdaptive << m_refSpeedShortBest[i] << "\n";
+        logFileAdaptive << m_refSpeedShortBest[i] << m_times[i] << m_timesBest[i] << "\n";
     }
+
 }
 
 
@@ -540,12 +552,8 @@ void PIDadaptiveGain::updateSpeedReferenceGain()
         {
             m_bLap = m_lLap;
             m_bGain = m_gain;
-            m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.5);
         }
-        else
-        {
-            m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.5);
-        }
+        m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.5);
         qDebug() << "bestGain: " << m_bGain << "new gain: " << m_gain;
     }
     else
