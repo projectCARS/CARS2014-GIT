@@ -1,6 +1,8 @@
 #pragma once
 
 #include "NIDAQmx.h"
+#include "definitions.h"
+#include <fstream>
 
 class IOControl
 {
@@ -38,6 +40,12 @@ private:
     const char *analog_input;
     const char *digital_output;
 
+
+   //for VoltageLog-file
+   QElapsedTimer timeVoltageLog;
+   std::ofstream logFileVoltageLog;
+   bool writeVoltageLog;
+
 public:
 	IOControl(int ID);
     ~IOControl();
@@ -53,7 +61,7 @@ public:
     void receiveSignals(float &gas, float &turn);
     //void receiveSignals(std::vector<float> &signals);
 	// Takes values (-1 to 1) and send it to output pins in corresponding voltage.
-	void sendSignals(float gas, float turn);
+    void sendSignals(float gas, float turn, CarData &carData);
 	// Takes input signals from the hand controller and sends it as output to the car.
 	void manualControl(void);
 	// Sends the gas signal from the hand controller and the turn signal turnSignal to the car.

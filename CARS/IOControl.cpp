@@ -1,6 +1,7 @@
 #include "headers.h"
 #include "definitions.h"
 #include "IOControl.h"
+#include "functions.h"
 
 IOControl::IOControl(int ID)
 {
@@ -115,6 +116,31 @@ void IOControl::init(void)
 	DAQmxCreateAOVoltageChan(m_hTaskOutput, analog_output, "", m_minValChannel, m_maxValChannel, DAQmx_Val_Volts, "");
 	DAQmxCreateDOChan(m_hTaskPower, digital_output, "", DAQmx_Val_ChanForAllLines);
 #endif
+    writeVoltageLog = true;
+    if (writeVoltageLog)
+    {
+        // Deciding which log file to write to
+        timeVoltageLog.start();
+        int fileNo = 1;
+        std::stringstream str;
+        for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here. (i < ceiling)
+        {
+            str.clear();
+            str.str(std::string());
+            str << "outdata/logFiles/logVoltage" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
+            if (!fileExists(str.str()))
+            {
+                break;
+            }
+            fileNo++;
+        }
+        logFileVoltageLog.open(str.str());
+        logFileVoltageLog << "time carID xPos yPos speed yaw yawVel Ugas Uturn \n";
+        std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+
+    }
+
+
 }
 
 void IOControl::startController(void)
@@ -152,13 +178,24 @@ void IOControl::receiveSignals(float &gas, float &turn)
 #endif
 }
 
-void IOControl::sendSignals(float gas, float turn)
+void IOControl::sendSignals(float gas, float turn, CarData &carData)
 {
 #ifdef NIDAQ_IS_AVALIABLE
     m_tempArray[0] = gas;
     m_tempArray[1] = turn;
     decimalToVoltage(m_tempArray);
     sendSignalsVolt(m_tempArray);
+    if (writeVoltageLog)
+    {
+        // "time carID xPos yPos speed yaw yawVel Ugas Uturn \n"
+
+        logFileVoltageLog << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
+        logFileVoltageLog << carData.state[0] << " " << carData.state[1] << " " ;
+        logFileVoltageLog << carData.state[2] << " " << carData.state[3] << " " ;
+        logFileVoltageLog << carData.state[4] << " " ;
+        logFileVoltageLog << m_tempArray[0] << " " << m_tempArray[1] << "\n" ;
+    }
+
 
 #endif
 }
@@ -373,7 +410,6 @@ void IOControl::sendSignalsVolt(float64 *signal)
     else
     {
         DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
-
     }
 #endif
 }

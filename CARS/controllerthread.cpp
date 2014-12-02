@@ -145,7 +145,7 @@ void ControllerThread::run()
                         m_controllers[i]->calcSignals(carData[i].state, signal[i].gas, signal[i].turn);
                     }
 
-                    ioControls[i].sendSignals(signal[i].gas, signal[i].turn);
+                    ioControls[i].sendSignals(signal[i].gas, signal[i].turn, carData[i]);
                     break;
                     // Send turn signal from controller and gas signal from hand controller to car.
                 case CarMode::Assisted:
@@ -180,7 +180,7 @@ void ControllerThread::run()
         {
             signal[i].gas = -0.9f;
             signal[i].turn = 0;
-            ioControls[i].sendSignals(signal[i].gas, signal[i].turn);
+            ioControls[i].sendSignals(signal[i].gas, signal[i].turn, carData[i]);
         }
     }
     // Sleep so that the cars have time to stop.
