@@ -15,6 +15,7 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
     m_filtertype = filterType;
 
 
+    //TODO make this pattern id-dependent, currently (2014-12-02) only use specific car 0 if imageMode is used
     Eigen::MatrixXf carPattern;
     cv::FileStorage storage("indata/car01.yml", cv::FileStorage::READ);
     cv::Mat tmp;
@@ -32,7 +33,6 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
 			break;
         case FilterType::ParticleFilter:
         {
-            //TODO make this id-dependent
             m_filter = new ParticleFilter(carPattern, speed, 5, motionModelType);
         }
             break;
