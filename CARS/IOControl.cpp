@@ -159,6 +159,7 @@ void IOControl::sendSignals(float gas, float turn)
     m_tempArray[1] = turn;
     decimalToVoltage(m_tempArray);
     sendSignalsVolt(m_tempArray);
+
 #endif
 }
 
@@ -372,6 +373,7 @@ void IOControl::sendSignalsVolt(float64 *signal)
     else
     {
         DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
+
     }
 #endif
 }

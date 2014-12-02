@@ -14,8 +14,8 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_startInd = 0;
     m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;      //m_vRef is uniqe to each car
-    m_gain = .6f;
-    m_offset = 0.4f;
+    m_gain = 1.0f;//.6f;
+    m_offset = 0.0f;//0.4f;
     m_checkPoint = false;
     m_firstLapDone = false;
     timer.start();
@@ -102,11 +102,11 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     }
     logFileAdaptive.open(str.str());
 
-    logFileAdaptive << "m_numOfInterval gRefLen newline m_intervalMidIndexes  m_refSpeedShort andThen m_refSpeedShortBest  m_times m_timesBest \n ";
-    logFileAdaptive << m_numOfInterval << " " << gRefLen << "\n" ;
+    logFileAdaptive << "m_numOfInterval gRefLen newline m_intervalMidIndexes  m_refSpeedShort andThen m_refSpeedShortBest  m_times m_timesBest \n";
+    logFileAdaptive << m_numOfInterval << " " << gRefLen << " 0" << "\n" ;
     for (int i = 0; i<m_numOfInterval ; i++ )
     {
-        logFileAdaptive <<  m_intervalMidIndexes[i] << " " << m_refSpeedShort[i] <<"\n";
+        logFileAdaptive <<  m_intervalMidIndexes[i] << " " << m_refSpeedShort[i] << " 0" << "\n";
     }
 
    // logFileSRgain << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
@@ -269,9 +269,9 @@ void PIDadaptiveGain::updateSpeedReference()
             m_refSpeedShortBest[i] = m_refSpeedShort[i];
         }
         // make new m_refSpeedShort
-        m_refSpeedShort[i] = m_refSpeedShortBest[i] + 0.55*(rand()/((float)RAND_MAX)- 0.5);
+        m_refSpeedShort[i] = m_refSpeedShortBest[i] + 0.4*(rand()/((float)RAND_MAX)- 0.2);
         if (m_refSpeedShort[i] < 0.1)   //dont allow negativ and close to zero speed...
-            m_refSpeedShort[i] = 0.1;
+            m_refSpeedShort[i] = 0.2f;
     }
 
 
@@ -296,10 +296,9 @@ void PIDadaptiveGain::updateSpeedReference()
     {
         m_vRef[i] = spline_eval(n, x, f, b, c, d, (double)i);
     }
-    logFileAdaptive <<  "\n";
     for (int i = 0; i<m_numOfInterval; i++)
     {
-        logFileAdaptive << m_refSpeedShortBest[i] << m_times[i] << m_timesBest[i] << "\n";
+        logFileAdaptive << m_refSpeedShortBest[i] << " " << m_times[i] << " " << m_timesBest[i] << "\n";
     }
 
 }
