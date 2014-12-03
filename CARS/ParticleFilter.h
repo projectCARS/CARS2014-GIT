@@ -71,7 +71,8 @@ private:
 
     bool m_newMeasurement;
 
-
+    //Parameters for the ST model
+    float Cm1, Cm2, Cm3,
 
     float gaussianNoise(void);
     int findFirst(const float value);
