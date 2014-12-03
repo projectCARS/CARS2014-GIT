@@ -189,8 +189,6 @@ void ProcessingThread::run()
                             carData[j].state[3] = yaw;
                             carData[j].state[4] = angvel;
             }
-
-            //std::cout << "\nstate yaw: " << carData[j].state[3] << std::endl;
         }
 
         // Log data. Currently only log data of car with id 0.

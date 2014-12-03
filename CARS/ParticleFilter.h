@@ -38,7 +38,6 @@ private:
     Eigen::MatrixXf carPattern;
     float expectedSpeed;
     int limit;
-    int noNegatives = 0;
     int noCarCounter = 31;
     bool noCar;
 
@@ -73,7 +72,8 @@ private:
     bool m_newMeasurement;
 
     //Parameters for the ST model
-    float Cm1, Cm2, Cm3;
+    float Cm1, Cm2, Cm3, Cf, lf, kSteer, mSteer, kThrottle, mThrottle;
+    float dutyCycles, thetaF;
 
     float gaussianNoise(void);
     int findFirst(const float value);
@@ -93,6 +93,11 @@ public:
     void update(const cv::Mat img);
     void parallelUpdate(const cv::Mat img);
     void noImgUpdate(float x, float y, float theta);
+
+    float calcDutycycles();
+    float calcThetaF();
+    float calcAlphaF(float Vy, float Vx, float omegaZ, float thetaF);
+    float calcLatForce();
 
     void nonLinearUndistort(float input[2], float output[2]);
     void cameraToWorldCoordinates(float cameraPoint[2], float worldPoint[2]);
