@@ -20,6 +20,8 @@ ProcessingThread::ProcessingThread(QObject *parent) :
 
 void ProcessingThread::run()
 {
+    bool imageMode = false;
+
     // Create virtual sensor.
     VirtualSensor sensor;
     // Timing.
@@ -114,8 +116,6 @@ void ProcessingThread::run()
         // Save car data from previous iteration.
         oldCarData = carData;
 
-
-
         if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter)
         {
             // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
@@ -151,6 +151,7 @@ void ProcessingThread::run()
         }
 
         // Wait for new input signal values to be written to struct.
+
         WaitForSingleObject(hControllerThreadEvent_signalsWritten, INFINITE);
 
         // Copy data.
@@ -178,13 +179,13 @@ void ProcessingThread::run()
             carData[j].mode = m_cars[j].getMode();
             carData[j].state = m_cars[j].getState();
 
-            if(m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
+            if(imageMode && m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
             {
                             float yaw = carData[j].state[3];
                             float vel = carData[j].state[2];
                             float angvel = carData[j].state[4];
                             sensor.cameraToWorldCoordinates(carData[j].state);
-                            carData[j].state[2] = vel;
+                            carData[j].state[2] = vel/PIXELS_PER_METER;
                             carData[j].state[3] = yaw;
                             carData[j].state[4] = angvel;
             }
@@ -449,7 +450,6 @@ void ProcessingThread::loadRaceSettings()
     raceSettings.doRace = false;
     if(m_settings.contains("race_settings/number_of_laps"))
     {
-        qDebug("settings exist");
         raceSettings.numberOfLaps = m_settings.value("race_settings/number_of_laps").toInt();
         raceSettings.doRace = (bool)m_settings.value("race_settings/do_race").toBool();
 

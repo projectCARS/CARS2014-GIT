@@ -6,8 +6,10 @@
 
 IOControl::IOControl(int ID)
 {
+
     m_ID = ID;
 #ifdef NIDAQ_IS_AVALIABLE
+
     DAQmxCreateTask("", &m_hTaskInput);
     DAQmxCreateTask("", &m_hTaskOutput);
     DAQmxCreateTask("", &m_hTaskPower);
@@ -135,13 +137,12 @@ void IOControl::init(void)
             }
             fileNo++;
         }
-        logFileVoltageLog.open(str.str());
-        logFileVoltageLog << "time carID xPos yPos speed yaw yawVel Ugas Uturn \n";
+        logFileVoltageLog->open(str.str());
+        *logFileVoltageLog << "time carID xPos yPos speed yaw yawVel Ugas Uturn \n";
         std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
 
     }
 */
-
 }
 
 void IOControl::startController(void)
@@ -179,7 +180,7 @@ void IOControl::receiveSignals(float &gas, float &turn)
 #endif
 }
 
-void IOControl::sendSignals(float gas, float turn, CarData &carData)
+void IOControl::sendSignals(float gas, float turn)//, CarData &carData)
 {
 #ifdef NIDAQ_IS_AVALIABLE
     m_tempArray[0] = gas;

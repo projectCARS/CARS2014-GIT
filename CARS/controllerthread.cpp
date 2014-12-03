@@ -55,6 +55,7 @@ void ControllerThread::loadControllerSettings()
 
 void ControllerThread::run()
 {
+
     // Load controller settings from file.
     loadControllerSettings();
 
@@ -68,7 +69,9 @@ void ControllerThread::run()
     std::vector<IOControl> ioControls;
     for (int i = 0; i < m_numCars; i++)
     {
+
         ioControls.push_back(IOControl(i));
+
     }
 
     // Initialize and start IO controllers.
@@ -145,7 +148,7 @@ void ControllerThread::run()
                         m_controllers[i]->calcSignals(carData[i].state, signal[i].gas, signal[i].turn);
                     }
 
-                    ioControls[i].sendSignals(signal[i].gas, signal[i].turn, carData[i]);
+                    ioControls[i].sendSignals(signal[i].gas, signal[i].turn);//, carData[i]);
                     break;
                     // Send turn signal from controller and gas signal from hand controller to car.
                 case CarMode::Assisted:
@@ -162,6 +165,7 @@ void ControllerThread::run()
             }
         }
         // Wait for input signal values to be read from struct.
+
         WaitForSingleObject(hControllerThreadEvent_signalsRead, INFINITE);
 
         // Copy data.
@@ -170,6 +174,7 @@ void ControllerThread::run()
         LeaveCriticalSection(&csControllerThreadData);
 
         // Tell the processing thread that the input signals has been read.
+
         SetEvent(hControllerThreadEvent_signalsWritten);
     }
 
@@ -180,7 +185,7 @@ void ControllerThread::run()
         {
             signal[i].gas = -0.9f;
             signal[i].turn = 0;
-            ioControls[i].sendSignals(signal[i].gas, signal[i].turn, carData[i]);
+            ioControls[i].sendSignals(signal[i].gas, signal[i].turn);//, carData[i]);
         }
     }
     // Sleep so that the cars have time to stop.

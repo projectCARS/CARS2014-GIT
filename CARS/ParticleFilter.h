@@ -39,6 +39,7 @@ private:
     float expectedSpeed;
     int limit;
     int noNegatives = 0;
+    int noCarCounter = 31;
     bool noCar;
 
     cv::Mat m_img;
@@ -72,7 +73,7 @@ private:
     bool m_newMeasurement;
 
     //Parameters for the ST model
-    float Cm1, Cm2, Cm3,
+    float Cm1, Cm2, Cm3;
 
     float gaussianNoise(void);
     int findFirst(const float value);
