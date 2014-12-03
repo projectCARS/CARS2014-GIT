@@ -60,11 +60,13 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
         m_intervalStartIndexes[i] = (int) (i * m_intervalLength);
         m_intervalMidIndexes[i] = m_intervalStartIndexes[i] + m_length2mid;
         m_refSpeedShort[i] = m_vRef[m_intervalMidIndexes[i]];
+        m_sectionVisited[i] = false;
     }
     m_refSpeedShortBest = m_refSpeedShort;
 
     timerSection.start();
     m_firstLapStarted = false;
+
 
     //end of used for section
 
@@ -190,17 +192,20 @@ int PIDadaptiveGain::findClosestSection(std::vector<float> &state)
 
 bool PIDadaptiveGain::newSectionEntered(std::vector<float> &state, int IndexCurrent)
 {
-    if ( m_IndexSectionOld == IndexCurrent )
+    if (!m_sectionVisited[IndexCurrent])
     {
-        //qDebug() <<"newSectionEntered = false";
+        if ( m_IndexSectionOld == IndexCurrent )
+        {
+            return false;
+        }
+        else
+        {
+            m_IndexSectionOld = IndexCurrent;
+            return true;
+            m_sectionVisited[IndexCurrent] = true;
+        }
+    } else
         return false;
-    }
-    else
-    {
-        m_IndexSectionOld = IndexCurrent;
-        //qDebug() <<"newSectionEntered = true";
-        return true;
-    }
 }
 
 void PIDadaptiveGain::updateSectionTimers(int IndexSection)
@@ -257,12 +262,13 @@ void PIDadaptiveGain::updateSpeedReference()
     for (int i = 1; i<m_numOfInterval; i++)
     {
         m_times[i] = m_timerTimes[i] - m_timerTimes[i-1];
+        m_sectionVisited[i] = false;
     }
 
     // update m_timesBest and m_refSpeedShortBest;
     for (int i = 0; i<m_numOfInterval; i++)
     {
-        if (m_times[i]<m_timesBest[i])
+        if (( m_times[i]>0) && (m_times[i]<m_timesBest[i] )) //time för section must be postive. Else something has gone wrong...
         {
             m_timesBest[i] = m_times[i];
             m_refSpeedShortBest[i] = m_refSpeedShort[i];

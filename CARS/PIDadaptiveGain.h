@@ -58,7 +58,7 @@ private:
     std::vector<float> m_timesBest;
     QElapsedTimer timerSection;
     bool m_firstLapStarted;  //section also uses m_firstLapDone declared above
-
+    std::vector<bool> m_sectionVisited;
 
     //end for section
 
