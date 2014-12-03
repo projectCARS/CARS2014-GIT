@@ -3,6 +3,7 @@
 #include "IOControl.h"
 #include "functions.h"
 
+
 IOControl::IOControl(int ID)
 {
     m_ID = ID;
@@ -117,7 +118,7 @@ void IOControl::init(void)
 	DAQmxCreateDOChan(m_hTaskPower, digital_output, "", DAQmx_Val_ChanForAllLines);
 #endif
     writeVoltageLog = true;
-    if (writeVoltageLog)
+    /*if (writeVoltageLog)
     {
         // Deciding which log file to write to
         timeVoltageLog.start();
@@ -139,7 +140,7 @@ void IOControl::init(void)
         std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
 
     }
-
+*/
 
 }
 
@@ -185,7 +186,7 @@ void IOControl::sendSignals(float gas, float turn, CarData &carData)
     m_tempArray[1] = turn;
     decimalToVoltage(m_tempArray);
     sendSignalsVolt(m_tempArray);
-    if (writeVoltageLog)
+    /*if (writeVoltageLog)
     {
         // "time carID xPos yPos speed yaw yawVel Ugas Uturn \n"
 
@@ -195,7 +196,7 @@ void IOControl::sendSignals(float gas, float turn, CarData &carData)
         logFileVoltageLog << carData.state[4] << " " ;
         logFileVoltageLog << m_tempArray[0] << " " << m_tempArray[1] << "\n" ;
     }
-
+*/
 
 #endif
 }

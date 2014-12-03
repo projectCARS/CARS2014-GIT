@@ -2,7 +2,10 @@
 
 #include "NIDAQmx.h"
 #include "definitions.h"
+#include "headers.h"
 #include <fstream>
+
+
 
 class IOControl
 {
@@ -42,7 +45,7 @@ private:
 
 
    //for VoltageLog-file
-   QElapsedTimer timeVoltageLog;
+   //QElapsedTimer timeVoltageLog;
    std::ofstream logFileVoltageLog;
    bool writeVoltageLog;
 

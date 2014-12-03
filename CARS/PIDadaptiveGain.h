@@ -59,10 +59,6 @@ private:
     QElapsedTimer timerSection;
     bool m_firstLapStarted;  //section also uses m_firstLapDone declared above
 
-    //used by interp (cubic splines)
-    //std::vector<float> b;
-    //std::vector<float> c;
-    //std::vector<float> d;
 
     //end for section
 

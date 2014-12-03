@@ -90,7 +90,7 @@ SOURCES += main.cpp\
     racedialog.cpp \
     PIDadaptiveGain.cpp \
     racegroupbox.cpp \
-    interp.cpp
+
 
 HEADERS  += mainwindow.h \
     processingthread.h \
@@ -122,7 +122,7 @@ HEADERS  += mainwindow.h \
     racedialog.h \
     PIDadaptiveGain.h \
     racegroupbox.h \
-    interp.h
+
 
 FORMS    += mainwindow.ui \
     referencedialog.ui \
