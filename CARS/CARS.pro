@@ -90,6 +90,7 @@ SOURCES += main.cpp\
     racedialog.cpp \
     PIDadaptiveGain.cpp \
     racegroupbox.cpp \
+    STModel.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -122,6 +123,7 @@ HEADERS  += mainwindow.h \
     racedialog.h \
     PIDadaptiveGain.h \
     racegroupbox.h \
+    STModel.h
 
 
 FORMS    += mainwindow.ui \

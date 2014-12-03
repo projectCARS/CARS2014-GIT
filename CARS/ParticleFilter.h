@@ -5,6 +5,7 @@
 
 #include "Filter.h"
 #include "CTModel.h"
+#include "STModel.h"
 #include "VirtualSensor.h"
 #include <Eigen/Dense>
 #include "functions.h"
@@ -67,7 +68,10 @@ private:
     MotionModelType::Enum mType;
     MotionModel *M;
 
-    VectorXd xhat;
+    VectorXd sumState;
+
+    MatrixXd xhat;
+    MatrixXd xhatpred;
 
     bool m_newMeasurement;
 
@@ -97,7 +101,7 @@ public:
     float calcDutycycles();
     float calcThetaF();
     float calcAlphaF(float Vy, float Vx, float omegaZ, float thetaF);
-    float calcLatForce();
+    float calcLatForce(float alphaF);
 
     void nonLinearUndistort(float input[2], float output[2]);
     void cameraToWorldCoordinates(float cameraPoint[2], float worldPoint[2]);
