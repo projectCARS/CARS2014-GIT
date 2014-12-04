@@ -33,7 +33,7 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
             std::cout << "Error: Motion model type not implemented, in ParticleFilter::ParticleFilter(), ParticleFilter.cpp" << std::endl;
     }
 
-    imageMode = false;
+    imageMode = true;
     LoadTrack();
 
     time = omp_get_wtime();
@@ -41,12 +41,12 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
     expectedSpeed = speed;
     limit = lim;
     noCar = true;
+    std::cout << carPattern << std::endl;
 
     T = 1/100;
-
-    xhat = MatrixXd::Zero(M->getNumStates(),NUMBER_OF_PARTICLES);
-    xhatpred = MatrixXd::Zero(M->getNumStates(), NUMBER_OF_PARTICLES);
-    sumState = VectorXd::Zero(M->getNumStates());
+    xhat = Eigen::MatrixXf::Zero(M->getNumStates(),NUMBER_OF_PARTICLES);
+    xhatpred = Eigen::MatrixXf::Zero(M->getNumStates(), NUMBER_OF_PARTICLES);
+    sumState = Eigen::VectorXf::Zero(M->getNumStates());
 
     sumStates[0] = 0;
     sumStates[1] = 0;
@@ -282,12 +282,11 @@ void ParticleFilter::parallelUpdate(const cv::Mat img)
     Eigen::Matrix2f rotate, translate;
     Eigen::MatrixXf pos;
     Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(2, points);
-    float val = 0;
     float sum = 0;
     //tStart = omp_get_wtime();
 
 omp_set_num_threads(3);
-#pragma omp parallel for private(rotate, translate, pos, sum, val)
+#pragma omp parallel for private(rotate, translate, pos, sum)
     for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
         // Add border values around each point controlled
@@ -295,10 +294,9 @@ omp_set_num_threads(3);
         cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
 
         // Rotate and translate pattern according to hypothesis
-        rotate << cos(xhatpred(3,n)), -sin(xhatpred(3,n)),
-            sin(xhatpred(3,n)), cos(xhatpred(3,n));
-        translate << xhatpred(0,n), 0,
-            xhatpred(1,n), 0;
+        rotate << cos((float)xhatpred(3,n)), -sin((float)xhatpred(3,n)),sin((float)xhatpred(3,n)), cos((float)xhatpred(3,n));
+        translate << (float)xhatpred(0,n), 0, (float)xhatpred(1,n), 0;
+
         /*
         // Rotate and translate pattern according to hypothesis
         rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
@@ -307,8 +305,6 @@ omp_set_num_threads(3);
             posYPoints[n], 0;
         */
         pos = rotate*carPattern.transpose() + translate*ones;
-
-        val = 0.;
         sum = 0.;
         for (int p = 0; p < points; p++)
         {
@@ -328,8 +324,6 @@ omp_set_num_threads(3);
                 // Throws the hypothesis if no point found. This gives some speedup.
                 if (mean.val[0] == 0)
                 {
-
-                    //totSum = 0;
                     sum = 0;
                     break;
                 }
@@ -340,7 +334,6 @@ omp_set_num_threads(3);
             }
         }
         noncumulativeWeights[n] = sum; // save the weights in non-cumulative form in the parallelized loop
-
     }
 
     // Form a cumulative sum of the weights
@@ -349,6 +342,7 @@ omp_set_num_threads(3);
     {
         cumulativeWeights[i] = cumulativeWeights[i - 1] + noncumulativeWeights[i];
     }
+    qDebug("11");
 
     //tEnd = omp_get_wtime();
    //std::cout << "Parallel for time: " << tEnd - tStart << std::endl;
@@ -791,21 +785,22 @@ void ParticleFilter::updateFilter()
     {
         if (carGone())
         {
+            qDebug("carCounter %i", noCarCounter);
             if(noCarCounter > 0)
             {
                 time = omp_get_wtime();
                 std::cout << "Class ParticleFilter:	Could not find any matching hypotheses. Attempting extensive search" << std::endl;
                 extensiveSearch(m_img);
-                noCarCounter = 0;
+                qDebug("1");
+                noCarCounter = 1;
             }
             else
             {
                 noCarCounter++;
                 T = ((double)(omp_get_wtime() - time));
                 time = omp_get_wtime();
-                std::cout << T << std::endl;
-                omp_set_num_threads(3);
-                #pragma omp parallel for
+                //omp_set_num_threads(3);
+                //#pragma omp parallel for
                 for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
                 {
 
@@ -830,14 +825,19 @@ void ParticleFilter::updateFilter()
 
                 parallelUpdate(m_img);
                 systematicResample();
+                qDebug("gone");
             }
         }
         else
         {
-            //Propagate using world coordinates
+            qDebug("2");
+            //Propagate using camera coordinates
             propagateCT();
+            qDebug("3");
             parallelUpdate(m_img);
+            qDebug("4");
             systematicResample();
+            qDebug("5");
 
         }
         //drawThreadData.sumStates = getSumStates();
@@ -935,19 +935,18 @@ void ParticleFilter::logStates(std::ofstream *logFile)
     *logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
 }
 
-
 std::vector<float> ParticleFilter::getState(void)
 {
-    std::vector<float> state(xhat.size());
-    for (int i=0; i < xhat.size(); i++)
+    std::vector<float> state(M->getNumStates());
+    for (int i=0; i < M->getNumStates(); i++)
     {
         state[i] = sumStates[i]/NUMBER_OF_PARTICLES;
+        std::cout << "state " << i  << ": "<< state[i] << std::endl;
     }
     if(sumStates[3]/NUMBER_OF_PARTICLES > M_PI || sumStates[3]/NUMBER_OF_PARTICLES < -M_PI)
     {
         sumStates[3] = fmod(sumStates[3]+ 3*M_PI, 2*M_PI) - M_PI;
     }
-
     return state;
 }
 

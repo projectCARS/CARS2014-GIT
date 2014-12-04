@@ -104,6 +104,7 @@ void ControllerThread::run()
         }
         m_doStopMutex.unlock();
 
+
         // Wait for all data to be written to struct.
         WaitForSingleObject(hControllerThreadEvent1, INFINITE);
 
@@ -128,6 +129,7 @@ void ControllerThread::run()
                     break;
                     // Send gas and turn signal from controller to car.
                 case CarMode::Auto:
+
                     if (-0.02 < carData[i].state[2] && carData[i].state[2] < 0.02 && signal[i].gas > 0.05 && !m_isBacking[i])
                     {
                         m_stuckCounter[i]++;
@@ -149,6 +151,7 @@ void ControllerThread::run()
                     }
 
                     ioControls[i].sendSignals(signal[i].gas, signal[i].turn, carData[i]);
+
                     break;
                     // Send turn signal from controller and gas signal from hand controller to car.
                 case CarMode::Assisted:
@@ -164,6 +167,7 @@ void ControllerThread::run()
                 }
             }
         }
+
         // Wait for input signal values to be read from struct.
 
         WaitForSingleObject(hControllerThreadEvent_signalsRead, INFINITE);

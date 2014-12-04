@@ -91,7 +91,8 @@ SOURCES += main.cpp\
     PIDadaptiveGain.cpp \
     racegroupbox.cpp \
     qcustomplot.cpp \
-    plotwindow.cpp
+    plotwindow.cpp \
+    STModel.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -125,7 +126,8 @@ HEADERS  += mainwindow.h \
     PIDadaptiveGain.h \
     racegroupbox.h \
     qcustomplot.h \
-    plotwindow.h
+    plotwindow.h \
+    STModel.h
 
 
 FORMS    += mainwindow.ui \

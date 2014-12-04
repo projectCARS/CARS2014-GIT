@@ -36,7 +36,7 @@ private:
 
     float sumStates[5];
 
-    Eigen::MatrixXf carPattern;
+
     float expectedSpeed;
     int limit;
     int noCarCounter = 31;
@@ -68,11 +68,6 @@ private:
     MotionModelType::Enum mType;
     MotionModel *M;
 
-    VectorXd sumState;
-
-    MatrixXd xhat;
-    MatrixXd xhatpred;
-
     bool m_newMeasurement;
 
     //Parameters for the ST model
@@ -85,6 +80,11 @@ private:
 public:
     ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType);
     ~ParticleFilter();
+
+    Eigen::MatrixXf carPattern;
+    Eigen::MatrixXf xhat;
+    Eigen::MatrixXf xhatpred;
+    Eigen::VectorXf sumState;
 
     void setState(float state[3]);
     void extensiveSearch(cv::Mat img);

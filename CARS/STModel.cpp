@@ -1,7 +1,7 @@
 #include "headers.h"
 #include "EKF.h"
 #include "MotionModel.h"
-#include "CTModel.h"
+#include "STModel.h"
 #include <Eigen/Dense>
 #include <random>
 
@@ -62,7 +62,7 @@ void STModel::updateModel(VectorXd xhat, double T)
     double Vy = xhat(5);
 
     // System dynamics
-    f(0) = X + 2 * v / w * sin(w*T / 2) * cos(h + w*T / 2);
+    /*f(0) = X + 2 * v / w * sin(w*T / 2) * cos(h + w*T / 2);
     f(1) = Y + 2 * v / w * sin(w*T / 2) * sin(h + w*T / 2);
     f(2) = v;
     f(3) = h + w*T;
@@ -79,6 +79,6 @@ void STModel::updateModel(VectorXd xhat, double T)
     F(1, 4) = v / (w*w) * (w*T*cos(h + w*T) - sin(h + w*T) + sin(h));
 
     F(3, 4) = T;
-
+*/
     //TODO: Add dynamics for G and H...
 }

@@ -20,7 +20,7 @@ ProcessingThread::ProcessingThread(QObject *parent) :
 
 void ProcessingThread::run()
 {
-    bool imageMode = false;
+    bool imageMode = true;
 
     // Create virtual sensor.
     VirtualSensor sensor;
