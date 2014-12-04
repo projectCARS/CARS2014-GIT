@@ -3,7 +3,7 @@
 #include "classes.h"
 #include "PIDadaptiveGain.h"
 #include "functions.h"
-#include "plotwindow.h"
+
 
 
 #include <fstream>
@@ -67,9 +67,11 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     makePlots = true;
     if (makePlots)
     {
-        plotWindow pW;
-        pW.setModal(true);
-        pW.exec();
+        //plotDialog pD;
+        pD.setModal(true);
+        pD.exec();
+
+        pD.makePlot(m_numOfInterval);
     }
 
     //end: used for plotWindow

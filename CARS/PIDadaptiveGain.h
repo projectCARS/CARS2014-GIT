@@ -9,6 +9,7 @@
 #include "qtheaders.h"
 #include <stdlib.h>
 #include <time.h>
+#include "plotDialog.h"
 
 
 class PIDadaptiveGain : public Controller
@@ -45,7 +46,7 @@ private:
     int m_IndexSectionOld;
 
 
-    //for sectionn
+    //for section
     float m_numOfInterval;
     float m_intervalLength;
     int m_length2mid;
@@ -62,7 +63,10 @@ private:
 
     //end for section
 
+    //making plots
     bool makePlots;
+    plotDialog pD;
+    //end plots
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
