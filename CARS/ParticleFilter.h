@@ -10,11 +10,7 @@
 #include <Eigen/Dense>
 #include "functions.h"
 #include "definitions.h"
-#include <tbb/parallel_for.h>
-#include <tbb/blocked_range.h>
 #include "omp.h"
-
-using namespace tbb;
 
 class ParticleFilter : public Filter
 {
@@ -39,7 +35,7 @@ private:
 
     float expectedSpeed;
     int limit;
-    int noCarCounter = 31;
+    int noCarCounter;
     bool noCar;
 
     cv::Mat m_img;
@@ -61,12 +57,17 @@ private:
     double time = 0;
 
     int trackConstraints[1200][1500];
-    int numPartInCritReg= 0;
+    int numPartInCritReg = 0;
 
     VirtualSensor vs;
 
     MotionModelType::Enum mType;
     MotionModel *M;
+
+    Eigen::MatrixXf carPattern;
+    //Eigen::MatrixXf xhat;
+    //Eigen::MatrixXf xhatpred;
+    //Eigen::VectorXf sumState;
 
     bool m_newMeasurement;
 
@@ -81,10 +82,7 @@ public:
     ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType);
     ~ParticleFilter();
 
-    Eigen::MatrixXf carPattern;
-    Eigen::MatrixXf xhat;
-    Eigen::MatrixXf xhatpred;
-    Eigen::VectorXf sumState;
+
 
     void setState(float state[3]);
     void extensiveSearch(cv::Mat img);

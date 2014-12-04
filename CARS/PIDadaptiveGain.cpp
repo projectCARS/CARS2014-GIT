@@ -64,7 +64,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     //end of: used for section
 
     //used for plotWindow
-    makePlots = true;
+    /*makePlots = true;
     if (makePlots)
     {
         //plotDialog pD;
@@ -73,7 +73,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 
         pD.makePlot(m_numOfInterval);
     }
-
+    */
     //end: used for plotWindow
 
     m_turnPID.resize(3);

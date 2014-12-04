@@ -86,7 +86,7 @@ void VirtualSensor::grabThresholdImage()
 
     //std::cout << "copy time : " << omp_get_wtime() - t << std::endl;
 
-    int lowerThresh = 120;
+    int lowerThresh = 140;
     int upperThresh = 255;
     int gaussSize = 3;
 
@@ -130,7 +130,7 @@ std::vector<float> VirtualSensor::detectMarkers()
     LeaveCriticalSection(&csDrawThreadData);
     tempMat = tempMat - mask * .5;
 
-    int lowerThresh = 130; // 140 original
+    int lowerThresh = 140; // 140 original
     int upperThresh = 255;
     int gaussSize = 3;
 

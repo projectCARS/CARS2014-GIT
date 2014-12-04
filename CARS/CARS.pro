@@ -43,6 +43,8 @@ LIBS += -LC:\\tbb43_20141023oss\\lib\\ia32\\vc12 \
 -ltbbmalloc \
 -ltbbmalloc_proxy
 
+INCLUDEPATH += "C:\\Users\\User\\Documents\\CARS2014-GIT\\qcustomplot"
+
 QMAKE_CXXFLAGS += -openmp
 #LIBS += -lgomp -lpthread
 
@@ -90,8 +92,6 @@ SOURCES += main.cpp\
     racedialog.cpp \
     PIDadaptiveGain.cpp \
     racegroupbox.cpp \
-    qcustomplot.cpp \
-    plotwindow.cpp \
     STModel.cpp
 
 
@@ -125,8 +125,6 @@ HEADERS  += mainwindow.h \
     racedialog.h \
     PIDadaptiveGain.h \
     racegroupbox.h \
-    qcustomplot.h \
-    plotwindow.h \
     STModel.h
 
 
@@ -136,8 +134,7 @@ FORMS    += mainwindow.ui \
     carsettingsdialog.ui \
     drawsettingsdialog.ui \
     racedialog.ui \
-    racegroupbox.ui \
-    plotwindow.ui
+    racegroupbox.ui
 
 #RESOURCES += \
 #    CARS.qrc

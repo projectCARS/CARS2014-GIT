@@ -14,16 +14,6 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
 	m_mode = mode;
     m_filtertype = filterType;
 
-    //TODO make the pattern id-dependent, currently (2014-12-02) only use specific car 0 if imageMode is used
-    Eigen::MatrixXf carPattern;
-    cv::FileStorage storage("indata/car02.yml", cv::FileStorage::READ);
-    cv::Mat tmp;
-    storage["pattern"] >> tmp;
-    storage.release();
-    cv::cv2eigen(tmp, carPattern);
-    drawThreadData.pattern = carPattern;
-    float speed = 10;
-
 	// Initialize filter.
 	switch (filterType)
 	{
@@ -32,6 +22,15 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
 			break;
         case FilterType::ParticleFilter:
         {
+            //TODO make the pattern id-dependent, currently (2014-12-02) only use specific car 0 if imageMode is used
+            Eigen::MatrixXf carPattern;
+            cv::FileStorage storage("indata/car01.yml", cv::FileStorage::READ);
+            cv::Mat tmp;
+            storage["pattern"] >> tmp;
+            storage.release();
+            cv::cv2eigen(tmp, carPattern);
+            drawThreadData.pattern = carPattern;
+            float speed = 10;
             m_filter = new ParticleFilter(carPattern, speed, 5, motionModelType);
         }
             break;

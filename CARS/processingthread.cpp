@@ -136,7 +136,7 @@ void ProcessingThread::run()
             EnterCriticalSection(&csDrawThreadData);
             m_cars[0].addImageMeasurement(drawThreadData.processedImage);
             LeaveCriticalSection(&csDrawThreadData);
-            if(carMeasurements.size() > 0)
+            if(carMeasurements.size() > 0 && !imageMode)
                 m_cars[0].addMeasurement(carMeasurements[0].x, carMeasurements[0].y, carMeasurements[0].theta);
         }
 
