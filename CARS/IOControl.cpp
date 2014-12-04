@@ -3,6 +3,13 @@
 #include "IOControl.h"
 #include "functions.h"
 
+//test
+#include "headers.h"
+#include "definitions.h"
+#include "classes.h"
+#include "PIDadaptiveGain.h"
+#include "functions.h"
+
 
 IOControl::IOControl(int ID)
 {
@@ -21,90 +28,90 @@ IOControl::IOControl(int ID)
 #endif
     switch (m_ID)
     {
-        case 0:
-            m_minValChannel = 0;
-            m_maxValChannel = 3;
+    case 0:
+        m_minValChannel = 0;
+        m_maxValChannel = 3;
 
-            m_linearizationBreak = 0.35;
-            m_voltGasThreshold = 1.4710;
-            m_voltGasIntervall = 1.4693;
+        m_linearizationBreak = 0.35;
+        m_voltGasThreshold = 1.4710;
+        m_voltGasIntervall = 1.4693;
 
-            m_voltReverseThreshold = 1.68;
-
-
-            m_minGasVolt = 0.91; // 1.14;
-            m_maxGasVolt = 2.21; // 2.31;
-            m_minTurnVolt = 0.11;
-            m_maxTurnVolt = 2.97; //3.242;
-
-            m_gasNeutral = 1.61;
-            m_turnNeutral = 1.53;
+        m_voltReverseThreshold = 1.68;
 
 
-            analog_output = "Dev1/ao0:1";
-            analog_input = "Dev1/ai1:2";
-            digital_output = "Dev1/port0/line7";
-            break;
-        case 1:
-            m_minValChannel = 0;
-            m_maxValChannel = 3;
+        m_minGasVolt = 0.91; // 1.14;
+        m_maxGasVolt = 2.21; // 2.31;
+        m_minTurnVolt = 0.11;
+        m_maxTurnVolt = 2.97; //3.242;
 
-            m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
-            m_voltGasIntervall = 1.4693;
+        m_gasNeutral = 1.61;
+        m_turnNeutral = 1.53;
 
-            m_minGasVolt = 0.91; // 1.14;
-            m_maxGasVolt = 2.10; // 2.31;
-            m_minTurnVolt = 0.17;
-            m_maxTurnVolt = 2.9; //3.242;
 
-            m_gasNeutral = 1.58;
-            m_turnNeutral = 1.53;
+        analog_output = "Dev1/ao0:1";
+        analog_input = "Dev1/ai1:2";
+        digital_output = "Dev1/port0/line7";
+        break;
+    case 1:
+        m_minValChannel = 0;
+        m_maxValChannel = 3;
 
-            analog_output = "Dev1/ao0:1";
-            analog_input = "Dev1/ai1:2";
-            digital_output = "Dev1/port0/line7";
-            break;
-        case 2:
-            m_minValChannel = 0;
-            m_maxValChannel = 3;
+        m_linearizationBreak = 0.38;
+        m_voltGasThreshold = 1.4706;
+        m_voltGasIntervall = 1.4693;
 
-            m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
-            m_voltGasIntervall = 1.4693;
+        m_minGasVolt = 0.91; // 1.14;
+        m_maxGasVolt = 2.10; // 2.31;
+        m_minTurnVolt = 0.17;
+        m_maxTurnVolt = 2.9; //3.242;
 
-            m_minGasVolt = 0.91; // 1.14;
-            m_maxGasVolt = 2.10; // 2.31;
-            m_minTurnVolt = 0.17;
-            m_maxTurnVolt = 2.9; //3.242;
+        m_gasNeutral = 1.58;
+        m_turnNeutral = 1.53;
 
-            m_gasNeutral = 1.58;
-            m_turnNeutral = 1.53;
+        analog_output = "Dev1/ao0:1";
+        analog_input = "Dev1/ai1:2";
+        digital_output = "Dev1/port0/line7";
+        break;
+    case 2:
+        m_minValChannel = 0;
+        m_maxValChannel = 3;
 
-            analog_output = "Dev1/ao0:1";
-            analog_input = "Dev1/ai1:2";
-            digital_output = "Dev1/port0/line7";
-            break;
-        default:
-            m_minValChannel = 0;
-            m_maxValChannel = 3;
+        m_linearizationBreak = 0.38;
+        m_voltGasThreshold = 1.4706;
+        m_voltGasIntervall = 1.4693;
 
-            m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
-            m_voltGasIntervall = 1.4693;
+        m_minGasVolt = 0.91; // 1.14;
+        m_maxGasVolt = 2.10; // 2.31;
+        m_minTurnVolt = 0.17;
+        m_maxTurnVolt = 2.9; //3.242;
 
-            m_minGasVolt = 0.3;
-            m_maxGasVolt = 2.7;
-            m_minTurnVolt = 0.17;
-            m_maxTurnVolt = 2.9;
+        m_gasNeutral = 1.58;
+        m_turnNeutral = 1.53;
 
-            m_gasNeutral = 1.58;
-            m_turnNeutral = 1.53;
+        analog_output = "Dev1/ao0:1";
+        analog_input = "Dev1/ai1:2";
+        digital_output = "Dev1/port0/line7";
+        break;
+    default:
+        m_minValChannel = 0;
+        m_maxValChannel = 3;
 
-            analog_output = "";
-            analog_input = "";
-            digital_output = "";
-            break;
+        m_linearizationBreak = 0.38;
+        m_voltGasThreshold = 1.4706;
+        m_voltGasIntervall = 1.4693;
+
+        m_minGasVolt = 0.3;
+        m_maxGasVolt = 2.7;
+        m_minTurnVolt = 0.17;
+        m_maxTurnVolt = 2.9;
+
+        m_gasNeutral = 1.58;
+        m_turnNeutral = 1.53;
+
+        analog_output = "";
+        analog_input = "";
+        digital_output = "";
+        break;
     }
 }
 
@@ -115,14 +122,14 @@ IOControl::~IOControl()
 void IOControl::init(void)
 {
 #ifdef NIDAQ_IS_AVALIABLE
-	DAQmxCreateAIVoltageChan(m_hTaskInput, analog_input, "", DAQmx_Val_RSE, m_minValChannel, m_maxValChannel, DAQmx_Val_Volts, NULL);
-	DAQmxCreateAOVoltageChan(m_hTaskOutput, analog_output, "", m_minValChannel, m_maxValChannel, DAQmx_Val_Volts, "");
-	DAQmxCreateDOChan(m_hTaskPower, digital_output, "", DAQmx_Val_ChanForAllLines);
+    DAQmxCreateAIVoltageChan(m_hTaskInput, analog_input, "", DAQmx_Val_RSE, m_minValChannel, m_maxValChannel, DAQmx_Val_Volts, NULL);
+    DAQmxCreateAOVoltageChan(m_hTaskOutput, analog_output, "", m_minValChannel, m_maxValChannel, DAQmx_Val_Volts, "");
+    DAQmxCreateDOChan(m_hTaskPower, digital_output, "", DAQmx_Val_ChanForAllLines);
 #endif
-    writeVoltageLog = true;
-    /*if (writeVoltageLog)
+    writeVoltageLog = false;
+    if (writeVoltageLog)
     {
-        // Deciding which log file to write to
+        /* // Deciding which log file to write to
         timeVoltageLog.start();
         int fileNo = 1;
         std::stringstream str;
@@ -137,36 +144,50 @@ void IOControl::init(void)
             }
             fileNo++;
         }
-        logFileVoltageLog->open(str.str());
-        *logFileVoltageLog << "time carID xPos yPos speed yaw yawVel Ugas Uturn \n";
+        qDebug("1");
+       //std::ofstream AlogFileVoltageLog;
+       logFileVoltageLog.open(str.str());
+       qDebug("2.5");
+       logFileVoltageLog << "time carID xPos yPos speed yaw yawVel Ugas Uturn \n";
         std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+        qDebug("2");
 
-    }
 */
+        timeVoltageLog.start();
+        std::stringstream str;
+        str.clear();
+        str.str(std::string());
+        str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
+        std::ofstream LF;
+        LF.open(str.str());
+        LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn\n";
+        std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+        LF.close();
+    }
 }
 
 void IOControl::startController(void)
 {
 #ifdef NIDAQ_IS_AVALIABLE
-	DAQmxStartTask(m_hTaskInput);
-	DAQmxStartTask(m_hTaskOutput);
-	DAQmxStartTask(m_hTaskPower);
-	controllerOn();
+    DAQmxStartTask(m_hTaskInput);
+    DAQmxStartTask(m_hTaskOutput);
+    DAQmxStartTask(m_hTaskPower);
+    controllerOn();
 #endif
 }
 
 void IOControl::stopController(void)
 {
 #ifdef NIDAQ_IS_AVALIABLE
-	controllerOff();
-		
-	DAQmxStopTask(m_hTaskInput);
-	DAQmxStopTask(m_hTaskOutput);
-	DAQmxStopTask(m_hTaskPower);
+    controllerOff();
 
-	DAQmxClearTask(m_hTaskInput);
-	DAQmxClearTask(m_hTaskOutput);
-	DAQmxClearTask(m_hTaskPower);
+    DAQmxStopTask(m_hTaskInput);
+    DAQmxStopTask(m_hTaskOutput);
+    DAQmxStopTask(m_hTaskPower);
+
+    DAQmxClearTask(m_hTaskInput);
+    DAQmxClearTask(m_hTaskOutput);
+    DAQmxClearTask(m_hTaskPower);
 #endif
 }
 
@@ -180,24 +201,35 @@ void IOControl::receiveSignals(float &gas, float &turn)
 #endif
 }
 
-void IOControl::sendSignals(float gas, float turn)//, CarData &carData)
+void IOControl::sendSignals(float gas, float turn, CarData &carData)
 {
 #ifdef NIDAQ_IS_AVALIABLE
     m_tempArray[0] = gas;
     m_tempArray[1] = turn;
     decimalToVoltage(m_tempArray);
     sendSignalsVolt(m_tempArray);
-    /*if (writeVoltageLog)
-    {
-        // "time carID xPos yPos speed yaw yawVel Ugas Uturn \n"
+    // std::ofstream LF;
+    // LF.open(str.str());
+    // logDataU(timeVoltageLog.elapsed()/1000.0, carData, gas, turn, &LF)
 
-        logFileVoltageLog << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
-        logFileVoltageLog << carData.state[0] << " " << carData.state[1] << " " ;
-        logFileVoltageLog << carData.state[2] << " " << carData.state[3] << " " ;
-        logFileVoltageLog << carData.state[4] << " " ;
-        logFileVoltageLog << m_tempArray[0] << " " << m_tempArray[1] << "\n" ;
+    if (writeVoltageLog)
+    {
+        std::stringstream str;
+        str.clear();
+        str.str(std::string());
+        str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
+        std::ofstream LF;
+        LF.open(str.str(),std::ofstream::app);
+        // "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn \n"
+
+        LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
+        LF << carData.state[0] << " " << carData.state[1] << " " ;
+        LF << carData.state[2] << " " << carData.state[3] << " " ;
+        LF << carData.state[4] << " " ;
+        LF << m_tempArray[0] << " " << m_tempArray[1] << " ";
+        LF << gas << " " << turn << "\n" ;
+        LF.close();
     }
-*/
 
 #endif
 }
@@ -233,9 +265,9 @@ void IOControl::controllerOff(void)
     signal[0] = m_gasNeutral;
     signal[1] = m_turnNeutral;
     DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
-	uInt8 value[1];
-	value[0] = 0;
-	DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
+    uInt8 value[1];
+    value[0] = 0;
+    DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
     signal[0] = 0;
     signal[1] = 0;
     DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
@@ -288,13 +320,13 @@ void IOControl::voltageToDecimal(float64 *voltage)
     }
     // If voltage is break/reverse
     else if (voltage[0] > m_voltReverseThreshold && voltage[0] <= m_maxGasVolt)
-    //if (voltage[0] > m_gasNeutral && voltage[0] <= m_maxGasVolt)
+        //if (voltage[0] > m_gasNeutral && voltage[0] <= m_maxGasVolt)
     {
         voltage[0] = -(voltage[0] - m_voltReverseThreshold) / (m_maxGasVolt - m_voltReverseThreshold);
     }
     // If voltage is 0 - m_linearizationBreak
     else if (voltage[0] < m_voltGasThreshold && voltage[0] >= m_voltGasIntervall)
-    //else if (voltage[0] < m_gasNeutral && voltage[0] >= m_voltGasIntervall)
+        //else if (voltage[0] < m_gasNeutral && voltage[0] >= m_voltGasIntervall)
     {
         voltage[0] = m_linearizationBreak * (m_voltGasThreshold - voltage[0]) / (m_voltGasThreshold - m_voltGasIntervall);
     }

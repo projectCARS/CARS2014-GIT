@@ -4,7 +4,7 @@
 #include "definitions.h"
 #include "headers.h"
 #include <fstream>
-
+#include <stdlib.h>
 
 
 class IOControl
@@ -46,10 +46,13 @@ private:
 
    //for VoltageLog-file
    QElapsedTimer timeVoltageLog;
-   //std::ofstream *logFileVoltageLog;
+   //std::ofstream logFileVoltageLog;
+   //std::stringstream str;
    bool writeVoltageLog;
 
 public:
+
+
 	IOControl(int ID);
     ~IOControl();
 
@@ -64,7 +67,7 @@ public:
     void receiveSignals(float &gas, float &turn);
     //void receiveSignals(std::vector<float> &signals);
 	// Takes values (-1 to 1) and send it to output pins in corresponding voltage.
-    void sendSignals(float gas, float turn);//, CarData &carData);
+    void sendSignals(float gas, float turn, CarData &carData);
 	// Takes input signals from the hand controller and sends it as output to the car.
 	void manualControl(void);
 	// Sends the gas signal from the hand controller and the turn signal turnSignal to the car.
@@ -82,5 +85,6 @@ private:
 	// Turns the IO controller on.
 	void controllerOn(void);
 	// Turns the IO controller off.
-	void controllerOff(void);
+    void controllerOff(void);
+
 };

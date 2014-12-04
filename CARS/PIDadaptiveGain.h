@@ -62,6 +62,8 @@ private:
 
     //end for section
 
+    bool makePlots;
+
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
     QElapsedTimer timeSRgain;

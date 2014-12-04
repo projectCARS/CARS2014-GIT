@@ -7,6 +7,7 @@ void updateLapData(CarData &cardata);
 
 
 void logData(float sysTime, std::vector<CarData> carData, std::vector<CarMeasurement> carMeasurements, std::vector<Signal> signal, std::ofstream *logFile);
+void logDataU(float sysTime, std::vector<CarData> carData, float64 gas, float64 turn, std::ofstream *logFile);
 
 // Used in class Calibrator to check for car existence.
 bool fileExists(const std::string &file);

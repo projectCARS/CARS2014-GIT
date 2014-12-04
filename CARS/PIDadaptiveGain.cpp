@@ -3,6 +3,7 @@
 #include "classes.h"
 #include "PIDadaptiveGain.h"
 #include "functions.h"
+#include "plotwindow.h"
 
 
 #include <fstream>
@@ -13,8 +14,8 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_startInd = 0;
     m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;      //m_vRef is uniqe to each car
-    m_gain = 1.0f;//.6f;
-    m_offset = 0.0f;//0.4f;
+    m_gain = 1.0f;
+    m_offset = 0.0f;
     m_checkPoint = false;
     m_firstLapDone = false;
     timer.start();
@@ -46,14 +47,8 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_times.resize(m_numOfInterval);
     m_timesBest.resize(0);
     m_timesBest.resize(m_numOfInterval);
-
-    /*b.resize(0);
-    c.resize(0);
-    d.resize(0);
-    b.resize(m_numOfInterval);
-    c.resize(m_numOfInterval);
-    d.resize(m_numOfInterval);
-*/
+    m_sectionVisited.resize(0);
+    m_sectionVisited.resize(m_numOfInterval);
 
     for (int i = 0; i<m_numOfInterval ; i++ )
     {
@@ -66,9 +61,18 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 
     timerSection.start();
     m_firstLapStarted = false;
+    //end of: used for section
 
+    //used for plotWindow
+    makePlots = true;
+    if (makePlots)
+    {
+        plotWindow pW;
+        pW.setModal(true);
+        pW.exec();
+    }
 
-    //end of used for section
+    //end: used for plotWindow
 
     m_turnPID.resize(3);
     m_speedPID.resize(3);
@@ -110,7 +114,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
         logFileAdaptive <<  m_intervalMidIndexes[i] << " " << m_refSpeedShort[i] << " 0" << "\n";
     }
 
-   // logFileSRgain << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
+    // logFileSRgain << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
     std::cout << "PIDadaptiveGain object:		Writing log to " << str.str() << std::endl;
 
 }
@@ -121,9 +125,10 @@ PIDadaptiveGain::~PIDadaptiveGain()
 
 void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &turn)
 {
-    bool adaptiveGain, section;
+    bool adaptiveGain, section, staticGain;
     adaptiveGain = false;
-    section = true;
+    section = false;
+    staticGain = true;
 
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
@@ -132,6 +137,8 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     //prepare reference speed
     if (adaptiveGain)
         m_refSpeed = calcRefSpeed(state, m_refIndClosest, m_gain, m_offset);
+    else if (staticGain)
+        m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1.2, 0.3);    //change gain and offset
     else if (section)
         m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1, 0);
 

@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = CARS
 TEMPLATE = app
@@ -90,6 +90,8 @@ SOURCES += main.cpp\
     racedialog.cpp \
     PIDadaptiveGain.cpp \
     racegroupbox.cpp \
+    qcustomplot.cpp \
+    plotwindow.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -122,6 +124,8 @@ HEADERS  += mainwindow.h \
     racedialog.h \
     PIDadaptiveGain.h \
     racegroupbox.h \
+    qcustomplot.h \
+    plotwindow.h
 
 
 FORMS    += mainwindow.ui \
@@ -130,7 +134,8 @@ FORMS    += mainwindow.ui \
     carsettingsdialog.ui \
     drawsettingsdialog.ui \
     racedialog.ui \
-    racegroupbox.ui
+    racegroupbox.ui \
+    plotwindow.ui
 
 #RESOURCES += \
 #    CARS.qrc

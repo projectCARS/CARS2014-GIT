@@ -39,7 +39,7 @@ void updateLapData(CarData &cardata)
                 cardata.lapData.lapTimer.restart();
                 cardata.lapData.firstLapStarted = true;
                 cardata.lapData.bestTime = 1000;
-                qDebug() << "start first lap";
+                //qDebug() << "start first lap";
             }
         }
 
@@ -59,11 +59,11 @@ void updateLapData(CarData &cardata)
                 cardata.lapData.firstLapDone = true;
                 cardata.lapData.lastLapTime = cardata.lapData.lapTime;
                 cardata.lapData.lapTimer.restart();
-                qDebug() << "lapTime: " << cardata.lapData.lapTime;
+                //qDebug() << "lapTime: " << cardata.lapData.lapTime;
                 if (cardata.lapData.lapTime < cardata.lapData.bestTime)
                 {
                     cardata.lapData.bestTime = cardata.lapData.lapTime;
-                    std::cout << "bestTime: " << cardata.lapData.bestTime << std::endl;
+                    //std::cout << "bestTime: " << cardata.lapData.bestTime << std::endl;
                 }
             }
             //update LapData with information
@@ -113,6 +113,16 @@ void logData(float sysTime, std::vector<CarData> carData, std::vector<CarMeasure
         //std::cout << "[" << carData[i].state.size() << ", " << carMeasurements.size() << ", " << signals.size() << "]" << std::endl;
     }
 }
+
+
+void logDataU(float sysTime, std::vector<CarData> carData, float64 gas, float64 turn, std::ofstream *logFile)
+{
+    (*logFile) << sysTime << " " << gas;
+    (*logFile) << "\n";
+
+}
+
+
 
 void drawStatesToImg(Eigen::MatrixXf carPattern, float *posX, float *posY, float *yaw, cv::Mat img, int selection)
 {
