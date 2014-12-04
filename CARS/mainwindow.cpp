@@ -452,7 +452,7 @@ void MainWindow::updateFrame(void)
     {
         char output[4];
         sprintf(output,"THE WINNER IS CAR %i", raceSettings.winnerID);
-        cv::putText(m_tmpMat, output, cv::Point(300, 550), 1, 5, cv::Scalar(255, 200, 0),2,8, false);
+        cv::putText(m_tmpMat, output, cv::Point(300, 550), 1, 4, cv::Scalar(255, 200, 0), 2, 8, false);
     }
 
     // Only draw cars if carData is not empty. carData could be empty if the processingthread
@@ -479,8 +479,11 @@ void MainWindow::updateFrame(void)
                         sprintf(output2,"%.2f", m_carData[j].lapData.lastLapTime);
                         char output3[4];
                         sprintf(output3,"%.2f", m_carData[j].lapData.bestTime);
+                        //char output4[4];
+                        //sprintf(output4,"Lap nr: %i", (m_carData[j].lapData.lapNumber + 1));
                         cv::putText(m_tmpMat, output2, cv::Point((750 -numTimers * 150), 150), 1, 3, cv::Scalar(0, 255, 255),2,8, false );
                         cv::putText(m_tmpMat, output3, cv::Point((750 -numTimers * 150), 190), 1, 3, cv::Scalar(120, 255, 0),2,8, false );
+                        //cv::putText(m_tmpMat, output4, cv::Point((750 -numTimers * 150), 230), 1, 2, cv::Scalar(255, 255, 255),2,8, false );
                     }
                 }
                 numTimers++;

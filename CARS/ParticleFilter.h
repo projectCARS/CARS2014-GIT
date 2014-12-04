@@ -30,7 +30,7 @@ private:
     float noncumulativeWeights[NUMBER_OF_PARTICLES];
     float cumulativeWeights[NUMBER_OF_PARTICLES];
 
-    float sumStates[5];
+    float sumStates[8];
 
 
     float expectedSpeed;
@@ -80,11 +80,12 @@ private:
 
 public:
     ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType);
+    ParticleFilter();
     ~ParticleFilter();
 
 
 
-    void setState(float state[3]);
+    void setState(float state[5]);
     void extensiveSearch(cv::Mat img);
     void propagate(void);
     void propagateWorldCoordinates(void);
@@ -121,6 +122,7 @@ public:
     float *getPosYPoints(void){ return posYPoints; };
     float *getYawPoints(void){ return yawPoints; };
     float *getSumStates(void){ return sumStates; };
+    int getnoCarCounter(void){ return noCarCounter;};
 
     virtual void addMeasurement(float x, float y, float theta);
     // Add a new set of inputsignals to the filter

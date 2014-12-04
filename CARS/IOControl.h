@@ -49,6 +49,9 @@ private:
    //std::ofstream logFileVoltageLog;
    //std::stringstream str;
    bool writeVoltageLog;
+   bool writeVoltageLogMan;
+   bool writeVoltageLogAss;
+
 
 public:
 
@@ -69,9 +72,9 @@ public:
 	// Takes values (-1 to 1) and send it to output pins in corresponding voltage.
     void sendSignals(float gas, float turn, CarData &carData);
 	// Takes input signals from the hand controller and sends it as output to the car.
-	void manualControl(void);
+    void manualControl(CarData &carData);
 	// Sends the gas signal from the hand controller and the turn signal turnSignal to the car.
-    void assistedControl(float turnSignal);
+    void assistedControl(float turnSignal, CarData &carData);
 	
 private:
 	// Transforms voltage to a interval between -1 and 1.

@@ -113,6 +113,35 @@ IOControl::IOControl(int ID)
         digital_output = "";
         break;
     }
+    writeVoltageLogMan = false;
+    if (writeVoltageLogMan)
+    {
+        timeVoltageLog.start();
+        std::stringstream str;
+        str.clear();
+        str.str(std::string());
+        str << "outdata/logFiles/logVoltageManual.txt";
+        std::ofstream LF;
+        LF.open(str.str());
+        LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn\n";
+        std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+        LF.close();
+    }
+
+    writeVoltageLogAss = false;
+    if (writeVoltageLogAss)
+    {
+    timeVoltageLog.start();
+    std::stringstream str;
+    str.clear();
+    str.str(std::string());
+    str << "outdata/logFiles/logVoltageAss.txt";
+    std::ofstream LF;
+    LF.open(str.str());
+    LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn turn\n";
+    std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+    LF.close();
+}
 }
 
 IOControl::~IOControl()
@@ -129,30 +158,7 @@ void IOControl::init(void)
     writeVoltageLog = false;
     if (writeVoltageLog)
     {
-        /* // Deciding which log file to write to
-        timeVoltageLog.start();
-        int fileNo = 1;
-        std::stringstream str;
-        for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here. (i < ceiling)
-        {
-            str.clear();
-            str.str(std::string());
-            str << "outdata/logFiles/logVoltage" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
-            if (!fileExists(str.str()))
-            {
-                break;
-            }
-            fileNo++;
-        }
-        qDebug("1");
-       //std::ofstream AlogFileVoltageLog;
-       logFileVoltageLog.open(str.str());
-       qDebug("2.5");
-       logFileVoltageLog << "time carID xPos yPos speed yaw yawVel Ugas Uturn \n";
-        std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
-        qDebug("2");
 
-*/
         timeVoltageLog.start();
         std::stringstream str;
         str.clear();
@@ -274,7 +280,7 @@ void IOControl::controllerOff(void)
 #endif
 }
 
-void IOControl::manualControl(void)
+void IOControl::manualControl( CarData &carData)
 {
 #ifdef NIDAQ_IS_AVALIABLE
     // Read input signals and save to m_tempArray
@@ -282,11 +288,29 @@ void IOControl::manualControl(void)
 
     // Send signals (m_tempControlSignals) back to the controller
     sendSignalsVolt(m_tempArray);
+
+    if (writeVoltageLogMan)
+    {
+        std::stringstream str;
+        str.clear();
+        str.str(std::string());
+        str << "outdata/logFiles/logVoltageManual.txt";
+        std::ofstream LF;
+        LF.open(str.str(),std::ofstream::app);
+        // "time carID xPos yPos speed yaw yawVel Ugas Uturn\n"
+
+        LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
+        LF << carData.state[0] << " " << carData.state[1] << " " ;
+        LF << carData.state[2] << " " << carData.state[3] << " " ;
+        LF << carData.state[4] << " " ;
+        LF << m_tempArray[0] << " " << m_tempArray[1] << "\n";
+        LF.close();
+    }
 #endif
 }
 
 // Sends the gas signal from the hand controller and the turn signal turnSignal to the car.
-void IOControl::assistedControl(float turnSignal)
+void IOControl::assistedControl(float turnSignal, CarData &carData)
 {
 #ifdef NIDAQ_IS_AVALIABLE
     // Read input signals from hand controller.
@@ -304,6 +328,26 @@ void IOControl::assistedControl(float turnSignal)
 
     // Send signals to the car.
     sendSignalsVolt(voltArray);
+
+    if (writeVoltageLogAss)
+    {
+        std::stringstream str;
+        str.clear();
+        str.str(std::string());
+        str << "outdata/logFiles/logVoltageAss.txt";
+        std::ofstream LF;
+        LF.open(str.str(),std::ofstream::app);
+        // "time carID xPos yPos speed yaw yawVel Ugas Uturn turn\n"
+
+        LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
+        LF << carData.state[0] << " " << carData.state[1] << " " ;
+        LF << carData.state[2] << " " << carData.state[3] << " " ;
+        LF << carData.state[4] << " " ;
+        LF << voltArray[0] << " " << voltArray[1] << " ";
+        LF << turnSignal << "\n" ;
+        LF.close();
+    }
+
 #endif
 }
 

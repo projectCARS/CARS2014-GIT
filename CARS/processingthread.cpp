@@ -20,7 +20,7 @@ ProcessingThread::ProcessingThread(QObject *parent) :
 
 void ProcessingThread::run()
 {
-    bool imageMode = true;
+    bool imageMode = false;
 
     // Create virtual sensor.
     VirtualSensor sensor;
@@ -118,25 +118,27 @@ void ProcessingThread::run()
 
         if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter)
         {
-            // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
+
             markers = sensor.detectMarkers();
             // Calculate position, angle and id.
             carMeasurements = findCars(markers);
         }
         else
         {
-            t1 = omp_get_wtime();
-            // Add a thresholded image to drawthreadData struct
+            // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
             markers = sensor.detectMarkers();
             // Calculate position, angle and id.
             carMeasurements = findCars(markers);
 
             //sensor.grabThresholdImage(); //Use this if particle filter is set to use ImageMode
-            t2 = omp_get_wtime();
-            EnterCriticalSection(&csDrawThreadData);
-            m_cars[0].addImageMeasurement(drawThreadData.processedImage);
-            LeaveCriticalSection(&csDrawThreadData);
-            if(carMeasurements.size() > 0 && !imageMode)
+
+            if(imageMode)
+            {
+                EnterCriticalSection(&csDrawThreadData);
+                m_cars[0].addImageMeasurement(drawThreadData.processedImage);
+                LeaveCriticalSection(&csDrawThreadData);
+            }
+            else if(carMeasurements.size() > 0)
                 m_cars[0].addMeasurement(carMeasurements[0].x, carMeasurements[0].y, carMeasurements[0].theta);
         }
 

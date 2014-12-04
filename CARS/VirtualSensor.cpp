@@ -130,7 +130,7 @@ std::vector<float> VirtualSensor::detectMarkers()
     LeaveCriticalSection(&csDrawThreadData);
     tempMat = tempMat - mask * .5;
 
-    int lowerThresh = 140; // 140 original
+    int lowerThresh = 130; // 140 original
     int upperThresh = 255;
     int gaussSize = 3;
 

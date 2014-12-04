@@ -13,6 +13,8 @@
 #include <iostream>
 
 
+ParticleFilter::ParticleFilter(){qDebug("FEEEEL");}
+
 ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType)
 {
     switch (motionModelType)
@@ -33,7 +35,7 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
             std::cout << "Error: Motion model type not implemented, in ParticleFilter::ParticleFilter(), ParticleFilter.cpp" << std::endl;
     }
 
-    imageMode = true;
+    imageMode = false;
     LoadTrack();
 
     time = omp_get_wtime();
@@ -56,7 +58,7 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
     sumStates[5] = 0;
     sumStates[6] = 0;
     sumStates[7] = 0;
-    qDebug("0");
+
     m_img = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
     if (fileExists("indata/calibrationData.yml"))
@@ -99,9 +101,7 @@ void ParticleFilter::propagate(void)
     {
         // update points with random walk model
         velPoints[i]  = expectedSpeed + 25 * gaussianNoise();
-        yawPoints[i] = yaw[i] + M_PI / 3 * gaussianNoise(); // angle
-        if (yawPoints[i] < -M_PI || yawPoints[i] > M_PI)
-            yawPoints[i] = fmod(yawPoints[i]+ 3*M_PI, 2*M_PI) - M_PI;
+        yawPoints[i] = yaw[i] + M_PI / 5 * gaussianNoise(); // angle
         posXPoints[i] = posX[i] + velPoints[i]*sin(yawPoints[i]);
         posYPoints[i] = posY[i] - velPoints[i]*cos(yawPoints[i]);
     }
@@ -186,12 +186,12 @@ void ParticleFilter::propagateST(void)
     dutyCycles = calcDutycycles();
     thetaF = calcThetaF();
 
-    float alphaF, FLat;
+    //float alphaF, FLat;
 
     for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
         //alphaF = calcAlphaF(VxPoints[i], VyPoints[i], yawPoints[i], thetaF);
-        FLat = calcLatForce(alphaF);
+        //FLat = calcLatForce(alphaF);
 
         //angvelPoints[i] = angvel[i] +
     }
@@ -767,9 +767,9 @@ void ParticleFilter::updateFilter()
     // Update the filter using an image as measurement
     if(imageMode)
     {
+        qDebug("limit: %i", limit);
         /*if (carGone())
         {
-            qDebug("noCarCounter: %i ",noCarCounter);
             if(1)//noCarCounter > 0)
             {
                 time = omp_get_wtime();
@@ -779,7 +779,6 @@ void ParticleFilter::updateFilter()
             }
             else
             {
-                qDebug("hej");
                 noCarCounter++;
                 T = ((double)(omp_get_wtime() - time));
                 time = omp_get_wtime();
@@ -817,7 +816,7 @@ void ParticleFilter::updateFilter()
         else
         {
             propagate();
-            update(m_img);
+            parallelUpdate(m_img);
             resample();
         }
 
@@ -835,7 +834,6 @@ void ParticleFilter::updateFilter()
     {
         if (carGone())
         {
-            qDebug("gar Gone");
             for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
             {
                 float yawGuess = ((rand() / ((float)RAND_MAX))*M_PI * 2) - M_PI; // pick any angle
@@ -929,7 +927,6 @@ std::vector<float> ParticleFilter::getState(void)
     for (int i=0; i < M->getNumStates(); i++)
     {
         state[i] = sumStates[i]/NUMBER_OF_PARTICLES;
-        std::cout << "i: " << i << " " << state[i] << std::endl;
     }
     if(sumStates[3]/NUMBER_OF_PARTICLES > M_PI || sumStates[3]/NUMBER_OF_PARTICLES < -M_PI)
     {

@@ -124,7 +124,7 @@ void ControllerThread::run()
                 {
                     // Send gas and turn signal from hand controller to car.
                 case CarMode::Manual:
-                    ioControls[i].manualControl();
+                    ioControls[i].manualControl(carData[i]);
                     ioControls[i].receiveSignals(signal[i].gas, signal[i].turn);
                     break;
                     // Send gas and turn signal from controller to car.
@@ -157,7 +157,7 @@ void ControllerThread::run()
                 case CarMode::Assisted:
                     ioControls[i].receiveSignals(signal[i].gas, signal[i].turn);
                     m_controllers[i]->calcTurnSignal(carData[i].state, signal[i].turn);
-                    ioControls[i].assistedControl(signal[i].turn);
+                    ioControls[i].assistedControl(signal[i].turn, carData[i]);
                     break;
                 case CarMode::NotConnected:
                     // Do nothing.
