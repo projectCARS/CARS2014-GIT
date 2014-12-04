@@ -64,16 +64,14 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     //end of: used for section
 
     //used for plotWindow
-    /*makePlots = true;
+    makePlots = true;
     if (makePlots)
     {
-        //plotDialog pD;
-        pD.setModal(true);
-        pD.exec();
-
-        pD.makePlot(m_numOfInterval);
+        pD.show();
+        //firstLeftPlot(float numSections, std::vector<int> sectionMidIndexes, std::vector<float> refSpeed)
+        pD.firstLeftPlot(m_numOfInterval, m_intervalMidIndexes, m_refSpeedShort);
     }
-    */
+
     //end: used for plotWindow
 
     m_turnPID.resize(3);
@@ -265,7 +263,7 @@ void PIDadaptiveGain::updateSectionTimers(int IndexSection)
 
 void PIDadaptiveGain::updateSpeedReference()
 {
-    qDebug() << "updateSpeedReference";
+    //qDebug() << "updateSpeedReference";
     // make m_times from m_timerTimes
     m_times[0] = m_timerTimes[0];
     for (int i = 1; i<m_numOfInterval; i++)
@@ -314,7 +312,10 @@ void PIDadaptiveGain::updateSpeedReference()
     {
         logFileAdaptive << m_refSpeedShortBest[i] << " " << m_times[i] << " " << m_timesBest[i] << "\n";
     }
+    //
+    //doubleplotdialog::updatePlots(float numSections, std::vector<float> refSpeedBest, std::vector<float> timesLast, std::vector<float> timesBest )
 
+    pD.updatePlots(m_numOfInterval, m_refSpeedShortBest, m_times, m_timesBest);
 }
 
 
@@ -568,6 +569,7 @@ void PIDadaptiveGain::updateSpeedReferenceGain()
         }
         m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.5);
         qDebug() << "bestGain: " << m_bGain << "new gain: " << m_gain;
+
     }
     else
     {
