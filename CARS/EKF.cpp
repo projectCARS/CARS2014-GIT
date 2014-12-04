@@ -19,7 +19,6 @@ EKF::EKF(MotionModelType::Enum motionModelType)
         default:
             std::cout << "Error: Motion model type not implemented, in EKF::EKF(), EKF.cpp" << std::endl;
     }
-
     // Set vector and matrix sizes
     xhat = VectorXd::Zero(M->getNumStates());
     // Avoid division by zero by assigning a small value.

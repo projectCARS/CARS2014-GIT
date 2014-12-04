@@ -21,7 +21,12 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
         {
             mType = motionModelType;
             M = new CTModel();
-            qDebug("pf");
+        }
+            break;
+        case MotionModelType::STModel:
+        {
+            mType = motionModelType;
+            M = new STModel();
         }
             break;
         default:
@@ -36,16 +41,26 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
     expectedSpeed = speed;
     limit = lim;
     noCar = true;
-    xhat = VectorXd::Zero(M->getNumStates());
+
+    T = 1/100;
+
+    xhat = MatrixXd::Zero(M->getNumStates(),NUMBER_OF_PARTICLES);
+    xhatpred = MatrixXd::Zero(M->getNumStates(), NUMBER_OF_PARTICLES);
+    sumState = VectorXd::Zero(M->getNumStates());
+
     sumStates[0] = 0;
     sumStates[1] = 0;
     sumStates[2] = 0;
-    m_img = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    sumStates[3] = 0;
+    sumStates[4] = 0;
+    sumStates[5] = 0;
+    sumStates[6] = 0;
+    sumStates[7] = 0;
 
+    m_img = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
     if (fileExists("indata/calibrationData.yml"))
     {
-        std::cout << "Class VirtualSensor:	Loading calibration coefficients" << std::endl;
         cv::FileStorage storage("indata/calibrationData.yml", cv::FileStorage::READ);
         storage["distCoeffs"] >> distCoeffs;
         storage["cameraMatrix"] >> cameraMatrix;
@@ -107,17 +122,26 @@ void ParticleFilter::propagateWorldCoordinates(void)
     }
 }
 
-// Propagate according to coordinated turn model using world coordinates
+// Propagate according to coordinated turn model using camera coordinates
 void ParticleFilter::propagateCT(void)
 {
-
+    // Update the time step
     T = ((double)(omp_get_wtime() - time));
     time = omp_get_wtime();
-    //std::cout << T << std::endl;
+
     omp_set_num_threads(3);
 #pragma omp parallel for
     for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
+
+        xhatpred(2,i) = xhat(2,i) + gaussianNoise()*30; //Velocity
+        xhatpred(4,i) = xhat(4,i) + M_PI / 7 * gaussianNoise(); // Angular velocity
+        xhatpred(3,i) = xhat(3,i) + xhat(4,i)*T; //Yaw
+        if (xhatpred(3,i) < -M_PI || xhatpred(3,i) > M_PI)
+            xhatpred(3,i) = fmod(xhatpred(3,i) + 3*M_PI, 2*M_PI) - M_PI;
+        xhatpred(0,i) = xhat(0,i) + 2 * xhatpred(2,i) / xhatpred(4,i) * sin(xhatpred(4,i)*T / 2) * cos(xhatpred(3,i) + xhatpred(4,i)*T / 2);
+        xhatpred(1,i) = xhat(1,i) + 2 * xhatpred(2,i) / xhatpred(4,i) * sin(xhatpred(4,i)*T / 2) * sin(xhatpred(3,i) + xhatpred(4,i)*T / 2);
+        /*
         // update points with CT model
         velPoints[i] = vel[i] + gaussianNoise()*30;
         angvelPoints[i] = angvel[i] + M_PI / 7 * gaussianNoise();
@@ -126,6 +150,7 @@ void ParticleFilter::propagateCT(void)
             yawPoints[i] = fmod(yawPoints[i] + 3*M_PI, 2*M_PI) - M_PI;
         posXPoints[i] = posX[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
         posYPoints[i] = posY[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
+        */
     }
 }
 
@@ -152,22 +177,22 @@ void ParticleFilter::propagateCTWorldCoordinates(void)
 
 void ParticleFilter::propagateST(void)
 {
+    // Update the time step
     T = ((double)(omp_get_wtime() - time));
     time = omp_get_wtime();
 
+    dutyCycles = calcDutycycles();
+    thetaF = calcThetaF();
+
+    float alphaF, FLat;
+
     for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
-        // update points with ST model
-        //VxPoints[i] =
-        velPoints[i] = vel[i] + gaussianNoise()*0.05;
-        angvelPoints[i] = angvel[i] + M_PI / 7 * gaussianNoise();
-        yawPoints[i] = yaw[i] + angvel[i]*T;
-        if (yawPoints[i] < -M_PI || yawPoints[i] > M_PI)
-            yawPoints[i] = fmod(yawPoints[i]+ 3*M_PI, 2*M_PI) - M_PI;
-        posXPoints[i] = posX[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
-        posYPoints[i] = posY[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
-    }
+        //alphaF = calcAlphaF(VxPoints[i], VyPoints[i], yawPoints[i], thetaF);
+        FLat = calcLatForce(alphaF);
 
+        //angvelPoints[i] = angvel[i] +
+    }
 }
 
 float ParticleFilter::gaussianNoise(void)
@@ -265,16 +290,22 @@ omp_set_num_threads(3);
 #pragma omp parallel for private(rotate, translate, pos, sum, val)
     for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
     {
-
         // Add border values around each point controlled
         cv::Rect ROI = cv::Rect(0, 0, limit, limit);
         cv::Mat imgROI(limit, limit, CV_8UC1, cv::Scalar(0, 0, 0));
 
         // Rotate and translate pattern according to hypothesis
+        rotate << cos(xhatpred(3,n)), -sin(xhatpred(3,n)),
+            sin(xhatpred(3,n)), cos(xhatpred(3,n));
+        translate << xhatpred(0,n), 0,
+            xhatpred(1,n), 0;
+        /*
+        // Rotate and translate pattern according to hypothesis
         rotate << cos(yawPoints[n]), -sin(yawPoints[n]),
             sin(yawPoints[n]), cos(yawPoints[n]);
         translate << posXPoints[n], 0,
             posYPoints[n], 0;
+        */
         pos = rotate*carPattern.transpose() + translate*ones;
 
         val = 0.;
@@ -324,9 +355,9 @@ omp_set_num_threads(3);
 
 }
 
+// Update the weights based on measurements from the find cars algorithm
 void ParticleFilter::noImgUpdate(float x, float y, float theta)
 {
-
     float val, sum, angle, measAngle, weight;
     measAngle = theta;
     double base = 0;
@@ -352,7 +383,6 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
         {
             numPartInCritReg++;
         }
-
 
         float xWorld = (PIXELS_PER_METER*posXPoints[n]);
         float yWorld = (PIXELS_PER_METER*posYPoints[n]);
@@ -424,9 +454,7 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
 
             sum = sum*weight;
 
-            //std::cout << "base: " << base << " angle : " << angle << " MeasAngle: " << measAngle << " weight: " << weight << " sum : " << sum <<std::endl;
-
-            // In the parallel loop it's not posible to make a cumulative sum, do that outside the loop
+            // In the parallel loop it's not possible to make a cumulative sum, do that outside the loop
             noncumulativeWeights[n] = sum;
         }
     }
@@ -532,13 +560,13 @@ void ParticleFilter::systematicResample(void)
     sumStates[3] = 0;
     sumStates[4] = 0;
     int k = 0;
-    noNegatives = 0;
 
-    if (cumulativeWeights[NUMBER_OF_PARTICLES - 1] != 0)
+    if (cumulativeWeights[NUMBER_OF_PARTICLES - 1] > 0.3)
     {
         ordNum[0] = (rand() / ((float)RAND_MAX))/NUMBER_OF_PARTICLES;
 
         // Normalize weights to form a cumulative summed probability distribution
+        // TODO Parallelize this and see if it gives speedup
         for (int i = 0; i < NUMBER_OF_PARTICLES - 1; ++i)
         {
             cumulativeWeights[i] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
@@ -552,6 +580,7 @@ void ParticleFilter::systematicResample(void)
             while(cumulativeWeights[k] < ordNum[j])
                 k++;
 
+            /*
             posX[j] = posXPoints[k];
             sumStates[0] += posXPoints[k];
             posY[j] = posYPoints[k];
@@ -577,6 +606,34 @@ void ParticleFilter::systematicResample(void)
 
             angvel[j] = angvelPoints[k];
             sumStates[4] += angvelPoints[k];
+            */
+
+            xhat(0,j) = xhatpred(0,k);
+            sumStates[0] += xhatpred(0,k);
+            xhat(1,j) = xhatpred(1,k);
+            sumStates[1] += xhatpred(1,k);
+            xhat(2,j) = xhatpred(2,k);
+            sumStates[2] += xhatpred(2,k);
+
+            xhat(3,j) = xhatpred(3,k);
+            if(!imageMode){
+                // Add 2*PI to the angle if the majority of the particles are close to the turning point around -pi and pi
+                if(xhatpred(3,k) < 0 && numPartInCritReg < NUMBER_OF_PARTICLES*0.1f)
+                {
+                    sumStates[3] += (xhatpred(3,k) + 2*M_PI);
+                    //std::cout << "1 " << yawPoints[k] + 2*M_PI << std::endl;
+                }
+                else{
+                    sumStates[3] += xhatpred(3,k);
+                    //std::cout << "2 " << yawPoints[k] << std::endl;
+                }
+            }
+            else
+                sumStates[3] += xhatpred(3,k);
+
+            xhat(4,j) = xhatpred(4,k);
+            sumStates[4] += xhatpred(4,k);
+
         }
     }
     else
@@ -584,6 +641,7 @@ void ParticleFilter::systematicResample(void)
         noCar = true;
         for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
         {
+            /*
             posX[i] = posXPoints[i];
             sumStates[0] += posX[i];
             posY[i] = posYPoints[i];
@@ -610,114 +668,120 @@ void ParticleFilter::systematicResample(void)
             }
             angvel[i] = angvelPoints[i];
             sumStates[4] += angvelPoints[i];
+            */
+
+            xhat(0,i) = xhatpred(0,i);
+            sumStates[0] += xhatpred(0,i);
+            xhat(1,i) = xhatpred(1,i);
+            sumStates[1] += xhatpred(1,i);
+            xhat(2,i) = xhatpred(2,i);
+            sumStates[2] += xhatpred(2,i);
+
+            xhat(3,i) = xhatpred(3,i);
+            if(!imageMode){
+                // Add 2*PI to the angle if the majority of the particles are close to the turning point around -pi and pi
+                if(xhatpred(3,i) < 0 && numPartInCritReg < NUMBER_OF_PARTICLES*0.1f)
+                {
+                    sumStates[3] += (xhatpred(3,i) + 2*M_PI);
+                    //std::cout << "1 " << yawPoints[k] + 2*M_PI << std::endl;
+                }
+                else{
+                    sumStates[3] += xhatpred(3,i);
+                    //std::cout << "2 " << yawPoints[k] << std::endl;
+                }
+            }
+            else
+                sumStates[3] += xhatpred(3,i);
+
+            xhat(4,i) = xhatpred(4,i);
+            sumStates[4] += xhatpred(4,i);
+
         }
     }
-}
-
-int ParticleFilter::findFirst(const float value)
-{
-    for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-    {
-        if (cumulativeWeights[i] >= value)
-        {
-            return i;
-        }
-    }
-    std::cout << "Class ParticleFilter:	Error in findFirst()" << std::endl;
-    //std::cout << "Class ParticleFilter:	Trying to find > " << value << "in array with max " << cumulativeWeights[NUMBER_OF_PARTICLES - 1] << std::endl;
-    return -1;
-}
-
-void ParticleFilter::logStates(std::ofstream *logFile)
-{
-    *logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
 }
 
 void ParticleFilter::extensiveSearch(cv::Mat img)
-    {
-        // Detect contrasting image features for seeding states
-        cv::vector<cv::vector<cv::Point> > contours;
-        cv::vector<cv::Vec4i> hierarchy;
-        findContours(img, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-        // Merge connected components
-        int i, j;
-        std::vector<cv::Point> blobs;
-        if (!contours.empty())
-        {
-            for (i = 0; i < contours.size(); i++)
-            {
-                int x = 0;
-                int y = 0;
-                int len = contours.at(i).size();
-                // naive approach by averaging contour points
-                for (j = 0; j < len; j++)
-                {
-                    //std::cout << "in component " << i << ", [" << contours.at(i).at(j).x << ", " << contours.at(i).at(j).y << "]" << std::endl;
-                    x += contours.at(i).at(j).x;
-                    y += contours.at(i).at(j).y;
-                }
-
-                cv::Point point;
-                point.x = x / len;
-                point.y = y / len;
-                blobs.push_back(point);
-            }
-        }
-        else
-        {
-            std::cout << "Class ParticleFilter:	Cannot find any image features in extensive search" << std::endl;
-        }
-
-        int index;
-        float yawGuess;
-        if (!contours.empty()) // Guess position based on image features
-        {
-            for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
-            {
-                yawGuess = (rand() / ((float)RAND_MAX))*M_PI * 2; // pick any angle
-
-                // Feed image feature points + guessed yaw to state vectors
-                yaw[i] = yawGuess;
-                index = rand() % blobs.size(); // pick one of the probable points;
-                posX[i] = blobs[index].x;
-                posY[i] = blobs[index].y;
-                vel[i] = 0.3f;
-                angvel[i] = vel[i];
-            }
-        }
-        else // Look over entire image
-        {
-            for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
-            {
-                posX[i] = (rand() / ((float)RAND_MAX))*img.cols; // pick any posX
-                posY[i] = (rand() / ((float)RAND_MAX))*img.rows; // pick any posY
-                yaw[i] = (rand() / ((float)RAND_MAX))*M_PI * 2; // pick any angle
-                vel[i] = 0.3f;
-                angvel[i] = vel[i];
-            }
-        }
-        noCar = false; // To break extensive search. This will be tried on next image search.
-    }
-
-void ParticleFilter::addInputSignals(float gas, float turn)
 {
-    m_gas = gas;
-    m_turn = turn;
-}
-
-std::vector<float> ParticleFilter::getState(void)
-{
-    std::vector<float> state(xhat.size());
-    for (int i=0; i < xhat.size(); i++)
+    // Detect contrasting image features for seeding states
+    cv::vector<cv::vector<cv::Point> > contours;
+    cv::vector<cv::Vec4i> hierarchy;
+    findContours(img, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+    // Merge connected components
+    int i, j;
+    std::vector<cv::Point> blobs;
+    if (!contours.empty())
     {
-        state[i] = sumStates[i]/NUMBER_OF_PARTICLES;
+        for (i = 0; i < contours.size(); i++)
+        {
+            int x = 0;
+            int y = 0;
+            int len = contours.at(i).size();
+            // naive approach by averaging contour points
+            for (j = 0; j < len; j++)
+            {
+                //std::cout << "in component " << i << ", [" << contours.at(i).at(j).x << ", " << contours.at(i).at(j).y << "]" << std::endl;
+                x += contours.at(i).at(j).x;
+                y += contours.at(i).at(j).y;
+            }
+
+            cv::Point point;
+            point.x = x / len;
+            point.y = y / len;
+            blobs.push_back(point);
+        }
     }
-    if(!imageMode && sumStates[3]/NUMBER_OF_PARTICLES > M_PI){
-        //std::cout << sumStates[3]/NUMBER_OF_PARTICLES;
-        //state[3] = (sumStates[3]/NUMBER_OF_PARTICLES) - (2.*M_PI);
+    else
+    {
+        std::cout << "Class ParticleFilter:	Cannot find any image features in extensive search" << std::endl;
     }
 
-    return state;
+    int index;
+    float yawGuess;
+    if (!contours.empty()) // Guess position based on image features
+    {
+        for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
+        {
+            yawGuess = (rand() / ((float)RAND_MAX))*M_PI * 2 - M_PI; // pick any angle
+
+            xhat(3,i) = yawGuess;
+            index = rand() % blobs.size(); // pick one of the probable points;
+            xhat(0,i) = blobs[index].x;
+            xhat(1,i) = blobs[index].y;
+            xhat(2,i) = 0.3f;
+            xhat(4,i) = 0;
+
+            /*
+            // Feed image feature points + guessed yaw to state vectors
+            yaw[i] = yawGuess;
+            index = rand() % blobs.size(); // pick one of the probable points;
+            posX[i] = blobs[index].x;
+            posY[i] = blobs[index].y;
+            vel[i] = 0.3f;
+            angvel[i] = vel[i];
+            */
+        }
+    }
+    else // Look over entire image
+    {
+        for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
+        {
+            xhat(0,i) = (rand() / ((float)RAND_MAX))*img.cols; // pick any posX
+            xhat(1,i) = (rand() / ((float)RAND_MAX))*img.rows; // pick any posY
+            xhat(3,i) = (rand() / ((float)RAND_MAX))*M_PI * 2; // pick any angle
+            xhat(2,i) = 0.3f;
+            xhat(4,i) = 0;
+
+            /*
+            posX[i] = (rand() / ((float)RAND_MAX))*img.cols; // pick any posX
+            posY[i] = (rand() / ((float)RAND_MAX))*img.rows; // pick any posY
+            yaw[i] = (rand() / ((float)RAND_MAX))*M_PI * 2; // pick any angle
+            vel[i] = 0.3f;
+            angvel[i] = vel[i];
+            */
+
+        }
+    }
+    noCar = false; // To break extensive search. This will be tried on next image search.
 }
 
 void ParticleFilter::updateFilter()
@@ -744,6 +808,15 @@ void ParticleFilter::updateFilter()
                 #pragma omp parallel for
                 for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
                 {
+
+                    xhatpred(2,i) = xhat(2,i);
+                    xhatpred(4,i) = xhat(4,i);
+                    xhatpred(3,i) = xhat(3,i) + xhatpred(4,i)*T;
+                    if (xhatpred(3,i) < -M_PI || xhatpred(3,i) > M_PI)
+                        xhatpred(3,i) = fmod(xhatpred(3,i) + 3*M_PI, 2*M_PI) - M_PI;
+                    xhatpred(0,i) = xhat(0,i) + 2 * xhatpred(2,i) / xhatpred(4,i) * sin(xhatpred(4,i)*T / 2) * cos(xhat(3,i) + xhatpred(4,i)*T / 2);
+                    xhatpred(1,i) = xhat(1,i) + 2 * xhatpred(2,i) / xhatpred(4,i) * sin(xhatpred(4,i)*T / 2) * sin(xhat(3,i) + xhatpred(4,i)*T / 2);
+                    /*
                     // update points with CT model
                     velPoints[i] = vel[i];
                     angvelPoints[i] = angvel[i];
@@ -752,11 +825,11 @@ void ParticleFilter::updateFilter()
                         yawPoints[i] = fmod(yawPoints[i]+ 3*M_PI, 2*M_PI) - M_PI;
                     posXPoints[i] = posX[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
                     posYPoints[i] = posY[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
+                    */
                 }
 
                 parallelUpdate(m_img);
                 systematicResample();
-
             }
         }
         else
@@ -767,7 +840,7 @@ void ParticleFilter::updateFilter()
             systematicResample();
 
         }
-        drawThreadData.sumStates = getSumStates();
+        //drawThreadData.sumStates = getSumStates();
 
     }
     else // Update the filter using x, y, theta values as measurements
@@ -830,7 +903,7 @@ void ParticleFilter::updateFilter()
                     break;
                 case MotionModelType::Enum::STModel:
                 {
-                    //std::cout << "st";
+                    // Propagate according to STModel
                 }
                     break;
                 default:
@@ -838,9 +911,50 @@ void ParticleFilter::updateFilter()
             }
 
         }
-    drawThreadData.sumStates = getSumStates();
+    // SHOULD BE REMOVED drawThreadData.sumStates = getSumStates();
     }
     m_newMeasurement = false;
+}
+
+int ParticleFilter::findFirst(const float value)
+{
+    for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+    {
+        if (cumulativeWeights[i] >= value)
+        {
+            return i;
+        }
+    }
+    std::cout << "Class ParticleFilter:	Error in findFirst()" << std::endl;
+    //std::cout << "Class ParticleFilter:	Trying to find > " << value << "in array with max " << cumulativeWeights[NUMBER_OF_PARTICLES - 1] << std::endl;
+    return -1;
+}
+
+void ParticleFilter::logStates(std::ofstream *logFile)
+{
+    *logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
+}
+
+
+std::vector<float> ParticleFilter::getState(void)
+{
+    std::vector<float> state(xhat.size());
+    for (int i=0; i < xhat.size(); i++)
+    {
+        state[i] = sumStates[i]/NUMBER_OF_PARTICLES;
+    }
+    if(sumStates[3]/NUMBER_OF_PARTICLES > M_PI || sumStates[3]/NUMBER_OF_PARTICLES < -M_PI)
+    {
+        sumStates[3] = fmod(sumStates[3]+ 3*M_PI, 2*M_PI) - M_PI;
+    }
+
+    return state;
+}
+
+void ParticleFilter::addInputSignals(float gas, float turn)
+{
+    m_gas = gas;
+    m_turn = turn;
 }
 
 void ParticleFilter::addMeasurement(float x, float y, float theta)
@@ -923,4 +1037,24 @@ void ParticleFilter::LoadTrack() {
     }
   }
   in.close();
+}
+
+float ParticleFilter::calcDutycycles()
+{
+    return kThrottle*m_gas + mThrottle;
+}
+
+float ParticleFilter::calcThetaF()
+{
+    return kSteer*m_turn + mSteer;
+}
+
+float ParticleFilter::calcAlphaF(float Vx, float Vy, float omegaZ, float thetaF)
+{
+    return atan((Vy + lf*omegaZ)/Vx) - thetaF;
+}
+
+float ParticleFilter::calcLatForce(float alphaF)
+{
+    return -Cf*alphaF;
 }

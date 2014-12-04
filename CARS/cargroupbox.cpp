@@ -21,6 +21,7 @@ CarGroupBox::CarGroupBox(QWidget *parent) :
     ui->filterComboBox->addItem("NoFilter", (int)FilterType::NoFilter);
     // Add motion models.
     ui->motionModelComboBox->addItem("CTModel", (int)MotionModelType::CTModel);
+    ui->motionModelComboBox->addItem("STModel", (int)MotionModelType::STModel);
 
     // Add controllers.
     ui->controllerComboBox->addItem("PIDController", (int)ControllerType::PIDController);
