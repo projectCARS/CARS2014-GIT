@@ -17,11 +17,16 @@ public:
     void firstLeftPlot(float numSections, std::vector<int> sectionMidIndexes, std::vector<float> refSpeed);
     void updatePlots(float numSections, std::vector<float> refSpeedBest, std::vector<float> timesLast, std::vector<float> timesBest );
 
+private slots:
+    void on_pushButton_released();
+
 private:
     Ui::doubleplotdialog *ui;
 
     QVector<double> refSpeedStart;
     QVector<double> leftX;
+
+    void closeEvent(QCloseEvent *event);
 };
 
 #endif // DOUBLEPLOTDIALOG_H

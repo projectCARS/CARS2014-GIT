@@ -29,7 +29,7 @@ std::vector<float> m_timesBest;
 void doubleplotdialog::firstLeftPlot(float numSections, std::vector<int> sectionMidIndexes, std::vector<float> refSpeed)
 {
     qDebug("i first left plot");
-   /* refSpeedStart.resize(numSections);
+    refSpeedStart.resize(numSections);
     leftX.resize(numSections);
 
 
@@ -48,7 +48,7 @@ void doubleplotdialog::firstLeftPlot(float numSections, std::vector<int> section
     pen.setColor(QColor(0, 0, 0));
     ui->leftPlot->graph(0)->setPen(pen);
     qDebug("before reploit");
-*/
+
     //ui->leftPlot->replot();
     qDebug("replot done");
     //Sleep(100);
@@ -100,4 +100,14 @@ void doubleplotdialog::updatePlots(float numSections, std::vector<float> refSpee
 
     ui->rigthPlot->replot();
     Sleep(100);
+}
+
+void doubleplotdialog::on_pushButton_released()
+{
+    this->close();
+}
+
+void doubleplotdialog::closeEvent(QCloseEvent *event)
+{
+    event->accept();
 }

@@ -4,8 +4,6 @@
 #include "PIDadaptiveGain.h"
 #include "functions.h"
 
-
-
 #include <fstream>
 
 PIDadaptiveGain::PIDadaptiveGain(int ID)
@@ -64,21 +62,22 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     //end of: used for section
 
     //used for plotWindow
-    /*
-    makePlots = false;
+
+    makePlots = true;
     if (makePlots)
     {
-        qDebug("init pd");
+        qDebug("init show_before");
         //pD.show();
         //firstLeftPlot(float numSections, std::vector<int> sectionMidIndexes, std::vector<float> refSpeed)
-        qDebug("firstlefplot");
 
-        pD.firstLeftPlot(m_numOfInterval, m_intervalMidIndexes, m_refSpeedShort);
+        //qDebug("firstlefplot");
+       // pD.firstLeftPlot(m_numOfInterval, m_intervalMidIndexes, m_refSpeedShort);
         pD.show();
+        qDebug("init show_after");
     }
 
     //end: used for plotWindow
-    */
+
 
     m_turnPID.resize(3);
     m_speedPID.resize(3);
