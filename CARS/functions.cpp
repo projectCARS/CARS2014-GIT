@@ -124,8 +124,6 @@ void logDataU(float sysTime, std::vector<CarData> carData, float64 gas, float64 
 
 }
 
-
-
 void drawStatesToImg(Eigen::MatrixXf carPattern, float *posX, float *posY, float *yaw, cv::Mat img, int selection)
 {
     int points = carPattern.rows();

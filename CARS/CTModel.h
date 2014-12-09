@@ -82,6 +82,7 @@ public:
      * @param T Time since the last state was calculated, approximately.
      */
 	virtual void updateModel(VectorXd xhat, double T);
+    virtual void addInput(float u_gas, float u_turn);
 
 private:
     /**

@@ -3,6 +3,7 @@
 #include "EKF.h"
 #include "Filter.h"
 #include "CTModel.h"
+#include "STModel.h"
 #include <Eigen/Dense>
 #include <math.h>
 
@@ -15,6 +16,9 @@ EKF::EKF(MotionModelType::Enum motionModelType)
     {
         case MotionModelType::CTModel:
             M = new CTModel();
+            break;
+        case MotionModelType::STModel:
+            M = new STModel();
             break;
         default:
             std::cout << "Error: Motion model type not implemented, in EKF::EKF(), EKF.cpp" << std::endl;
@@ -47,6 +51,7 @@ EKF::~EKF()
 void EKF::firstState()
 {
     // Relinearization.
+    addInputSignals(u(0), u(1));
 	updateModel();
     // Covariance.
     MatrixXd S = H * P * H.transpose() + R;

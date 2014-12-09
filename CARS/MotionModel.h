@@ -23,4 +23,5 @@ public:
 
     // Relinearize model matrices around current states.
 	virtual void updateModel(VectorXd xhat, double T) = 0;
+    virtual void addInput(float u_gas, float u_turn) = 0;
 };

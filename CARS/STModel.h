@@ -39,6 +39,12 @@ private:
      */
     MatrixXd F, H, R, Q;
 
+    /**
+     * @brief The parameters used in the STmodel
+     */
+    float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kSteer, mSteer, kThrottle, mThrottle;
+    float m_gas, m_turn;
+
 public:
     /**
      * @brief The constructor initializes all the matrices and vectors.
@@ -82,11 +88,21 @@ public:
      * @param T Time since the last state was calculated, approximately.
      */
     virtual void updateModel(VectorXd xhat, double T);
+    virtual void addInput(float u_gas, float u_turn);
 
 private:
     /**
      * @brief Gives initial values to F, G, H, Q and R
      */
     void matrixSetup();
+
+    // returns Duty cycles as a function of gas control signal
+    float calcDutycycles();
+    // returns thetaF as a function of turn control signal
+    float calcThetaF();
+    // Returns AlphaF parameter used when updating the model
+    float calcAlphaF(float Vx, float Vy, float omegaZ, float thetaF);
+    // returns lateral force
+    float calcLatForce(float alphaF);
 
 };

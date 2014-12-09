@@ -416,20 +416,22 @@ void IOControl::decimalToVoltage(float64 *decimal)
         decimal[0] = m_gasNeutral;
     }
     // If gas is 0 - m_linearizationBreak
-    else if (0)//decimal[0] > 0 && decimal[0] <= m_linearizationBreak)
+    else if (decimal[0] > 0 && decimal[0] <= m_linearizationBreak)
     {
         decimal[0] = m_voltGasThreshold - decimal[0] / m_linearizationBreak * (m_voltGasThreshold - m_voltGasIntervall);
     }
     // If gas is m_linearizationBreak - 100%
-    else if (decimal[0] > 0 && decimal[0] <= 1)//m_linearizationBreak && decimal[0] <= 1)
+    else if (decimal[0] > m_linearizationBreak && decimal[0] <= 1)//m_linearizationBreak && decimal[0] <= 1)
     {
-        decimal[0] = -0.33 + m_voltGasIntervall - (decimal[0] - m_linearizationBreak) / (1 - m_linearizationBreak)* (m_voltGasIntervall - m_minGasVolt);
+        decimal[0] = m_voltGasIntervall - (decimal[0] - m_linearizationBreak) / (1 - m_linearizationBreak)* (m_voltGasIntervall - m_minGasVolt);
+        //decimal[0] = -0.33 + m_voltGasIntervall - (decimal[0] - m_linearizationBreak) / (1 - m_linearizationBreak)* (m_voltGasIntervall - m_minGasVolt);
         //decimal[0] = -0.513*decimal[0] + 1.423;
     }
     // If break/reverse
     else if (decimal[0] < 0 && decimal[0] >= -1)
     {
-        decimal[0] = -0.2 + m_voltReverseThreshold + -decimal[0] * (m_maxGasVolt - m_voltReverseThreshold)*4;
+        decimal[0] = m_voltReverseThreshold + -decimal[0] * (m_maxGasVolt - m_voltReverseThreshold);
+        //decimal[0] = -0.2 + m_voltReverseThreshold + -decimal[0] * (m_maxGasVolt - m_voltReverseThreshold)*4;
     }
     // If out of bounds
     else
