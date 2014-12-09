@@ -15,7 +15,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;      //m_vRef is uniqe to each car
     m_gain = 1.0f;
-    m_offset = 0.0f;
+    m_offset = 0.3f;
     m_checkPoint = false;
     m_firstLapDone = false;
     timer.start();
@@ -64,15 +64,21 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     //end of: used for section
 
     //used for plotWindow
-    makePlots = true;
+    /*
+    makePlots = false;
     if (makePlots)
     {
-        pD.show();
+        qDebug("init pd");
+        //pD.show();
         //firstLeftPlot(float numSections, std::vector<int> sectionMidIndexes, std::vector<float> refSpeed)
+        qDebug("firstlefplot");
+
         pD.firstLeftPlot(m_numOfInterval, m_intervalMidIndexes, m_refSpeedShort);
+        pD.show();
     }
 
     //end: used for plotWindow
+    */
 
     m_turnPID.resize(3);
     m_speedPID.resize(3);
@@ -126,9 +132,9 @@ PIDadaptiveGain::~PIDadaptiveGain()
 void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &turn)
 {
     bool adaptiveGain, section, staticGain;
-    adaptiveGain = false;
+    adaptiveGain = true;
     section = false;
-    staticGain = true;
+    staticGain = false;
 
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
@@ -312,10 +318,8 @@ void PIDadaptiveGain::updateSpeedReference()
     {
         logFileAdaptive << m_refSpeedShortBest[i] << " " << m_times[i] << " " << m_timesBest[i] << "\n";
     }
-    //
-    //doubleplotdialog::updatePlots(float numSections, std::vector<float> refSpeedBest, std::vector<float> timesLast, std::vector<float> timesBest )
-
-    pD.updatePlots(m_numOfInterval, m_refSpeedShortBest, m_times, m_timesBest);
+    //if (makePlots)
+    //    pD.updatePlots(m_numOfInterval, m_refSpeedShortBest, m_times, m_timesBest);
 }
 
 
@@ -567,7 +571,7 @@ void PIDadaptiveGain::updateSpeedReferenceGain()
             m_bLap = m_lLap;
             m_bGain = m_gain;
         }
-        m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.5);
+        m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.3);
         qDebug() << "bestGain: " << m_bGain << "new gain: " << m_gain;
 
     }

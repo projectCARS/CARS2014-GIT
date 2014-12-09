@@ -9,7 +9,7 @@
 #include "qtheaders.h"
 #include <stdlib.h>
 #include <time.h>
-#include "doubleplotdialog.h"
+//#include "doubleplotdialog.h"
 
 
 class PIDadaptiveGain : public Controller
@@ -62,12 +62,12 @@ private:
     std::vector<bool> m_sectionVisited;
 
     //end for section
-
+/*
     //making plots
     bool makePlots;
     doubleplotdialog pD;
     //end plots
-
+*/
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
     QElapsedTimer timeSRgain;

@@ -92,7 +92,9 @@ SOURCES += main.cpp\
     racedialog.cpp \
     PIDadaptiveGain.cpp \
     racegroupbox.cpp \
-    STModel.cpp
+    STModel.cpp \
+    qcustomplot.cpp \
+    doubleplotdialog.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -125,7 +127,9 @@ HEADERS  += mainwindow.h \
     racedialog.h \
     PIDadaptiveGain.h \
     racegroupbox.h \
-    STModel.h
+    STModel.h \
+    qcustomplot.h \
+    doubleplotdialog.h
 
 
 FORMS    += mainwindow.ui \
@@ -134,7 +138,8 @@ FORMS    += mainwindow.ui \
     carsettingsdialog.ui \
     drawsettingsdialog.ui \
     racedialog.ui \
-    racegroupbox.ui
+    racegroupbox.ui \
+    doubleplotdialog.ui
 
 #RESOURCES += \
 #    CARS.qrc

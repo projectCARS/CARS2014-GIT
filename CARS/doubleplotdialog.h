@@ -20,8 +20,8 @@ public:
 private:
     Ui::doubleplotdialog *ui;
 
-    QVector<float> refSpeedStart;
-    QVector<int> x;
+    QVector<double> refSpeedStart;
+    QVector<double> leftX;
 };
 
 #endif // DOUBLEPLOTDIALOG_H

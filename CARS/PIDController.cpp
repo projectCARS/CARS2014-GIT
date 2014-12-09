@@ -111,8 +111,14 @@ float PIDController::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
         dt = 0.007f;
         m_prevI = 0;
     }
+    float P;
+    float Kp_pos = 0.1;
+    float Kp_neg = 1;
 
-    float P = error;
+    if(error < 0)
+        P = error*Kp_neg;
+    else
+        P = error*Kp_pos;
     float I = (m_prevI + error*dt);
     if (I > 8) I = 8;
     float D = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
@@ -212,6 +218,16 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 	float carX, carY, diffX, diffY, refAngle, carAngle, diffAngle;
 	float turnSignal = 0;
 
+    start = std::chrono::system_clock::now();
+    std::chrono::duration<double> T = start - end;
+    end = std::chrono::system_clock::now();
+    float dt = (float)T.count();
+    if (dt < 0.0001 || dt > 0.1) {
+        dt = 0.007f;
+    }
+    m_prevI = 0;
+
+
 	// x and y coordinate of the car. 
 	carX = state[0];
 	carY = state[1];
@@ -247,8 +263,11 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 		turnSignal = 1.0;
 	}
 	else
-	{
-        turnSignal = m_turnPID[0]*diffAngle / M_PI_2;
+    {
+        float KturnVel = 0.1;
+        float I = (m_prevIturn + diffAngle*dt);
+        float P = m_turnPID[0]*diffAngle / M_PI_2 - KturnVel*state[4];
+        turnSignal = I + P;
 		if (turnSignal > 1)
 		{
 			turnSignal = 1;
@@ -256,9 +275,9 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 		else if (turnSignal < -1)
 		{
 			turnSignal = -1;
-		}
+        }
+        m_prevIturn = I;
 	}
-
 	// Return Turning voltage.
 	return turnSignal;
 }

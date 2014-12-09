@@ -81,6 +81,8 @@ private:
 	void voltageToDecimal(float64 *values);
 	// Transforms an interval between -1 and 1 to corresponding voltage.
 	void decimalToVoltage(float64 *values);
+    // Transforms an interval between -1 and 1 to corresponding voltage.
+    void decimalToVoltageLinearMap(float64 *values);
 	// Recieve the voltage from the input pins.
     void receiveSignalsVolt(float64 *signal);
 	// Send the voltage to the output pins.

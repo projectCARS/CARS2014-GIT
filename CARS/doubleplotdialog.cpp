@@ -1,5 +1,6 @@
 #include "doubleplotdialog.h"
 #include "ui_doubleplotdialog.h"
+#include "Windows.h"
 
 doubleplotdialog::doubleplotdialog(QWidget *parent) :
     QDialog(parent),
@@ -27,44 +28,52 @@ std::vector<float> m_timesBest;
 
 void doubleplotdialog::firstLeftPlot(float numSections, std::vector<int> sectionMidIndexes, std::vector<float> refSpeed)
 {
-    refSpeedStart(numSections);
-    x(numSections);
+    qDebug("i first left plot");
+   /* refSpeedStart.resize(numSections);
+    leftX.resize(numSections);
+
 
     for (int i = 0; i<numSections; i++)
     {
-        x[i] = sectionMidIndexes[i];
+        leftX[i] = sectionMidIndexes[i];
         refSpeedStart[i] = refSpeed[i];
     }
 
+    qDebug("calcs done");
     ui->leftPlot->addGraph();
-    ui->leftPlot->graph(0)->setData(x,refSpeedStart);
+    ui->leftPlot->graph(0)->setData(leftX,refSpeedStart);
     ui->leftPlot->xAxis->setRange(0,numSections);
     ui->leftPlot->yAxis->setRange(0,4);
     QPen pen;
     pen.setColor(QColor(0, 0, 0));
     ui->leftPlot->graph(0)->setPen(pen);
-
-    ui->leftPlot->replot();
+    qDebug("before reploit");
+*/
+    //ui->leftPlot->replot();
+    qDebug("replot done");
+    //Sleep(100);
 }
 
 
 
 void doubleplotdialog::updatePlots(float numSections, std::vector<float> refSpeedBest, std::vector<float> timesLast, std::vector<float> timesBest )
 {
+    qDebug("gfdslkagnlkjfda");
     //init
-    QVector<float> refSpeedB, timesL, timesB;
-    QVector<int> x2(numSections);
+    QVector<double> refSpeedB, timesL, timesB;
+    QVector<double> x2(numSections);
     for (int i = 0; i < numSections; i++)
     {
         refSpeedB[i] = refSpeedBest[i];
         timesL[i] = timesLast[i];
         timesB[i] = timesBest[i];
+        x2[i] = i;
     }
 
 
     //left plot
     ui->leftPlot->addGraph();
-    ui->leftPlot->graph(1)->setData(x,refSpeedB);
+    ui->leftPlot->graph(1)->setData(leftX,refSpeedB);
     //ui->leftPlot->xAxis->setRange(0,numSections);
     //ui->leftPlot->yAxis->setRange(0,4);
     QPen pen;
@@ -90,4 +99,5 @@ void doubleplotdialog::updatePlots(float numSections, std::vector<float> refSpee
     ui->rigthPlot->graph(1)->setPen(pen);
 
     ui->rigthPlot->replot();
+    Sleep(100);
 }

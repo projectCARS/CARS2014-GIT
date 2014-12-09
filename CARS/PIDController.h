@@ -15,13 +15,14 @@ private:
     std::vector<float> m_turnPID;
 
     float m_prevI;
+    float m_prevIturn;
     float m_prevD;
     float m_prevAngError;
     float m_prevSpeed;
     float m_refSpeed;
     float m_refGas;
 
-    std::chrono::time_point<std::chrono::system_clock> start, end;
+    std::chrono::time_point<std::chrono::system_clock> start, end, startTurn, endTurn;
 
     cv::Mat speedProfile;
 

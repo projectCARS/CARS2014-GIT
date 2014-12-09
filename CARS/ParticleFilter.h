@@ -20,11 +20,13 @@ private:
     float yaw[NUMBER_OF_PARTICLES];
     float vel[NUMBER_OF_PARTICLES];
     float angvel[NUMBER_OF_PARTICLES];
+    float latvel[NUMBER_OF_PARTICLES];
     float posXPoints[NUMBER_OF_PARTICLES];
     float posYPoints[NUMBER_OF_PARTICLES];
     float yawPoints[NUMBER_OF_PARTICLES];
     float velPoints[NUMBER_OF_PARTICLES];
     float angvelPoints[NUMBER_OF_PARTICLES];
+    float latvelPoints[NUMBER_OF_PARTICLES];
     float weights[NUMBER_OF_PARTICLES];
 
     float noncumulativeWeights[NUMBER_OF_PARTICLES];
@@ -45,8 +47,7 @@ private:
     cv::Mat cameraMatrix;
     cv::Mat cameraToWorldMatrix;
     Eigen::Matrix3f cameraToWorldMatrix_Eigen;
-    cv::Mat worldToCameraMatrix;
-    Eigen::Matrix3f worldToCameraMatrix_Eigen;
+
 
     float m_x = 0, m_y = 0, m_theta = 0;
     float m_gas, m_turn;
@@ -72,7 +73,7 @@ private:
     bool m_newMeasurement;
 
     //Parameters for the ST model
-    float Cm1, Cm2, Cm3, Cf, lf, kSteer, mSteer, kThrottle, mThrottle;
+    float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kSteer, mSteer, kThrottle, mThrottle;
     float dutyCycles, thetaF;
 
     float gaussianNoise(void);

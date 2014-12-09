@@ -115,32 +115,10 @@ void ProcessingThread::run()
 
         // Save car data from previous iteration.
         oldCarData = carData;
-
-        if(m_cars[0].getFiltertype() != FilterType::Enum::ParticleFilter)
-        {
-
-            markers = sensor.detectMarkers();
-            // Calculate position, angle and id.
-            carMeasurements = findCars(markers);
-        }
-        else
-        {
-            // Detect markers using virtual sensor. Output is written to vector markers in world coordinates.
-            markers = sensor.detectMarkers();
-            // Calculate position, angle and id.
-            carMeasurements = findCars(markers);
-
-            //sensor.grabThresholdImage(); //Use this if particle filter is set to use ImageMode
-
-            if(imageMode)
-            {
-                EnterCriticalSection(&csDrawThreadData);
-                m_cars[0].addImageMeasurement(drawThreadData.processedImage);
-                LeaveCriticalSection(&csDrawThreadData);
-            }
-            else if(carMeasurements.size() > 0)
-                m_cars[0].addMeasurement(carMeasurements[0].x, carMeasurements[0].y, carMeasurements[0].theta);
-        }
+        // Detect markers using virtual sensor. Output is written to vector markers in world coordinates
+        markers = sensor.detectMarkers();
+        // Calculate position, angle and id.
+        carMeasurements = findCars(markers);
 
         // Add measurements to cars.
         for (int j = 0; j < carMeasurements.size(); j++)
@@ -150,8 +128,20 @@ void ProcessingThread::run()
             {
                 m_cars[carMeasurements[j].id].addMeasurement(carMeasurements[j].x, carMeasurements[j].y, carMeasurements[j].theta);
             }
+            else
+            {
+                if(imageMode) // If the particle filter is set to use images as measurements, add an image
+                {
+                    EnterCriticalSection(&csDrawThreadData);
+                    m_cars[j].addImageMeasurement(drawThreadData.processedImage);
+                    LeaveCriticalSection(&csDrawThreadData);
+                }
+                else // Add new x,y,theta measurement to car
+                {
+                    m_cars[carMeasurements[j].id].addMeasurement(carMeasurements[j].x, carMeasurements[j].y, carMeasurements[j].theta);
+                }
+            }
         }
-
         // Wait for new input signal values to be written to struct.
 
         WaitForSingleObject(hControllerThreadEvent_signalsWritten, INFINITE);
@@ -163,7 +153,6 @@ void ProcessingThread::run()
 
         // Tell controller thread that the input signals has been read.
         SetEvent(hControllerThreadEvent_signalsRead);
-
         // Loop over all cars and estimate states.
         for (int j = 0; j < m_numCars; j++)
         {
@@ -192,7 +181,6 @@ void ProcessingThread::run()
                             carData[j].state[4] = angvel;
             }
         }
-
         // Log data. Currently only log data of car with id 0.
         if (loopCounter%logInterval==0) // log only some loops
         {

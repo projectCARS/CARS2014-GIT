@@ -3,6 +3,8 @@
 #include "classes.h"
 #include "definitions.h"
 #include "functions.h"
+#include <Eigen/Dense>
+
 
 /*#include <opencv2/highgui/highgui.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
