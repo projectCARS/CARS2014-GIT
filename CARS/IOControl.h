@@ -15,6 +15,9 @@ private:
 	TaskHandle m_hTaskPower = 0;
 	TaskHandle m_hTaskInput = 0;
 	TaskHandle m_hTaskOutput = 0;
+    //for controller 2
+    TaskHandle m_c2TaskPower = 0;
+    TaskHandle m_c2TaskOutput = 0;
 
 	float64 m_minValChannel;
 	float64 m_maxValChannel;
@@ -41,7 +44,12 @@ private:
 
     const char *analog_output;
     const char *analog_input;
-    const char *digital_output;
+    const char *digital_output_power;
+    const char *digital_output_PWM;
+
+
+    float64 m_freq;
+    float64 m_dutyCycle;
 
 
    //for VoltageLog-file

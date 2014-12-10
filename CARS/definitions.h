@@ -93,6 +93,15 @@ namespace ControllerType
     };
 }
 
+namespace HandController
+{
+    enum Enum
+    {
+        HandControl_1,
+        HandControl_2,
+    };
+}
+
 namespace GeneralDrawSettings
 {
     enum Enum
@@ -113,6 +122,9 @@ namespace CarSpecificDrawSettings
         Timer                   = 1 << 4,
     };
 }
+
+
+
 
 // ---------- Structs ----------
 // Struct passed from fildCars();
