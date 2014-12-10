@@ -611,6 +611,12 @@ void ParticleFilter::systematicResample(void)
             angvel[j] = angvelPoints[k];
             sumStates[4] += angvelPoints[k];
 
+            if(mType == MotionModelType::STModel)
+            {
+                latvel[j] = latvelPoints[k];
+                sumStates[5] += latvelPoints[k];
+            }
+
             /*
             xhat(0,j) = xhatpred(0,k);
             sumStates[0] += xhatpred(0,k);
@@ -671,6 +677,11 @@ void ParticleFilter::systematicResample(void)
             }
             angvel[i] = angvelPoints[i];
             sumStates[4] += angvelPoints[i];
+            if(mType == MotionModelType::STModel)
+            {
+                latvel[i] = latvelPoints[i];
+                sumStates[5] += latvelPoints[i];
+            }
 
             /*
             xhat(0,i) = xhatpred(0,i);
@@ -786,7 +797,6 @@ void ParticleFilter::updateFilter()
     // Update the filter using an image as measurement
     if(imageMode)
     {
-        qDebug("pf1");
         if (carGone())
         {
             if(noCarCounter > 50)
@@ -828,9 +838,7 @@ void ParticleFilter::updateFilter()
                 }
             }
             parallelUpdate(m_img);
-            qDebug("pf6");
             systematicResample();
-            qDebug("pf7");
         }
 
         else
@@ -856,6 +864,10 @@ void ParticleFilter::updateFilter()
                     posY[i] = m_y + 0.1*gaussianNoise();
                     vel[i] = 0.3f + 0.1*gaussianNoise();
                     angvel[i] = 0.1*gaussianNoise();
+                    if(mType == MotionModelType::STModel)
+                    {
+                        latvel[i] = 0.1*gaussianNoise();
+                    }
                 }
                 noCar = false;
             }
@@ -868,7 +880,7 @@ void ParticleFilter::updateFilter()
                     break;
                 case MotionModelType::Enum::STModel:
                 {
-                    // propagate according to st model
+                    propagateST();
                 }
                     break;
                 default:
@@ -893,8 +905,6 @@ void ParticleFilter::updateFilter()
                     float oldYaw = sumStates[3]/NUMBER_OF_PARTICLES;
                     float oldAngVel = sumStates[4]/NUMBER_OF_PARTICLES;
 
-
-
                     float newVel = oldVel;
                     float newAngVel = oldAngVel;
                     float newYaw = oldYaw + oldAngVel*T;
@@ -918,35 +928,62 @@ void ParticleFilter::updateFilter()
 
                     for(int i = 0; i < NUMBER_OF_PARTICLES; i++)
                     {
-                        /*
-                        velPoints[i] = vel[i];
-                        angvelPoints[i] = angvel[i];
-                        yawPoints[i] = yaw[i] + angvel[i]*T;
-                        if (yawPoints[i] < -M_PI || yawPoints[i] > M_PI)
-                            yawPoints[i] = fmod(yawPoints[i]+ 3*M_PI, 2*M_PI) - M_PI;
-                        posXPoints[i] = posX[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * cos(yaw[i] + angvelPoints[i]*T / 2);
-                        posYPoints[i] = posY[i] + 2 * velPoints[i] / angvelPoints[i] * sin(angvelPoints[i]*T / 2) * sin(yaw[i] + angvelPoints[i]*T / 2);
-                        */
                         sumStates[0] += newPosX;
                         sumStates[1] += newPosY;
                         sumStates[2] += newVel;
                         sumStates[3] += newYaw;
                         sumStates[4] += newAngVel;
                     }                    
-                    //noImgUpdate(m_x, m_y, m_theta);
-                   //cumulativeWeights[NUMBER_OF_PARTICLES - 1] = 0;
-                    //systematicResample();
                 }
                     break;
                 case MotionModelType::Enum::STModel:
                 {
                     // Propagate according to STModel
+                    T = ((double)(omp_get_wtime() - time));
+                    time = omp_get_wtime();
+                        //Update according to CT model prediction
+                    float oldPosX = sumStates[0]/NUMBER_OF_PARTICLES;
+                    float oldPosY = sumStates[1]/NUMBER_OF_PARTICLES;
+                    float oldVel = sumStates[2]/NUMBER_OF_PARTICLES;
+                    float oldYaw = sumStates[3]/NUMBER_OF_PARTICLES;
+                    float oldAngVel = sumStates[4]/NUMBER_OF_PARTICLES;
+                    float oldLatVel = sumStates[5]/NUMBER_OF_PARTICLES;
+
+                    float newVel = oldVel;
+                    float newAngVel = oldAngVel;
+                    float newLatVel = oldLatVel;
+                    float newYaw = oldYaw + oldAngVel*T;
+
+                    if(newYaw > M_PI)
+                        newYaw = newYaw - 2*M_PI;
+                    if(newYaw < -M_PI)
+                        newYaw = newYaw + 2*M_PI;
+
+                    // Update this to ST
+                    float newPosX = oldPosX + 2 * oldVel / oldAngVel * sin(oldAngVel*T / 2) * cos(oldYaw + oldAngVel*T / 2);
+                    float newPosY = oldPosY + 2 * oldVel / oldAngVel * sin(oldAngVel*T / 2) * sin(oldYaw + oldAngVel*T / 2);
+
+                    sumStates[0] = 0;
+                    sumStates[1] = 0;
+                    sumStates[2] = 0;
+                    sumStates[3] = 0;
+                    sumStates[4] = 0;
+                    sumStates[5] = 0;
+
+                    for(int i = 0; i < NUMBER_OF_PARTICLES; i++)
+                    {
+                        sumStates[0] += newPosX;
+                        sumStates[1] += newPosY;
+                        sumStates[2] += newVel;
+                        sumStates[3] += newYaw;
+                        sumStates[4] += newAngVel;
+                        sumStates[5] += newLatVel;
+                    }
                 }
                     break;
                 default:
                 std::cout << "default";
             }
-
         }
     }
     m_newMeasurement = false;
@@ -1011,6 +1048,7 @@ bool ParticleFilter::hasNewMeasurement(void)
     return m_newMeasurement;
 }
 
+// Used in camera2worldCoordinates
 void ParticleFilter::nonLinearUndistort(float input[2], float output[2])
 {
     double k1, k2, p1, p2, k3, fx, cx, fy, cy, z, x, y, r2, dx, dy, scale, xBis, yBis;

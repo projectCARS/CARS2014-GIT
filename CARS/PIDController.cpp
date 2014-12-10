@@ -115,10 +115,10 @@ float PIDController::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
     float Kp_pos = 0.1;
     float Kp_neg = 1;
 
-    if(error < 0)
+   // if(error < 0)
         P = error*Kp_neg;
-    else
-        P = error*Kp_pos;
+    //else
+     //   P = error*Kp_pos;
     float I = (m_prevI + error*dt);
     if (I > 8) I = 8;
     float D = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //

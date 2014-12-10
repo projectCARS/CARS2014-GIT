@@ -15,6 +15,7 @@
 #include "EKF.h"
 #include "MotionModel.h"
 #include "CTModel.h"
+#include "STModel.h"
 #include "Calibrator.h"
 #include "ParticleFilter.h"
 

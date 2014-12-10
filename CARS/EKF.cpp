@@ -26,7 +26,7 @@ EKF::EKF(MotionModelType::Enum motionModelType)
     // Set vector and matrix sizes
     xhat = VectorXd::Zero(M->getNumStates());
     // Avoid division by zero by assigning a small value.
-    xhat(4) = 1.e-6;
+    xhat(M->getNumStates() - 1) = 1.e-6;
     u = VectorXd::Zero(M->getNumControlSignals());
     z = VectorXd::Zero(M->getNumMeasurements());
     I = MatrixXd::Identity(M->getNumStates(), M->getNumStates());
@@ -51,7 +51,6 @@ EKF::~EKF()
 void EKF::firstState()
 {
     // Relinearization.
-    addInputSignals(u(0), u(1));
 	updateModel();
     // Covariance.
     MatrixXd S = H * P * H.transpose() + R;
@@ -63,6 +62,8 @@ void EKF::firstState()
 	xhat = xhat + K*innovation;
     // Estimate covariance.
 	P = (I - K * H) * P;
+
+    std::cout << "xhat first:\n" << xhat << std::endl;
 }
 
 void EKF::updateFilter(void)
@@ -70,6 +71,7 @@ void EKF::updateFilter(void)
     T = ((double)(clock() - time)) / CLOCKS_PER_SEC;
     time = clock();
 
+    std::cout << "xhat second:\n" << xhat << std::endl;
     // Relinearization.
 	updateModel();
 
@@ -101,6 +103,7 @@ void EKF::updateFilter(void)
 		xhat = xhatpred + K*innovation;
         // Estimate covariance.
 		P = (I - K*H)*Ppred;
+        std::cout << "xhat pred:\n" << xhatpred << std::endl;
 	}
 	else
 	{

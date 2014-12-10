@@ -67,14 +67,14 @@ void CTModel::updateModel(VectorXd xhat, double T)
 
 	// System jacobian
     F(0,0) = 1;
-	F(0, 2) = 2 / w * sin(w*T / 2) * cos(h + (w*T) / 2);
-	F(0, 3) = -2 * v / w * sin(w*T / 2) * sin(h + (w*T) / 2);
-    F(0, 4) = v / (w*w) * (w*T*cos(h + w*T) - sin(h + w*T) + sin(h));
-
     F(1,1) = 1;
     F(2,2) = 1;
     F(3,3) = 1;
     F(4,4) = 1;
+
+	F(0, 2) = 2 / w * sin(w*T / 2) * cos(h + (w*T) / 2);
+	F(0, 3) = -2 * v / w * sin(w*T / 2) * sin(h + (w*T) / 2);
+    F(0, 4) = v / (w*w) * (w*T*cos(h + w*T) - sin(h + w*T) + sin(h));
 
 	F(1, 2) = 2 / w * sin(w*T / 2) * sin(h + (w*T) / 2);
 	F(1, 3) = 2 * v / w * sin(w*T / 2) * cos(h + (w*T) / 2);
