@@ -50,6 +50,7 @@ private:
 
     float64 m_freq[2];
     float64 m_dutyCycle[2];
+    float64 m_factorVol2Duty;
 
     HandController::Enum m_handController;
 

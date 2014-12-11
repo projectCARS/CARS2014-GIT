@@ -15,13 +15,12 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 {
 
     m_handController = handController;
-   // m_handController = HandController::HandControl_2;
+     m_ID = ID;
     switch (m_handController)
     {
 
     case HandController::HandControl_1:
- qDebug("konstruktor hand1");
-        m_ID = ID;
+
 #ifdef NIDAQ_IS_AVALIABLE
 
         DAQmxCreateTask("", &m_hTaskInput);
@@ -53,6 +52,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 
             m_gasNeutral = 1.61;
             m_turnNeutral = 1.53;
+            m_gasFull = 0.9;
 
 
             analog_output = "Dev1/ao0:1";
@@ -74,6 +74,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 
             m_gasNeutral = 1.58;
             m_turnNeutral = 1.53;
+            m_gasFull = 0.9;
 
             analog_output = "Dev1/ao0:1";
             analog_input = "Dev1/ai1:2";
@@ -94,6 +95,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 
             m_gasNeutral = 1.58;
             m_turnNeutral = 1.53;
+            m_gasFull = 0.9;
 
             analog_output = "Dev1/ao0:1";
             analog_input = "Dev1/ai1:2";
@@ -152,24 +154,24 @@ IOControl::IOControl(int ID, HandController::Enum handController)
         }
         break;
     case HandController::HandControl_2:
-        m_ID = ID;
-        qDebug("konstruktor hand2");
 #ifdef NIDAQ_IS_AVALIABLE
+        DAQmxCreateTask("", &m_hTaskInput);
         DAQmxCreateTask("", &m_c2TaskOutput);
         DAQmxCreateTask("", &m_hTaskPower);
 #endif
+        m_prevSignals[0] = 0;
+        m_prevSignals[1] = 0;
         switch (m_ID)
         {
         case 0:
-            //m_minValChannel = 0;
-            //m_maxValChannel = 3;
+           m_minValChannel = 0;
+           m_maxValChannel = 3;
 
             m_linearizationBreak = 0.35;
             m_voltGasThreshold = 1.4710;
             m_voltGasIntervall = 1.4693;
 
             m_voltReverseThreshold = 1.68;
-
 
             m_minGasVolt = 0.91; // 1.14;
             m_maxGasVolt = 2.21; // 2.31;
@@ -180,9 +182,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_turnNeutral = 1.53;
             m_gasFull = 0.9;
 
-
-            //analog_output = "Dev1/ao0:1";
-            //analog_input = "Dev1/ai1:2";
+            analog_input = "Dev1/ai3:4";            //ai3:4 corresponds to pin 30 and 28
             digital_output_power = "Dev1/port0/line3";
             digital_output_PWM = "Dev1/ctr0:1";     //ctr0:1 corresponds to pin 2 and pin 40
 
@@ -190,6 +190,8 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_freq[1] = 20000;
             m_dutyCycle[0] = m_gasFull/3.0;
             m_dutyCycle[1] = m_turnNeutral/3.0;
+            m_factorVol2Duty = 3.0f;
+
             break;
         default:
             //TODO: do something
@@ -241,6 +243,7 @@ void IOControl::init(void)
 
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
+         DAQmxCreateAIVoltageChan(m_hTaskInput, analog_input, "", DAQmx_Val_RSE, m_minValChannel, m_maxValChannel, DAQmx_Val_Volts, NULL);
         DAQmxCreateDOChan(m_hTaskPower, digital_output_power, "", DAQmx_Val_ChanForAllLines);
         DAQmxCreateCOPulseChanFreq(m_c2TaskOutput, digital_output_PWM, "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0f, m_freq[0], m_dutyCycle[0]);
         DAQmxCfgImplicitTiming(m_c2TaskOutput, DAQmx_Val_ContSamps, 10000);
@@ -266,6 +269,7 @@ void IOControl::startController(void)
         break;
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
+        DAQmxStartTask(m_hTaskInput);
         DAQmxStartTask(m_c2TaskOutput);
         DAQmxStartTask(m_hTaskPower);
         controllerOn();
@@ -282,10 +286,8 @@ void IOControl::stopController(void)
     switch(m_handController)
     {
     case HandController::HandControl_1:
-
 #ifdef NIDAQ_IS_AVALIABLE
         controllerOff();
-
         DAQmxStopTask(m_hTaskInput);
         DAQmxStopTask(m_hTaskOutput);
         DAQmxStopTask(m_hTaskPower);
@@ -298,9 +300,11 @@ void IOControl::stopController(void)
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
         controllerOff();
+        DAQmxStopTask(m_hTaskInput);
         DAQmxStopTask(m_c2TaskOutput);
         DAQmxStopTask(m_hTaskPower);
 
+        DAQmxClearTask(m_hTaskInput);
         DAQmxClearTask(m_c2TaskOutput);
         DAQmxClearTask(m_hTaskPower);
 #endif
@@ -709,8 +713,8 @@ void IOControl::voltageToDutyCycle(float64 *values)
     float64 voltage[2];
     voltage[0] = values[0];
     voltage[1] = values[1];
-    values[0] = voltage[0]/3.0;
-    values[1] = voltage[1]/3.0;
+    values[0] = voltage[0]/m_factorVol2Duty;
+    values[1] = voltage[1]/m_factorVol2Duty;
     if ( (values[0]<0.0) | (values[0]>1.0) )
     {
         qDebug("gas duty cycle is out of bounds");
