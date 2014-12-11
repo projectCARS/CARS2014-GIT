@@ -53,6 +53,19 @@ void ControllerThread::loadControllerSettings()
     }
 }
 
+void ControllerThread::loadHandControllerSettings( std::vector<CarData> &carData)
+{
+    int numCars = 0;
+    while (m_settings.contains(QString("car/id%1/handController").arg(numCars)))
+    {
+        m_settings.beginGroup(QString("car/id%1").arg(numCars));
+        // Add car to vector m_cars.
+        carData[numCars].handController = static_cast<HandController::Enum>(m_settings.value("handController").toInt());
+        m_settings.endGroup();
+        numCars++;
+    }
+}
+
 void ControllerThread::run()
 {
 
@@ -68,11 +81,12 @@ void ControllerThread::run()
     // Vector with one IO controller for each car.
     std::vector<IOControl> ioControls;
 
+    // Load hand controller settings from file
+    loadHandControllerSettings(carData);
+
     for (int i = 0; i < m_numCars; i++)
-    {
-        m_settings.beginGroup(QString("car/id%1").arg(m_numCars));
-        ioControls.push_back(IOControl(i,static_cast<HandController::Enum>(m_settings.value("handController").toInt())));
-        m_settings.endGroup();
+    {      
+        ioControls.push_back(IOControl(i,carData[i].handController));
     }
 
     // Initialize and start IO controllers.

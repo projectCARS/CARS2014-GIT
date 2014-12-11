@@ -27,6 +27,7 @@ private:
     std::vector<int> m_stuckCounter;
 
     void loadControllerSettings(void);
+    void loadHandControllerSettings(std::vector<CarData> &carData);
 
 signals:
 
