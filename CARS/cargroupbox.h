@@ -28,6 +28,9 @@ public:
     void setMotionModelType(int type);
     int getMotionModelType();
 
+    void setHandControllerType(int type);
+    int getHandControllerType();
+
     void setControllerType(int type);
     int getControllerType();
 

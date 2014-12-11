@@ -235,10 +235,6 @@ void ProcessingThread::run()
         {
             //Calculate duration of one iteration using OMP
             timeDiff = (double)(omp_get_wtime()-ompTimeStart) / fpsInterval * 1000;
-            //std::cout << "Measurement Update : " << t2 - t1 << std::endl;
-            //std::cout << "Filter Update : " << ompTimeEnd - ompTimeMid << std::endl;
-            //std::cout << "Total loop time : " << (omp_get_wtime() - ompTimeStart)/ fpsInterval << std::endl;
-
             ompTimeStart = omp_get_wtime();
             // Calculate duration of one iteration in ms.
             std::cout << "FPS main: " << 1000.0/timeDiff << std::endl;
@@ -380,7 +376,8 @@ void ProcessingThread::loadCarSettings()
         m_cars.push_back(Car(m_numCars,
                              static_cast<CarMode::Enum>(m_settings.value("mode").toInt()),
                              static_cast<FilterType::Enum>(m_settings.value("filter").toInt()),
-                             static_cast<MotionModelType::Enum>(m_settings.value("motion_model").toInt()))
+                             static_cast<MotionModelType::Enum>(m_settings.value("motion_model").toInt()),
+                             static_cast<HandController::Enum>(m_settings.value("handController").toInt()))
                          );
         m_settings.endGroup();
         m_numCars++;
@@ -390,7 +387,7 @@ void ProcessingThread::loadCarSettings()
     if (m_numCars == 0)
     {
         m_settings.beginGroup(QString("car/id%1").arg(m_numCars));
-        m_cars.push_back(Car(m_numCars, CarMode::Auto, FilterType::EKF, MotionModelType::CTModel));
+        m_cars.push_back(Car(m_numCars, CarMode::Auto, FilterType::EKF, MotionModelType::CTModel, HandController::HandControl_1));
         m_settings.endGroup();
         m_numCars++;
     }

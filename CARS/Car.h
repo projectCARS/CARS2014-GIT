@@ -18,6 +18,9 @@ private:
 	bool m_lost;
 	// The current mode of the car. 
 	CarMode::Enum m_mode;
+    // The handController of the car
+    HandController::Enum m_handController;
+
 
     FilterType::Enum m_filtertype;
 
@@ -36,9 +39,9 @@ private:
 
 public:
 
-	Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelType::Enum motionModelType);
+    Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelType::Enum motionModelType, HandController::Enum handController);
     // Default constructor. Required by std::vector::resize.
-    Car() : Car(-1, CarMode::Auto, FilterType::EKF, MotionModelType::CTModel) {}
+    Car() : Car(-1, CarMode::Auto, FilterType::EKF, MotionModelType::CTModel, HandController::HandControl_1) {}
     ~Car();
 
 	// Returns true if the car is active, otherwise false.

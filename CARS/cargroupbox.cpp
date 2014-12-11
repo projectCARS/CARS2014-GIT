@@ -23,6 +23,10 @@ CarGroupBox::CarGroupBox(QWidget *parent) :
     ui->motionModelComboBox->addItem("CTModel", (int)MotionModelType::CTModel);
     ui->motionModelComboBox->addItem("STModel", (int)MotionModelType::STModel);
 
+    // Add hand controllers
+    ui->handControllercomboBox->addItem("Hand Controller 1", (int)HandController::HandControl_1);
+    ui->handControllercomboBox->addItem("Hand Controller 2", (int)HandController::HandControl_2);
+
     // Add controllers.
     ui->controllerComboBox->addItem("PIDController", (int)ControllerType::PIDController);
     ui->controllerComboBox->addItem("PIDControllerSR", (int)ControllerType::PIDControllerSR);
@@ -101,6 +105,16 @@ void CarGroupBox::setMotionModelType(int type)
 int CarGroupBox::getMotionModelType()
 {
     return ui->motionModelComboBox->itemData(ui->motionModelComboBox->currentIndex()).toInt();
+}
+
+void CarGroupBox::setHandControllerType(int type)
+{
+    ui->handControllercomboBox->setCurrentIndex(ui->handControllercomboBox->findData((int)type));
+}
+
+int CarGroupBox::getHandControllerType()
+{
+    return ui->handControllercomboBox->itemData(ui->handControllercomboBox->currentIndex()).toInt();
 }
 
 void CarGroupBox::setControllerType(int type)

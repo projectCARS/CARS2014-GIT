@@ -63,7 +63,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 
     //used for plotWindow
 
-    makePlots = true;
+    makePlots = false;
     if (makePlots)
     {
         qDebug("init show_before");

@@ -180,6 +180,7 @@ struct CarData
     FilterType::Enum filter;
     std::vector<float> state;
     LapData lapData;
+    HandController::Enum handController;
 };
 
 // Perhaps: struct IOControllerData ?

@@ -67,6 +67,7 @@ void CarSettingsDialog::addNewCar(void)
     m_settings.setValue("mode",(int)CarMode::NotConnected);
     m_settings.setValue("filter",(int)FilterType::EKF);
     m_settings.setValue("motion_model",(int)MotionModelType::CTModel);
+    m_settings.setValue("handController",(int)HandController::HandControl_1);
     m_settings.setValue("controller",(int)ControllerType::PIDController);
     m_settings.endGroup();
     addCarGroupBox();
@@ -82,6 +83,7 @@ void CarSettingsDialog::addCarGroupBox()
     m_carGroupBoxes[m_numCars]->setMode(m_settings.value("mode").toInt());
     m_carGroupBoxes[m_numCars]->setFilterType(m_settings.value("filter").toInt());
     m_carGroupBoxes[m_numCars]->setMotionModelType(m_settings.value("motion_model").toInt());
+    m_carGroupBoxes[m_numCars]->setHandControllerType(m_settings.value("handController").toInt());
     m_carGroupBoxes[m_numCars]->setControllerType(m_settings.value("controller").toInt());
     m_settings.endGroup();
     m_numCars++;
@@ -108,6 +110,7 @@ void CarSettingsDialog::saveCarSettings(void)
         m_settings.beginGroup(QString("car/id%1").arg(id));
         m_settings.setValue("mode", m_carGroupBoxes[id]->getMode());
         m_settings.setValue("filter", m_carGroupBoxes[id]->getFilterType());
+        m_settings.setValue("handController", m_carGroupBoxes[id]->getHandControllerType());
         m_settings.setValue("motion_model", m_carGroupBoxes[id]->getMotionModelType());
         m_settings.setValue("controller", m_carGroupBoxes[id]->getControllerType());
         m_settings.endGroup();

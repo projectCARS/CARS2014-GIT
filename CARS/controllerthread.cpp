@@ -67,11 +67,12 @@ void ControllerThread::run()
 
     // Vector with one IO controller for each car.
     std::vector<IOControl> ioControls;
+
     for (int i = 0; i < m_numCars; i++)
     {
-
-        ioControls.push_back(IOControl(i));
-
+        m_settings.beginGroup(QString("car/id%1").arg(m_numCars));
+        ioControls.push_back(IOControl(i,static_cast<HandController::Enum>(m_settings.value("handController").toInt())));
+        m_settings.endGroup();
     }
 
     // Initialize and start IO controllers.

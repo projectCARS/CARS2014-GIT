@@ -5,7 +5,7 @@
 
 #include <QDebug>
 
-Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelType::Enum motionModelType)
+Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelType::Enum motionModelType, HandController::Enum handController)
 {
 	// Assign car attributes.
 	m_id = id;
@@ -13,6 +13,7 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
 	m_lost = false;
 	m_mode = mode;
     m_filtertype = filterType;
+    m_handController = handController;
 
 	// Initialize filter.
 	switch (filterType)

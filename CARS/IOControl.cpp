@@ -11,13 +11,16 @@
 #include "functions.h"
 
 
-IOControl::IOControl(int ID)
+IOControl::IOControl(int ID, HandController::Enum handController)
 {
-    switch ()
+
+    m_handController = handController;
+   // m_handController = HandController::HandControl_2;
+    switch (m_handController)
     {
 
     case HandController::HandControl_1:
-
+ qDebug("konstruktor hand1");
         m_ID = ID;
 #ifdef NIDAQ_IS_AVALIABLE
 
@@ -111,6 +114,7 @@ IOControl::IOControl(int ID)
 
             m_gasNeutral = 1.58;
             m_turnNeutral = 1.53;
+            m_gasFull = 0.9;
 
             analog_output = "";
             analog_input = "";
@@ -149,9 +153,10 @@ IOControl::IOControl(int ID)
         break;
     case HandController::HandControl_2:
         m_ID = ID;
+        qDebug("konstruktor hand2");
 #ifdef NIDAQ_IS_AVALIABLE
         DAQmxCreateTask("", &m_c2TaskOutput);
-        DAQmxCreateTask("", &m_c2TaskPower);
+        DAQmxCreateTask("", &m_hTaskPower);
 #endif
         switch (m_ID)
         {
@@ -159,31 +164,32 @@ IOControl::IOControl(int ID)
             //m_minValChannel = 0;
             //m_maxValChannel = 3;
 
-            //m_linearizationBreak = 0.35;
-            //m_voltGasThreshold = 1.4710;
-            //m_voltGasIntervall = 1.4693;
+            m_linearizationBreak = 0.35;
+            m_voltGasThreshold = 1.4710;
+            m_voltGasIntervall = 1.4693;
 
-            //m_voltReverseThreshold = 1.68;
+            m_voltReverseThreshold = 1.68;
 
 
-            //m_minGasVolt = 0.91; // 1.14;
-            //m_maxGasVolt = 2.21; // 2.31;
-            //m_minTurnVolt = 0.11;
-            //m_maxTurnVolt = 2.97; //3.242;
+            m_minGasVolt = 0.91; // 1.14;
+            m_maxGasVolt = 2.21; // 2.31;
+            m_minTurnVolt = 0.11;
+            m_maxTurnVolt = 2.97; //3.242;
 
             m_gasNeutral = 1.61;
             m_turnNeutral = 1.53;
+            m_gasFull = 0.9;
 
 
             //analog_output = "Dev1/ao0:1";
             //analog_input = "Dev1/ai1:2";
             digital_output_power = "Dev1/port0/line3";
-            digital_output_PWM = "Dev1/port0/line5:6";
+            digital_output_PWM = "Dev1/ctr0:1";     //ctr0:1 corresponds to pin 2 and pin 40
 
             m_freq[0] = 20000;
             m_freq[1] = 20000;
-            m_dutyCycle[0] = 0.5;
-            m_dutyCycle[1] = 0.5;
+            m_dutyCycle[0] = m_gasFull/3.0;
+            m_dutyCycle[1] = m_turnNeutral/3.0;
             break;
         default:
             //TODO: do something
@@ -193,7 +199,7 @@ IOControl::IOControl(int ID)
         break;
 
     default:
-        //TODO: do something
+        //TODO: do something or...
         break;
     }
 
@@ -207,7 +213,8 @@ IOControl::~IOControl()
 
 void IOControl::init(void)
 {
-    switch ()
+    switch (m_handController)
+    {
     case HandController::HandControl_1:
 
 #ifdef NIDAQ_IS_AVALIABLE
@@ -235,18 +242,20 @@ void IOControl::init(void)
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
         DAQmxCreateDOChan(m_hTaskPower, digital_output_power, "", DAQmx_Val_ChanForAllLines);
-        //int32 DAQmxCreateCOPulseChanFreq (TaskHandle taskHandle, const char counter[], const char nameToAssignToChannel[], int32 units, int32 idleState, float64 initialDelay, float64 freq, float64 dutyCycle);
         DAQmxCreateCOPulseChanFreq(m_c2TaskOutput, digital_output_PWM, "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0f, m_freq[0], m_dutyCycle[0]);
+        DAQmxCfgImplicitTiming(m_c2TaskOutput, DAQmx_Val_ContSamps, 10000);
 #endif
         break;
 
     default:
         break;
+    }
 }
 
 void IOControl::startController(void)
 {
-    switch ()
+    switch (m_handController)
+    {
     case HandController::HandControl_1:
 #ifdef NIDAQ_IS_AVALIABLE
         DAQmxStartTask(m_hTaskInput);
@@ -258,28 +267,47 @@ void IOControl::startController(void)
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
         DAQmxStartTask(m_c2TaskOutput);
-        DAQmxStartTask(m_c2TaskPower);
+        DAQmxStartTask(m_hTaskPower);
         controllerOn();
 #endif
         break;
 
     default:
         break;
+    }
 }
 
 void IOControl::stopController(void)
 {
+    switch(m_handController)
+    {
+    case HandController::HandControl_1:
+
 #ifdef NIDAQ_IS_AVALIABLE
-    controllerOff();
+        controllerOff();
 
-    DAQmxStopTask(m_hTaskInput);
-    DAQmxStopTask(m_hTaskOutput);
-    DAQmxStopTask(m_hTaskPower);
+        DAQmxStopTask(m_hTaskInput);
+        DAQmxStopTask(m_hTaskOutput);
+        DAQmxStopTask(m_hTaskPower);
 
-    DAQmxClearTask(m_hTaskInput);
-    DAQmxClearTask(m_hTaskOutput);
-    DAQmxClearTask(m_hTaskPower);
+        DAQmxClearTask(m_hTaskInput);
+        DAQmxClearTask(m_hTaskOutput);
+        DAQmxClearTask(m_hTaskPower);
 #endif
+        break;
+    case HandController::HandControl_2:
+#ifdef NIDAQ_IS_AVALIABLE
+        controllerOff();
+        DAQmxStopTask(m_c2TaskOutput);
+        DAQmxStopTask(m_hTaskPower);
+
+        DAQmxClearTask(m_c2TaskOutput);
+        DAQmxClearTask(m_hTaskPower);
+#endif
+        break;
+    default:
+        break;
+    }
 }
 
 void IOControl::receiveSignals(float &gas, float &turn)
@@ -294,50 +322,63 @@ void IOControl::receiveSignals(float &gas, float &turn)
 
 void IOControl::sendSignals(float gas, float turn, CarData &carData)
 {
-#ifdef NIDAQ_IS_AVALIABLE
-    m_tempArray[0] = gas;
-    m_tempArray[1] = turn;
-    decimalToVoltage(m_tempArray);
-    sendSignalsVolt(m_tempArray);
-    // std::ofstream LF;
-    // LF.open(str.str());
-    // logDataU(timeVoltageLog.elapsed()/1000.0, carData, gas, turn, &LF)
-
-    if (writeVoltageLog)
+    switch (m_handController)
     {
-        std::stringstream str;
-        str.clear();
-        str.str(std::string());
-        str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
-        std::ofstream LF;
-        LF.open(str.str(),std::ofstream::app);
-        // "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn \n"
+    case HandController::HandControl_1:
+#ifdef NIDAQ_IS_AVALIABLE
+        m_tempArray[0] = gas;
+        m_tempArray[1] = turn;
+        decimalToVoltage(m_tempArray);
+        sendSignalsVolt(m_tempArray);
 
-        LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
-        LF << carData.state[0] << " " << carData.state[1] << " " ;
-        LF << carData.state[2] << " " << carData.state[3] << " " ;
-        LF << carData.state[4] << " " ;
-        LF << m_tempArray[0] << " " << m_tempArray[1] << " ";
-        LF << gas << " " << turn << "\n" ;
-        LF.close();
-    }
+        if (writeVoltageLog)
+        {
+            std::stringstream str;
+            str.clear();
+            str.str(std::string());
+            str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
+            std::ofstream LF;
+            LF.open(str.str(),std::ofstream::app);
+            // "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn \n"
+
+            LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
+            LF << carData.state[0] << " " << carData.state[1] << " " ;
+            LF << carData.state[2] << " " << carData.state[3] << " " ;
+            LF << carData.state[4] << " " ;
+            LF << m_tempArray[0] << " " << m_tempArray[1] << " ";
+            LF << gas << " " << turn << "\n" ;
+            LF.close();
+        }
 
 #endif
+        break;
+    case HandController::HandControl_2:
+        m_tempArray[0] = gas;
+        m_tempArray[1] = turn;
+        decimalToVoltage(m_tempArray);
+        sendSignalsVolt(m_tempArray);
+        break;
+    default:
+        break;
+    }
 }
 
 void IOControl::controllerOn(void)
 {
-    switch ()
+    float64 signal[2];
+    uInt8 value[1];
+    switch (m_handController)
+    {
     case HandController::HandControl_1:
 #ifdef NIDAQ_IS_AVALIABLE
-        float64 signal[2];
+        //float64 signal[2];
         // Start the controller with full gas. This ensures that the car starts in racing mode.
-        signal[0] = 0.9;
+        signal[0] = m_gasFull;
         signal[1] = m_turnNeutral;
         DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
 
         Sleep(20);
-        uInt8 value[1];
+        //uInt8 value[1];
         value[0] = 1;
         // Turn on controller.
         DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
@@ -352,21 +393,21 @@ void IOControl::controllerOn(void)
         break;
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
-        float64 signal[2];
+        //float64 signal[2];
         // Start the controller with full gas. This ensures that the car starts in racing mode.
-        signal[0] = 0.9;
+        signal[0] = m_gasFull;
         signal[1] = m_turnNeutral;
         DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL);
 
         Sleep(20);
-        uInt8 value[1];
+        //uInt8 value[1];
         value[0] = 1;
         // Turn on controller.
-        DAQmxWriteDigitalLines(m_c2TaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
+        DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
 
         // Sleep to ensure that the signals have been written.
         Sleep(200);
-        signal[0] = m_gasNeutral; //0.9;
+        signal[0] = m_gasNeutral;
         signal[1] = m_turnNeutral;
         // Send neutral signals.
         DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL);
@@ -375,22 +416,41 @@ void IOControl::controllerOn(void)
         break;
     default:
         break;
+    }
 }
 
 void IOControl::controllerOff(void)
 {
-#ifdef NIDAQ_IS_AVALIABLE
     float64 signal[2];
-    signal[0] = m_gasNeutral;
-    signal[1] = m_turnNeutral;
-    DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
     uInt8 value[1];
-    value[0] = 0;
-    DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
-    signal[0] = 0;
-    signal[1] = 0;
-    DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
+
+    switch (m_handController)
+    {
+    case HandController::HandControl_1:
+#ifdef NIDAQ_IS_AVALIABLE   
+        signal[0] = m_gasNeutral;
+        signal[1] = m_turnNeutral;
+        DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
+        value[0] = 0;
+        DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
+        signal[0] = 0;
+        signal[1] = 0;
+        DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
 #endif
+        break;
+    case HandController::HandControl_2:
+        signal[0] = m_gasNeutral;
+        signal[1] = m_turnNeutral;
+        DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL);
+        value[0] = 0;
+        DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL);
+        signal[0] = 0;
+        signal[1] = 0;
+        DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL);
+        break;
+    default:
+        break;
+    }
 }
 
 void IOControl::manualControl( CarData &carData)
@@ -610,15 +670,56 @@ void IOControl::receiveSignalsVolt(float64 *signal)
 // Add small offset and send signals.
 void IOControl::sendSignalsVolt(float64 *signal)
 {
+    switch (m_handController)
+    {
+    case HandController::HandControl_1:
 #ifdef NIDAQ_IS_AVALIABLE
-    if (signal[0] < m_minGasVolt | signal[0] > m_maxGasVolt | signal[1] < m_minTurnVolt | signal[1] > m_maxTurnVolt)
-    {
-        std::cout << "Output voltage is smaller than m_minVal, or larger than m_maxVal" << std::endl;
-        std::cout << "Gas voltage: " << signal[0] << ", Turn voltage: " << signal[1] << std::endl;
-    }
-    else
-    {
-        DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
-    }
+        if ((signal[0] < m_minGasVolt) | (signal[0] > m_maxGasVolt) | (signal[1] < m_minTurnVolt) | (signal[1] > m_maxTurnVolt))
+        {
+            std::cout << "Output voltage is smaller than m_minVal, or larger than m_maxVal" << std::endl;
+            std::cout << "Gas voltage: " << signal[0] << ", Turn voltage: " << signal[1] << std::endl;
+        }
+        else
+        {
+            DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL);
+        }
 #endif
+        break;
+    case HandController::HandControl_2:
+#ifdef NIDAQ_IS_AVALIABLE
+        if ((signal[0] < m_minGasVolt) | (signal[0] > m_maxGasVolt) | (signal[1] < m_minTurnVolt) | (signal[1] > m_maxTurnVolt))
+        {
+            std::cout << "Output voltage is smaller than m_minVal, or larger than m_maxVal" << std::endl;
+            std::cout << "Gas voltage: " << signal[0] << ", Turn voltage: " << signal[1] << std::endl;
+        }
+        else
+        {
+            voltageToDutyCycle(signal);
+            DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL);
+        }
+#endif
+        break;
+    default:
+        break;
+    }
+}
+
+void IOControl::voltageToDutyCycle(float64 *values)
+{
+    float64 voltage[2];
+    voltage[0] = values[0];
+    voltage[1] = values[1];
+    values[0] = voltage[0]/3.0;
+    values[1] = voltage[1]/3.0;
+    if ( (values[0]<0.0) | (values[0]>1.0) )
+    {
+        qDebug("gas duty cycle is out of bounds");
+        qDebug() << values[0];
+    }
+    if ( (values[1]<0.0) | (values[1]>1.0) )
+    {
+        qDebug("turn duty cycle is out of bounds");
+        qDebug() << values[1];
+    }
+    qDebug() << values[1];
 }

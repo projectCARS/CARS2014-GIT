@@ -16,7 +16,6 @@ private:
 	TaskHandle m_hTaskInput = 0;
 	TaskHandle m_hTaskOutput = 0;
     //for controller 2
-    TaskHandle m_c2TaskPower = 0;
     TaskHandle m_c2TaskOutput = 0;
 
 	float64 m_minValChannel;
@@ -38,6 +37,7 @@ private:
 
 	float64 m_gasNeutral;
 	float64 m_turnNeutral;
+    float64 m_gasFull;
 
 	float64 m_tempArray[2];
     float64 m_prevSignals[2];
@@ -48,8 +48,10 @@ private:
     const char *digital_output_PWM;
 
 
-    float64 m_freq;
-    float64 m_dutyCycle;
+    float64 m_freq[2];
+    float64 m_dutyCycle[2];
+
+    HandController::Enum m_handController;
 
 
    //for VoltageLog-file
@@ -64,7 +66,7 @@ private:
 public:
 
 
-	IOControl(int ID);
+    IOControl(int ID, HandController::Enum handController);
     ~IOControl();
 
 	// Initialize the controller.
@@ -99,5 +101,7 @@ private:
 	void controllerOn(void);
 	// Turns the IO controller off.
     void controllerOff(void);
+    // Transform a voltage to corresponding duty cycle
+    void voltageToDutyCycle(float64 *values);
 
 };
