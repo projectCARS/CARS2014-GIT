@@ -16,6 +16,8 @@ private:
     /** @name Matrix dimensions
      * @brief Contains the matrix dimensions. They are set in the constructor, CTModel::CTModel
      */
+
+    void decimalToVoltage(float64 *decimal);
     ///@{
     /**
      * @brief Number of states the model derives.
@@ -44,6 +46,21 @@ private:
      */
     float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kSteer, mSteer, kThrottle, mThrottle;
     float m_gas, m_turn;
+
+    // At what percentage the linearization will change.
+    float64 m_linearizationBreak;
+    // Highest voltage for gas.
+    float64 m_voltGasThreshold;
+    // When linearization algorithm switch.
+    float64 m_voltGasIntervall;
+    // Lowest voltage to reverse the car
+    float64 m_voltReverseThreshold;
+    float64 m_gasNeutral;
+    float64 m_turnNeutral;
+    float64 m_minGasVolt;
+    float64 m_maxGasVolt;
+    float64 m_minTurnVolt;
+    float64 m_maxTurnVolt;
 
 public:
     /**

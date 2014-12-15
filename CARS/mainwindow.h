@@ -8,6 +8,7 @@
 #include "cargroupbox.h"
 #include "carsettingsdialog.h"
 #include "racedialog.h"
+#include "doubleplotdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +26,9 @@ private:
     Ui::MainWindow *ui;
     QLabel *imageLabelProjector;
     QLabel *imageLabelGui;
+
+    //For testing plot
+    doubleplotdialog dialog;
 
     QSettings m_settings;
     QImage m_image;

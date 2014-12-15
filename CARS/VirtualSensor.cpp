@@ -4,6 +4,8 @@
 #include "functions.h"
 #include <QDebug>
 
+int count = 0;
+
 VirtualSensor::VirtualSensor()
 {
 #ifdef CAMERA_IS_AVALIABLE
@@ -112,10 +114,17 @@ std::vector<float> VirtualSensor::detectMarkers()
 {
     std::vector<float> allMarkers;
 #ifdef CAMERA_IS_AVALIABLE
+
+    //double t00 = omp_get_wtime();
     // Grab image from camera.
     m_pgrCamera.grabImage(&m_rawData);
+    //double t1 = omp_get_wtime();
+    //qDebug() << "cameraTime: " << t1 - t0;
     // Create cv::Mat object. Data is not copied - pData is simply stored in tempMat.
+    //double t0 = omp_get_wtime();
     cv::Mat tempMat = cv::Mat(m_rawData.rows, m_rawData.cols, CV_8UC1, m_rawData.pData, cv::Mat::AUTO_STEP);
+    //double t1 = omp_get_wtime();
+    //qDebug() << "t1: " << t1 - t0;
     if (tempMat.empty())
     {
         std::cout << "Error: Failed to aquire image from camera. Try replugging the camera." << std::endl;
@@ -124,29 +133,53 @@ std::vector<float> VirtualSensor::detectMarkers()
     // Read image from file.
     cv::Mat tempMat = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 #endif
+
+    //double t2 = omp_get_wtime();
     // Enter critical section and copy image to struct drawThreadData.
     EnterCriticalSection(&csDrawThreadData);
+    //double t3 = omp_get_wtime();
     tempMat.copyTo(drawThreadData.image);
+    //double t4 = omp_get_wtime();
     LeaveCriticalSection(&csDrawThreadData);
+    //double t5 = omp_get_wtime();
     tempMat = tempMat - mask * .5;
+    //double t6 = omp_get_wtime();
+    //qDebug() << "t1: " << t1 - t0 << "t2: " << t2 - t1 << "t3: " << t3 - t2 << "t4: " << t4 - t3;
 
     int lowerThresh = 120; // 140 original
     int upperThresh = 255;
     int gaussSize = 3;
 
+    //double t7 = omp_get_wtime();
     cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
     cv::GaussianBlur(tempMat, tempMat, cv::Size(gaussSize, gaussSize), 0, 0); //(3,3)
     cv::threshold(tempMat, tempMat, lowerThresh, upperThresh, cv::THRESH_BINARY);
+    //double t8 = omp_get_wtime();
+
+
+    //double t9 = omp_get_wtime();
     // Enter critical section and copy the processed image (tempMat) to processedImage.
     EnterCriticalSection(&csDrawThreadData);
     tempMat.copyTo(drawThreadData.processedImage);
     LeaveCriticalSection(&csDrawThreadData);
 
+    //double t10 = omp_get_wtime();
+
+
     /* Calculate markers from tempMat. Markers are given in camera coordinates. */
     imageToMarkers(tempMat, allMarkers);
+    //double t11 = omp_get_wtime();
     // Converting to meters
-    cameraToWorldCoordinates(allMarkers);
 
+    cameraToWorldCoordinates(allMarkers);
+    //double t12 = omp_get_wtime();
+
+    //if (count > 300){
+        //qDebug() << "t1: " << t12 - t00;
+      //  count = 0;
+    //}
+
+    count++;
 
     return allMarkers;
 }

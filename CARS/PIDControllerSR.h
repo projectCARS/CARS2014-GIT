@@ -18,7 +18,10 @@ private:
     int m_refIndClosest;
     float m_dist_lateral;
     float m_turnGain;
-    std::vector<float> m_speedPID;
+    float Kp_forward;
+    float Kp_brake;
+    float Ki;
+    float Kd;
     std::vector<float> m_turnPID;
 
     float m_prevI;

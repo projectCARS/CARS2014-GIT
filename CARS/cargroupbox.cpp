@@ -129,8 +129,8 @@ int CarGroupBox::getControllerType()
 
 void CarGroupBox::on_manualRadioButton_toggled(bool checked)
 {
-    ui->filterComboBox->setEnabled(!checked);
-    ui->motionModelComboBox->setEnabled(!checked);
+    ui->filterComboBox->setEnabled(true);
+    ui->motionModelComboBox->setEnabled(true);
     ui->controllerComboBox->setEnabled(!checked);
 }
 

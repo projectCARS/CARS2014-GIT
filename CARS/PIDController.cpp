@@ -15,18 +15,18 @@ PIDController::PIDController(int ID)
     switch (m_ID) {
         case 0:
             m_turnPID.resize(3);
-            m_speedPID.resize(3);
 #ifdef safeMode
             #define minSpeed 0.5f
             #define maxSpeed 1.6f
 
-            m_turnPID[0] = 1.5f;		//P
-            m_turnPID[1] = 0.0f;		//I
-            m_turnPID[2] = 0.0f;		//D
+            m_turnPID[0] = 2.2f;// 1.5f;    //P
+            m_turnPID[1] = 0.3f;            //I
+            m_turnPID[2] = 0.0f;            //D
 
-            m_speedPID[0] = 0.8f;	//P     0.2;
-            m_speedPID[1] = 0.01f;	//I
-            m_speedPID[2] = 0.008f;	//D
+            Kp_forward = 0.26f;
+            Kp_brake = 0.8f;
+            Ki = 0.05f;
+            Kd = 0.001f;
 #endif
 
         #ifdef fullForce
@@ -45,26 +45,28 @@ PIDController::PIDController(int ID)
 
             break;
         case 1:
+#define minSpeed 0.5f
+#define maxSpeed 1.6f
             m_turnPID.resize(3);
             m_turnPID[0] = 1.3f;		//P
-            m_turnPID[1] = 0;		//I
+            m_turnPID[1] = 0.3;		//I
             m_turnPID[2] = 0;		//D
 
-            m_speedPID.resize(3);
-            m_speedPID[0] = 0.6f;	//P     0.2;
-            m_speedPID[1] = 0.001f;	//I
-            m_speedPID[2] = 0.001f;	//D
+            Kp_forward = 0.16f;
+            Kp_brake = 0.8f;
+            Ki = 0.01f;
+            Kd = 0.008f;
             break;
         case 2:
             m_turnPID.resize(3);
             m_turnPID[0] = 1.3f;		//P
-            m_turnPID[1] = 0;		//I
+            m_turnPID[1] = 0.1;		//I
             m_turnPID[2] = 0;		//D
 
-            m_speedPID.resize(3);
-            m_speedPID[0] = 0.6f;	//P     0.2;
-            m_speedPID[1] = 0.001f;	//I
-            m_speedPID[2] = 0.001f;	//D
+            Kp_forward = 0.16f;
+            Kp_brake = 0.8f;
+            Ki = 0.01f;
+            Kd = 0.008f;
             break;
         default:
             m_turnGain = 1;
@@ -111,27 +113,23 @@ float PIDController::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
         dt = 0.007f;
         m_prevI = 0;
     }
-    float P;
-    float Kp_pos = 0.1;
-    float Kp_neg = 1;
+    float KP;
+    if(error > 0)
+        KP = Kp_forward;
+    else
+        KP = Kp_brake;
 
-   // if(error < 0)
-        P = error*Kp_neg;
-    //else
-     //   P = error*Kp_pos;
-    float I = (m_prevI + error*dt);
-    if (I > 8) I = 8;
-    float D = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
+    float Ierror = (m_prevI + error*dt);
+    if (Ierror > 8) Ierror = 8;
+    float Derror = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
 
-
-
-    float signal = P * m_speedPID[0] +
-                   I * m_speedPID[1] +
-                   D * m_speedPID[2];
+    float signal = KP * error +
+                   Ki * Ierror +
+                  Kd * Derror;
 
     m_prevAngError = error;
-    m_prevI = I;
-    m_prevD = D;
+    m_prevI = Ierror;
+    m_prevD = Derror;
 
     if (signal > 1)
         signal = 1;
@@ -225,8 +223,7 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
     if (dt < 0.0001 || dt > 0.1) {
         dt = 0.007f;
     }
-    m_prevI = 0;
-
+    //m_prevI = 0;
 
 	// x and y coordinate of the car. 
 	carX = state[0];
@@ -265,9 +262,9 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 	else
     {
         float KturnVel = 0.1;
-        float I = (m_prevIturn + diffAngle*dt);
+        float I = m_turnPID[1]*(m_prevIturn + diffAngle*dt);
         float P = m_turnPID[0]*diffAngle / M_PI_2 - KturnVel*state[4];
-        turnSignal = I + P;
+        turnSignal = P + I;
 		if (turnSignal > 1)
 		{
 			turnSignal = 1;
@@ -277,6 +274,7 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 			turnSignal = -1;
         }
         m_prevIturn = I;
+        qDebug() << "I: " << I << "P: " << P;
 	}
 	// Return Turning voltage.
 	return turnSignal;

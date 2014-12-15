@@ -28,6 +28,7 @@ private:
 
     void loadControllerSettings(void);
     void loadHandControllerSettings(std::vector<CarData> &carData);
+    void ControllerThread::loadModeSettings(std::vector<CarData> &carData);
 
 signals:
 

@@ -66,12 +66,24 @@ void ControllerThread::loadHandControllerSettings( std::vector<CarData> &carData
     }
 }
 
+void ControllerThread::loadModeSettings( std::vector<CarData> &carData)
+{
+    int numCars = 0;
+    while (m_settings.contains(QString("car/id%1/mode").arg(numCars)))
+    {
+        m_settings.beginGroup(QString("car/id%1").arg(numCars));
+        // Add car to vector m_cars.
+        carData[numCars].mode = static_cast<CarMode::Enum>(m_settings.value("mode").toInt());
+        m_settings.endGroup();
+        numCars++;
+    }
+}
+
 void ControllerThread::run()
 {
-
+    qDebug("cthread started");
     // Load controller settings from file.
     loadControllerSettings();
-
     // Could be a member variable.
     std::vector<Signal> signal(m_numCars);
 
@@ -83,17 +95,21 @@ void ControllerThread::run()
 
     // Load hand controller settings from file
     loadHandControllerSettings(carData);
+    loadModeSettings(carData);
 
     for (int i = 0; i < m_numCars; i++)
-    {      
+    {
         ioControls.push_back(IOControl(i,carData[i].handController));
     }
 
     // Initialize and start IO controllers.
     for (int i = 0; i < m_numCars; i++)
     {
-        ioControls[i].init();
-        ioControls[i].startController();
+        if(carData[i].mode != CarMode::NotConnected)
+        {
+            ioControls[i].init();
+            ioControls[i].startController();
+        }
     }
 
     // Initialize backing controllers. Delete old data.
@@ -102,7 +118,7 @@ void ControllerThread::run()
     m_stuckCounter.resize(0);
     for (int i = 0; i < m_numCars; i++)
     {
-        m_backingSequence.push_back(new AutoReverse());
+        m_backingSequence.push_back(new AutoReverse(i));
         m_isBacking.push_back(false);
         m_stuckCounter.push_back(0);
     }
@@ -145,7 +161,7 @@ void ControllerThread::run()
                     // Send gas and turn signal from controller to car.
                 case CarMode::Auto:
 
-                    if (-0.02 < carData[i].state[2] && carData[i].state[2] < 0.02 && signal[i].gas > 0.05 && !m_isBacking[i])
+                    if (-0.02 < carData[i].state[2] && carData[i].state[2] < 0.02 && signal[i].gas > 0.005 && !m_isBacking[i])
                     {
                         m_stuckCounter[i]++;
                     }
@@ -213,7 +229,10 @@ void ControllerThread::run()
     // Stop IO controllers.
     for (int i = 0; i < m_numCars; i++)
     {
-        ioControls[i].stopController();
+        if(carData[i].mode != CarMode::NotConnected)
+        {
+            ioControls[i].stopController();
+        }
     }
 }
 

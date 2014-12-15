@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>542</width>
+    <width>800</width>
     <height>168</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Car Settings</string>
@@ -18,6 +24,13 @@
     <widget class="QLabel" name="label_22">
      <property name="text">
       <string>Caution: do not connect more cars than there are output channels available on the NI-DAQ device.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Caution: Car 0 is paired to and tuned to work with hand controller 1. Car 1 is paired to and tuned to work with hand controller 2</string>
      </property>
     </widget>
    </item>
@@ -46,8 +59,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>522</width>
-        <height>98</height>
+        <width>780</width>
+        <height>79</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="scrollAreaContentsLayout"/>

@@ -60,8 +60,6 @@ private:
     int trackConstraints[1200][1500];
     int numPartInCritReg = 0;
 
-    VirtualSensor vs;
-
     MotionModelType::Enum mType;
     MotionModel *M;
 

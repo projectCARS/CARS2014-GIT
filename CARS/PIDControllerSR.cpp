@@ -20,7 +20,6 @@ PIDControllerSR::PIDControllerSR(int ID)
     switch (m_ID) {
         case 0:
             m_turnPID.resize(3);
-            m_speedPID.resize(3);
 #ifdef safeMode
             #define minSpeed 0.5
             #define maxSpeed 1.6
@@ -29,9 +28,10 @@ PIDControllerSR::PIDControllerSR(int ID)
             m_turnPID[1] = 0.0;		//I
             m_turnPID[2] = 0.0;		//D
 
-            m_speedPID[0] = 0.8f;	//P     0.2;
-            m_speedPID[1] = 0.01f;	//I
-            m_speedPID[2] = 0.008f;	//D
+            Kp_forward = 0.16f;
+            Kp_brake = 0.8f;
+            Ki = 0.01f;
+            Kd = 0.008f;
 #endif
 
         #ifdef fullForce
@@ -55,10 +55,10 @@ PIDControllerSR::PIDControllerSR(int ID)
             m_turnPID[1] = 0;		//I
             m_turnPID[2] = 0;		//D
 
-            m_speedPID.resize(3);
-            m_speedPID[0] = 0.6f;	//P     0.2;
-            m_speedPID[1] = 0.001f;	//I
-            m_speedPID[2] = 0.001f;	//D
+            Kp_forward = 0.16f;
+            Kp_brake = 0.8f;
+            Ki = 0.01f;
+            Kd = 0.008f;
             break;
         case 2:
             m_turnPID.resize(3);
@@ -66,10 +66,10 @@ PIDControllerSR::PIDControllerSR(int ID)
             m_turnPID[1] = 0;		//I
             m_turnPID[2] = 0;		//D
 
-            m_speedPID.resize(3);
-            m_speedPID[0] = 0.6f;	//P     0.2;
-            m_speedPID[1] = 0.001f;	//I
-            m_speedPID[2] = 0.001f;	//D
+            Kp_forward = 0.16f;
+            Kp_brake = 0.8f;
+            Ki = 0.01f;
+            Kd = 0.008f;
             break;
         default:
             m_turnGain = 1;
@@ -140,20 +140,23 @@ float PIDControllerSR::calcGasSignal(std::vector<float> &state, float refSpeed){
         dt = 0.007f;
         m_prevI = 0;
     }
+    float KP;
+    if(error > 0)
+        KP = Kp_forward;
+    else
+        KP = Kp_brake;
 
-    float P = error;
-    float I = (m_prevI + error*dt);
-    if (I > 8) I = 8;
-    float D = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
+    float Ierror = (m_prevI + error*dt);
+    if (Ierror > 8) Ierror = 8;
+    float Derror = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
 
-
-    float signal = P * m_speedPID[0] +
-                   I * m_speedPID[1] +
-                   D * m_speedPID[2];
+    float signal = KP * error +
+                   Ki * Ierror +
+                   Kd * Derror;
 
     m_prevAngError = error;
-    m_prevI = I;
-    m_prevD = D;
+    m_prevI = Ierror;
+    m_prevD = Derror;
 
     if (signal > 1)
         signal = 1;

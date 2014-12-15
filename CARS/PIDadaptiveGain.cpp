@@ -80,18 +80,18 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 
 
     m_turnPID.resize(3);
-    m_speedPID.resize(3);
 #ifdef safeMode
 #define minSpeed 0.5
 #define maxSpeed 1.6
 
-    m_turnPID[0] = 1.5f;	//P
-    m_turnPID[1] = 0.0;		//I
+    m_turnPID[0] = 1.8f;	//P
+    m_turnPID[1] = 0.2;		//I
     m_turnPID[2] = 0.0;		//D
 
-    m_speedPID[0] = 0.8f;	//P     0.2;
-    m_speedPID[1] = 0.01f;	//I
-    m_speedPID[2] = 0.008f;	//D
+    Kp_forward = 0.2;
+    Kp_brake = 0.8f;
+    Ki = 0.01f;
+    Kd = 0.008f;
 #endif
 
 
@@ -131,9 +131,9 @@ PIDadaptiveGain::~PIDadaptiveGain()
 void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &turn)
 {
     bool adaptiveGain, section, staticGain;
-    adaptiveGain = true;
+    adaptiveGain = false;
     section = false;
-    staticGain = false;
+    staticGain = true;
 
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
@@ -143,7 +143,7 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     if (adaptiveGain)
         m_refSpeed = calcRefSpeed(state, m_refIndClosest, m_gain, m_offset);
     else if (staticGain)
-        m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1.2, 0.3);    //change gain and offset
+        m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1.5, 0.3);    //change gain and offset
     else if (section)
         m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1, 0);
 
@@ -342,20 +342,23 @@ float PIDadaptiveGain::calcGasSignal(std::vector<float> &state, float refSpeed){
         dt = 0.007f;
         m_prevI = 0;
     }
+    float KP;
+    if(error > 0)
+        KP = Kp_forward;
+    else
+        KP = Kp_brake;
 
-    float P = error;
-    float I = (m_prevI + error*dt);
-    if (I > 8) I = 8;
-    float D = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
+    float Ierror = (m_prevI + error*dt);
+    if (Ierror > 8) Ierror = 8;
+    float Derror = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
 
-
-    float signal = P * m_speedPID[0] +
-            I * m_speedPID[1] +
-            D * m_speedPID[2];
+    float signal = KP * error +
+                   Ki * Ierror +
+                   Kd * Derror;
 
     m_prevAngError = error;
-    m_prevI = I;
-    m_prevD = D;
+    m_prevI = Ierror;
+    m_prevD = Derror;
 
     if (signal > 1)
         signal = 1;
@@ -488,6 +491,14 @@ float PIDadaptiveGain::calcTurnSignal(std::vector<float> &state, int refInd)
     float carX, carY, diffX, diffY, refAngle, carAngle, diffAngle;
     float turnSignal = 0;
 
+    start = std::chrono::system_clock::now();
+    std::chrono::duration<double> T = start - end;
+    end = std::chrono::system_clock::now();
+    float dt = (float)T.count();
+    if (dt < 0.0001 || dt > 0.1) {
+        dt = 0.007f;
+    }
+
     // x and y coordinate of the car.
     carX = state[0];
     carY = state[1];
@@ -524,7 +535,10 @@ float PIDadaptiveGain::calcTurnSignal(std::vector<float> &state, int refInd)
     }
     else
     {
-        turnSignal = m_turnPID[0]*diffAngle / M_PI_2;
+        float KturnVel = 0.1;
+        float I = m_turnPID[1]*(m_prevIturn + diffAngle*dt);
+        float P = m_turnPID[0]*diffAngle / M_PI_2 - KturnVel*state[4];
+        turnSignal = I + P;
         if (turnSignal > 1)
         {
             turnSignal = 1;
@@ -533,6 +547,8 @@ float PIDadaptiveGain::calcTurnSignal(std::vector<float> &state, int refInd)
         {
             turnSignal = -1;
         }
+        m_prevIturn = I;
+        qDebug() << "P: " << P << "I: " << I;
     }
 
     // Return Turning voltage.

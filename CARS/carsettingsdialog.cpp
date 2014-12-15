@@ -8,8 +8,7 @@ CarSettingsDialog::CarSettingsDialog(QWidget *parent) :
     ui->setupUi(this);
     ui->scrollAreaContentsLayout->setAlignment(Qt::AlignTop);
     // Set window size.
-    //setFixedSize(480,410);
-    setFixedSize(540,450);
+    setFixedSize(720,450);
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 

@@ -35,6 +35,7 @@ private:
 private slots:
     void on_chooseFileButton_clicked();
 
+    void on_reversecheckBox_clicked(bool checked);
 };
 
 #endif // REFERENCEDIALOG_H

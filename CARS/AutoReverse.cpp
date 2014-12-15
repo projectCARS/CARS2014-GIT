@@ -5,9 +5,20 @@
 #include "PIDController.h"
 #include <chrono>
 
-AutoReverse::AutoReverse()
+AutoReverse::AutoReverse(int id)
 {
 	m_backingCounter = 0;
+    switch(id)
+    {
+    case (0) :
+        m_reverseSpeed = -0.135f;
+        break;
+    case(1) :
+        m_reverseSpeed = -0.135f;
+        break;
+    default :
+        m_reverseSpeed = -0.125f;
+    }
 }
 
 AutoReverse::~AutoReverse()
@@ -29,6 +40,7 @@ void AutoReverse::calcTurnSignal(std::vector<float> &state, float &turn)
 
 float AutoReverse::backingSequence(std::vector<float> &state)
 {
+    qDebug("starting back sequence");
 
 	float signal = 0;
 	m_isBacking = true;
@@ -50,7 +62,7 @@ float AutoReverse::backingSequence(std::vector<float> &state)
 	else if (m_backingCounter <= 350)
 	{
 		m_backingCounter++;
-        signal = -0.1f;						//Slow back
+        signal = m_reverseSpeed;						//Slow back
 	}
 	else
 	{

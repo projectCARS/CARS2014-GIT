@@ -17,6 +17,8 @@ private:
 	TaskHandle m_hTaskOutput = 0;
     //for controller 2
     TaskHandle m_c2TaskOutput = 0;
+    TaskHandle m_c2TaskPower = 0;
+    TaskHandle m_c2TaskInput = 0;
 
 	float64 m_minValChannel;
 	float64 m_maxValChannel;
@@ -25,6 +27,10 @@ private:
 	float64 m_linearizationBreak; 
 	// Highest voltage for gas.
 	float64 m_voltGasThreshold; 
+    // Slope of the gas curve
+    float64 m_voltGasSlope;
+    // Slope of the reverse curve
+    float64 m_reverseGasSlope;
 	// When linearization algorithm switch.
 	float64 m_voltGasIntervall; 
     // Lowest voltage to reverse the car

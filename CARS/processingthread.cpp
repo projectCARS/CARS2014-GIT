@@ -113,12 +113,16 @@ void ProcessingThread::run()
         }
         m_doStopMutex.unlock();
 
+        //double t0 = omp_get_wtime();
         // Save car data from previous iteration.
         oldCarData = carData;
         // Detect markers using virtual sensor. Output is written to vector markers in world coordinates
         markers = sensor.detectMarkers();
+        //double t1 = omp_get_wtime();
         // Calculate position, angle and id.
         carMeasurements = findCars(markers);
+
+        //qDebug() << "cameraTime: " << t1 - t0;
 
         // Add measurements to cars.
         for (int j = 0; j < carMeasurements.size(); j++)

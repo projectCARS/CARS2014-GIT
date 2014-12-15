@@ -75,6 +75,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // Used when calculating FPS.
     m_fpsInterval = 100;
     m_t1 = 0;
+
+    //dialog.show();
 }
 
 MainWindow::~MainWindow()
@@ -105,6 +107,7 @@ void MainWindow::startThreads(void)
     // Load reference curve from file.
     loadReference();
     // Start threads.
+    //dialog.show();
     m_processingThread->start();
     m_controllerThread->start();
     qDebug() << "Threads started.";
@@ -277,7 +280,7 @@ void MainWindow::displayCountdown(void)
 
         char output[1];
         sprintf(output,"%i", i);
-        cv::putText(m_tmpMat, output, cv::Point(600, 500), 1, 8, cv::Scalar(255, 255, 50),2,8, false );
+        cv::putText(m_tmpMat, output, cv::Point(650, 480), 1, 8, cv::Scalar(255, 255, 255), 2, 8, false );
 
         cv::imshow("ProjectorWindow", m_tmpMat);
         // Display image from camera.
@@ -452,7 +455,7 @@ void MainWindow::updateFrame(void)
     {
         char output[4];
         sprintf(output,"THE WINNER IS CAR %i", raceSettings.winnerID);
-        cv::putText(m_tmpMat, output, cv::Point(300, 550), 1, 4, cv::Scalar(255, 200, 0), 2, 8, false);
+        cv::putText(m_tmpMat, output, cv::Point(310, 550), 1, 4, cv::Scalar(255, 255, 255), 2, 8, false);
     }
 
     // Only draw cars if carData is not empty. carData could be empty if the processingthread
@@ -466,24 +469,25 @@ void MainWindow::updateFrame(void)
             if(m_carSpecificDrawSettings[j] & CarSpecificDrawSettings::Timer)
             {
                 if(m_carData[j].lapData.firstLapStarted){
-                    char output[4];
+                    char output[10];
                     sprintf(output,"%.1f",m_carData[j].lapData.lapTime);
-                    char carID[4];
+                    char carID[10];
                     sprintf(carID,"Car %i",j);
+                    char output4[10];
+                    sprintf(output4,"Lap: %i", (m_carData[j].lapData.lapNumber + 1));
                     cv::putText(m_tmpMat, carID, cv::Point((750 -numTimers * 150), 65), 1, 2, cv::Scalar(255,150 ,0), 2, 8, false );
                     cv::putText(m_tmpMat, output, cv::Point((750 -numTimers * 150), 110), 1, 3, cv::Scalar(255, 255, 255), 2, 8, false );
+                    cv::putText(m_tmpMat, output4, cv::Point((750 -numTimers * 150), 230), 1, 2, cv::Scalar(255, 255, 255),2,8, false );
 
                     if(m_carData[j].lapData.firstLapDone)
                     {
-                        char output2[4];
+                        char output2[10];
                         sprintf(output2,"%.2f", m_carData[j].lapData.lastLapTime);
-                        char output3[4];
+                        char output3[10];
                         sprintf(output3,"%.2f", m_carData[j].lapData.bestTime);
-                        //char output4[4];
-                        //sprintf(output4,"Lap nr: %i", (m_carData[j].lapData.lapNumber + 1));
                         cv::putText(m_tmpMat, output2, cv::Point((750 -numTimers * 150), 150), 1, 3, cv::Scalar(0, 255, 255),2,8, false );
                         cv::putText(m_tmpMat, output3, cv::Point((750 -numTimers * 150), 190), 1, 3, cv::Scalar(120, 255, 0),2,8, false );
-                        //cv::putText(m_tmpMat, output4, cv::Point((750 -numTimers * 150), 230), 1, 2, cv::Scalar(255, 255, 255),2,8, false );
+
                     }
                 }
                 numTimers++;
@@ -752,19 +756,39 @@ void MainWindow::loadReference()
     gRef.resize(gRefLen * 2);
     vRef.resize(gRefLen);
     // Get values from reference curve and convert from pixels to meters.
-    for (int i = 0; i < gRefLen; i++)
-    {
-        // x pixel coordinate.
-        file >> gRef[i * 2];
-        gRef[i * 2] = gRef[i * 2];
-        // y pixel coordinate.
-        file >> gRef[i * 2 + 1];
-        gRef[i * 2 + 1] = gRef[i * 2 + 1];
-        // v_i - speed reference at point (x_i,y_i)
-        file >> vRef[i];  //speed must be stored in global coordinates in reference.txt
+    qDebug("hej");
+    if(m_settings.value("reference/reverse").toInt() == 0 ){
+        for (int i = 0; i < gRefLen; i++)
+        {
+            // x pixel coordinate.
+            file >> gRef[i * 2];
+            //gRef[i * 2] = gRef[i * 2];
+            // y pixel coordinate.
+            file >> gRef[i * 2 + 1];
+            //gRef[i * 2 + 1] = gRef[i * 2 + 1];
+            // v_i - speed reference at point (x_i,y_i)
+            file >> vRef[i];  //speed must be stored in global coordinates in reference.txt
 
-        numPoints++;
+            numPoints++;
+        }
     }
+    else
+    {
+        for (int i = gRefLen; i > 0; i--)
+        {
+            // x pixel coordinate.
+            file >> gRef[i * 2 - 2];
+            //gRef[i * 2] = gRef[i * 2];
+            // y pixel coordinate.
+            file >> gRef[i * 2 - 1];
+            //gRef[i * 2 + 1] = gRef[i * 2 + 1];
+            // v_i - speed reference at point (x_i,y_i)
+            file >> vRef[i - 1];  //speed must be stored in global coordinates in reference.txt
+
+            numPoints++;
+        }
+    }
+    qDebug("da");
 
     // Check that there were at least gRefLen numbers to read.
     if (numPoints < gRefLen)

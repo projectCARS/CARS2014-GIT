@@ -24,6 +24,7 @@ ReferenceDialog::ReferenceDialog(QWidget *parent) :
 
     QFileInfo fileInfo(m_fileName);
     ui->nameLabel->setText(fileInfo.fileName());
+    ui->reversecheckBox->setChecked(m_settings.value("reference/reverse").toBool());
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
@@ -158,4 +159,9 @@ void ReferenceDialog::drawReference(void)
         line(m_image, cv::Point(m_ref[0], m_ref[1]),
                     cv::Point(m_ref[2*m_refLen-4], m_ref[2*m_refLen-3]), cv::Scalar(0, 0, 255), 3);
     }
+}
+
+void ReferenceDialog::on_reversecheckBox_clicked(bool checked)
+{
+    m_settings.setValue("reference/reverse",(int)checked);
 }

@@ -11,11 +11,12 @@ private:
 	float m_prevSignal;
 	float m_startPosX;
 	float m_startPosY;
+    float m_reverseSpeed;
 
     float backingSequence(std::vector<float> &state);
 
 public:
-	AutoReverse();
+	AutoReverse(int id);
 	~AutoReverse();
 
 	bool m_isBacking;

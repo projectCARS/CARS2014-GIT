@@ -62,8 +62,6 @@ void EKF::firstState()
 	xhat = xhat + K*innovation;
     // Estimate covariance.
 	P = (I - K * H) * P;
-
-    std::cout << "xhat first:\n" << xhat << std::endl;
 }
 
 void EKF::updateFilter(void)
@@ -71,7 +69,6 @@ void EKF::updateFilter(void)
     T = ((double)(clock() - time)) / CLOCKS_PER_SEC;
     time = clock();
 
-    std::cout << "xhat second:\n" << xhat << std::endl;
     // Relinearization.
 	updateModel();
 
@@ -80,7 +77,7 @@ void EKF::updateFilter(void)
     MatrixXd Ppred = F*P*F.transpose() + Q;
 
     // If new measurement is found.
-	if (m_newMeasurement)
+    if (m_newMeasurement)
 	{
         angleDiff = xhatpred(3) - z(2);
         if (abs(angleDiff) > M_PI){
@@ -103,7 +100,6 @@ void EKF::updateFilter(void)
 		xhat = xhatpred + K*innovation;
         // Estimate covariance.
 		P = (I - K*H)*Ppred;
-        std::cout << "xhat pred:\n" << xhatpred << std::endl;
 	}
 	else
 	{
@@ -134,6 +130,7 @@ void EKF::addInputSignals(float gas, float turn)
     //Add control signals to filter.
     u(0) = gas;
     u(1) = turn;
+    M->addInput(u(0), u(1));
 }
 
 std::vector<float> EKF::getState(void)
