@@ -67,10 +67,6 @@ private:
 
     //end for section
 
-    //making plots
-    bool makePlots;
-    doubleplotdialog pD;
-    //end plots
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 

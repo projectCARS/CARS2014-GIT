@@ -61,22 +61,30 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_firstLapStarted = false;
     //end of: used for section
 
-    //used for plotWindow
 
-    makePlots = false;
-    if (makePlots)
+    if (plotData.makeRefplot)
     {
-        qDebug("init show_before");
-        //pD.show();
-        //firstLeftPlot(float numSections, std::vector<int> sectionMidIndexes, std::vector<float> refSpeed)
+        plotData.Xvalues.resize(0);
+        plotData.Xvalues.resize(m_numOfInterval);
+        plotData.Yvalues1.resize(0);
+        plotData.Yvalues1.resize(m_numOfInterval);
+        plotData.Yvalues2.resize(0);
+        plotData.Yvalues2.resize(m_numOfInterval);
 
-        //qDebug("firstlefplot");
-       // pD.firstLeftPlot(m_numOfInterval, m_intervalMidIndexes, m_refSpeedShort);
-        pD.show();
-        qDebug("init show_after");
+        plotData.axisRange.resize(4);
+        plotData.axisRange[0] = 0;
+        plotData.axisRange[1] = m_numOfInterval;
+        plotData.axisRange[2] = 0;
+        plotData.axisRange[3] = 5;
+
+        for (int i = 0; i<m_numOfInterval ; i++ )
+        {
+            plotData.Xvalues[i] = i + 1;
+            plotData.Yvalues1[i] = m_refSpeedShort[i];
+        }
+
     }
 
-    //end: used for plotWindow
 
 
     m_turnPID.resize(3);
@@ -85,12 +93,12 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 #define maxSpeed 1.6
 
     m_turnPID[0] = 1.8f;	//P
-    m_turnPID[1] = 0.2;		//I
+    m_turnPID[1] = 0.2f;		//I
     m_turnPID[2] = 0.0;		//D
 
-    Kp_forward = 0.2;
-    Kp_brake = 0.8f;
-    Ki = 0.01f;
+    Kp_forward = 0.18f;
+    Kp_brake = 5.8f;
+    Ki = 0.0f;
     Kd = 0.008f;
 #endif
 
@@ -132,8 +140,8 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
 {
     bool adaptiveGain, section, staticGain;
     adaptiveGain = false;
-    section = false;
-    staticGain = true;
+    section = true;
+    staticGain = false;
 
     // Find point on reference curve.
     m_refIndCircle = findIntersection(state, m_startInd);
@@ -143,7 +151,7 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     if (adaptiveGain)
         m_refSpeed = calcRefSpeed(state, m_refIndClosest, m_gain, m_offset);
     else if (staticGain)
-        m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1.5, 0.3);    //change gain and offset
+        m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1.2, 0.3);    //change gain and offset
     else if (section)
         m_refSpeed = calcRefSpeed(state, m_refIndClosest, 1, 0);
 
@@ -291,6 +299,15 @@ void PIDadaptiveGain::updateSpeedReference()
             m_refSpeedShort[i] = 0.2f;
     }
 
+    // update plotdata with current refSpeedShort
+    if (plotData.makeRefplot)
+    {
+        for (int i = 0; i<m_numOfInterval ; i++ )
+        {
+            plotData.Yvalues2[i] = m_refSpeedShort[i];
+        }
+    }
+
 
     // construct m_vRef from m_refSpeedShort with cubic spline - not a knot BC
     double *x,*f,*b,*c,*d;
@@ -317,8 +334,6 @@ void PIDadaptiveGain::updateSpeedReference()
     {
         logFileAdaptive << m_refSpeedShortBest[i] << " " << m_times[i] << " " << m_timesBest[i] << "\n";
     }
-    //if (makePlots)
-    //    pD.updatePlots(m_numOfInterval, m_refSpeedShortBest, m_times, m_timesBest);
 }
 
 
@@ -548,7 +563,7 @@ float PIDadaptiveGain::calcTurnSignal(std::vector<float> &state, int refInd)
             turnSignal = -1;
         }
         m_prevIturn = I;
-        qDebug() << "P: " << P << "I: " << I;
+        //qDebug() << "P: " << P << "I: " << I;
     }
 
     // Return Turning voltage.

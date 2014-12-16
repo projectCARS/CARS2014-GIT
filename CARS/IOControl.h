@@ -35,6 +35,8 @@ private:
 	float64 m_voltGasIntervall; 
     // Lowest voltage to reverse the car
     float64 m_voltReverseThreshold;
+    // Lowest voltage when braking
+    float64 m_voltBrakeThreshold;
 
 	float64 m_minGasVolt;
 	float64 m_maxGasVolt;
@@ -65,13 +67,11 @@ private:
    QElapsedTimer timeVoltageLog;
    //std::ofstream logFileVoltageLog;
    //std::stringstream str;
-   bool writeVoltageLog;
-   bool writeVoltageLogMan;
-   bool writeVoltageLogAss;
-
+   bool writeVoltageLogAuto = true;
+   bool writeVoltageLogMan = false;
+   bool writeVoltageLogAss = false;
 
 public:
-
 
     IOControl(int ID, HandController::Enum handController);
     ~IOControl();
@@ -87,7 +87,7 @@ public:
     void receiveSignals(float &gas, float &turn);
     //void receiveSignals(std::vector<float> &signals);
 	// Takes values (-1 to 1) and send it to output pins in corresponding voltage.
-    void sendSignals(float gas, float turn, CarData &carData);
+    void sendSignals(float gas, float turn, CarData &carData, bool isBacking);
 	// Takes input signals from the hand controller and sends it as output to the car.
     void manualControl(CarData &carData);
 	// Sends the gas signal from the hand controller and the turn signal turnSignal to the car.
@@ -97,7 +97,7 @@ private:
 	// Transforms voltage to a interval between -1 and 1.
 	void voltageToDecimal(float64 *values);
 	// Transforms an interval between -1 and 1 to corresponding voltage.
-	void decimalToVoltage(float64 *values);
+    void decimalToVoltage(float64 *values, bool isBacking);
     // Transforms an interval between -1 and 1 to corresponding voltage.
     void decimalToVoltageLinearMap(float64 *values);
 	// Recieve the voltage from the input pins.

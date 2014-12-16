@@ -11,13 +11,13 @@ AutoReverse::AutoReverse(int id)
     switch(id)
     {
     case (0) :
-        m_reverseSpeed = -0.135f;
+        m_reverseSpeed = -0.078f;
         break;
     case(1) :
-        m_reverseSpeed = -0.135f;
+        m_reverseSpeed = -0.078f;
         break;
     default :
-        m_reverseSpeed = -0.125f;
+        m_reverseSpeed = -0.078f;
     }
 }
 

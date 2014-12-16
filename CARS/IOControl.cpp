@@ -10,6 +10,8 @@
 #include "PIDadaptiveGain.h"
 #include "functions.h"
 
+std::ofstream LF;
+
 void printError(int32 status, int line)
 {
     if( DAQmxFailed(status) )
@@ -57,6 +59,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_voltGasSlope = -0.533;
 
             m_voltReverseThreshold = 1.68;
+            m_voltBrakeThreshold = 1.472;
 
             m_reverseGasSlope = 0.47;
 
@@ -79,6 +82,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_maxValChannel = 3;
 
             m_voltReverseThreshold = 1.68;
+            m_voltBrakeThreshold = 1.472;
 
             m_reverseGasSlope = 0.47;
 
@@ -105,6 +109,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_maxValChannel = 3;
 
             m_voltReverseThreshold = 1.68;
+            m_voltBrakeThreshold = 1.472;
 
             m_reverseGasSlope = 0.47;
 
@@ -130,6 +135,8 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_minValChannel = 0;
             m_maxValChannel = 3;
 
+            m_voltReverseThreshold = 1.68;
+            m_voltBrakeThreshold = 1.472;
             m_reverseGasSlope = 0.47;
 
             m_linearizationBreak = 0.38;
@@ -151,7 +158,17 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             digital_output_power = "";
             break;
         }
-        writeVoltageLogMan = false;
+        if (writeVoltageLogAuto)
+        {
+            timeVoltageLog.start();
+            std::stringstream str;
+            str.clear();
+            str.str(std::string());
+            str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
+            LF.open(str.str());
+            LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn\n";
+            std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+        }
         if (writeVoltageLogMan)
         {
             timeVoltageLog.start();
@@ -159,14 +176,11 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             str.clear();
             str.str(std::string());
             str << "outdata/logFiles/logVoltageManual.txt";
-            std::ofstream LF;
             LF.open(str.str());
             LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn\n";
             std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
-            LF.close();
         }
 
-        writeVoltageLogAss = false;
         if (writeVoltageLogAss)
         {
             timeVoltageLog.start();
@@ -174,11 +188,9 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             str.clear();
             str.str(std::string());
             str << "outdata/logFiles/logVoltageAss.txt";
-            std::ofstream LF;
             LF.open(str.str());
             LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn turn\n";
             std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
-            LF.close();
         }
         break;
     case HandController::HandControl_2:
@@ -202,6 +214,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_voltGasSlope = -0.533;
 
             m_voltReverseThreshold = 1.63;
+            m_voltBrakeThreshold = 1.472;
 
             m_reverseGasSlope = 0.47;
 
@@ -235,6 +248,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_voltGasSlope = -0.59;
 
             m_voltReverseThreshold = 1.57;//1.68;
+            m_voltBrakeThreshold = 1.472;
             m_reverseGasSlope = 0.75;
 
             m_minGasVolt = 0.91; // 1.14;
@@ -266,6 +280,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_voltGasSlope = -0.533;
 
             m_voltReverseThreshold = 1.68;
+            m_voltBrakeThreshold = 1.472;
 
             m_minGasVolt = 0.91; // 1.14;
             m_maxGasVolt = 2.10; // 2.31;
@@ -294,6 +309,9 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_voltGasThreshold = 1.4706;
             m_voltGasIntervall = 1.4693;
             m_voltGasSlope = -0.533;
+
+            m_voltReverseThreshold = 1.68;
+            m_voltBrakeThreshold = 1.472;
 
             m_minGasVolt = 0.3;
             m_maxGasVolt = 2.7;
@@ -349,21 +367,7 @@ void IOControl::init(void)
         printError(DAQmxCreateDOChan(m_hTaskPower, digital_output_power, "", DAQmx_Val_ChanForAllLines),323);
         qDebug("analog output initiated");
 #endif
-        writeVoltageLog = true;
-        if (writeVoltageLog)
-        {
 
-            timeVoltageLog.start();
-            std::stringstream str;
-            str.clear();
-            str.str(std::string());
-            str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
-            std::ofstream LF;
-            LF.open(str.str());
-            LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn\n";
-            std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
-            LF.close();
-        }
         break;
 
     case HandController::HandControl_2:
@@ -374,22 +378,6 @@ void IOControl::init(void)
         printError(DAQmxCfgImplicitTiming(m_c2TaskOutput, DAQmx_Val_ContSamps, 10000), 348);
 
 #endif
-        writeVoltageLog = false;
-        if (writeVoltageLog)
-        {
-
-            timeVoltageLog.start();
-            std::stringstream str;
-            str.clear();
-            str.str(std::string());
-            str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
-            std::ofstream LF;
-            LF.open(str.str());
-            LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn\n";
-            std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
-            LF.close();
-        }
-
         break;
 
     default:
@@ -430,6 +418,8 @@ void IOControl::stopController(void)
     case HandController::HandControl_1:
 #ifdef NIDAQ_IS_AVALIABLE
         controllerOff();
+        if(writeVoltageLogAuto || writeVoltageLogMan || writeVoltageLogAss)
+            LF.close();
         printError(DAQmxStopTask(m_hTaskInput), 433);
         printError(DAQmxStopTask(m_hTaskOutput), 434);
         printError(DAQmxStopTask(m_hTaskPower), 435);
@@ -454,6 +444,7 @@ void IOControl::stopController(void)
     default:
         break;
     }
+
 }
 
 void IOControl::receiveSignals(float &gas, float &turn)
@@ -466,7 +457,7 @@ void IOControl::receiveSignals(float &gas, float &turn)
 #endif
 }
 
-void IOControl::sendSignals(float gas, float turn, CarData &carData)
+void IOControl::sendSignals(float gas, float turn, CarData &carData, bool isBacking)
 {
     switch (m_handController)
     {
@@ -474,56 +465,27 @@ void IOControl::sendSignals(float gas, float turn, CarData &carData)
 #ifdef NIDAQ_IS_AVALIABLE
         m_tempArray[0] = gas;
         m_tempArray[1] = turn;
-        decimalToVoltage(m_tempArray);
+        decimalToVoltage(m_tempArray, isBacking);
 
-        if (writeVoltageLog)
+        if (writeVoltageLogAuto)
         {
-            std::stringstream str;
-            str.clear();
-            str.str(std::string());
-            str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
-            std::ofstream LF;
-            LF.open(str.str(),std::ofstream::app);
-            // "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn \n"
-
             LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
             LF << carData.state[0] << " " << carData.state[1] << " " ;
             LF << carData.state[2] << " " << carData.state[3] << " " ;
             LF << carData.state[4] << " " ;
             LF << m_tempArray[0] << " " << m_tempArray[1] << " ";
             LF << gas << " " << turn << "\n" ;
-            LF.close();
         }
 
         sendSignalsVolt(m_tempArray);
-
-
 
 #endif
         break;
     case HandController::HandControl_2:
         m_tempArray[0] = gas;
         m_tempArray[1] = turn;
-        decimalToVoltage(m_tempArray);
+        decimalToVoltage(m_tempArray, isBacking);
         sendSignalsVolt(m_tempArray);
-        if (writeVoltageLog)
-        {
-            std::stringstream str;
-            str.clear();
-            str.str(std::string());
-            str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
-            std::ofstream LF;
-            LF.open(str.str(),std::ofstream::app);
-            // "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn \n"
-
-            LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
-            LF << carData.state[0] << " " << carData.state[1] << " " ;
-            LF << carData.state[2] << " " << carData.state[3] << " " ;
-            LF << carData.state[4] << " " ;
-            LF << m_tempArray[0] << " " << m_tempArray[1] << " ";
-            LF << gas << " " << turn << "\n" ;
-            LF.close();
-        }
         break;
     default:
         break;
@@ -631,18 +593,19 @@ void IOControl::manualControl( CarData &carData)
 #ifdef NIDAQ_IS_AVALIABLE
     // Read input signals and save to m_tempArray
     receiveSignalsVolt(m_tempArray);
-       qDebug("manual gas volt: %f", m_tempArray[0]);
+       //qDebug("manual gas volt: %f", m_tempArray[0]);
     // Send signals (m_tempControlSignals) back to the controller
     sendSignalsVolt(m_tempArray);
 
+    double t1 = omp_get_wtime();
     if (writeVoltageLogMan)
     {
-        std::stringstream str;
-        str.clear();
-        str.str(std::string());
-        str << "outdata/logFiles/logVoltageManual.txt";
-        std::ofstream LF;
-        LF.open(str.str(),std::ofstream::app);
+        //std::stringstream str;
+        //str.clear();
+        //str.str(std::string());
+        //str << "outdata/logFiles/logVoltageManual.txt";
+        //std::ofstream LF;
+        //LF.open(str.str(),std::ofstream::app);
         // "time carID xPos yPos speed yaw yawVel Ugas Uturn\n"
 
         LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
@@ -650,8 +613,9 @@ void IOControl::manualControl( CarData &carData)
         LF << carData.state[2] << " " << carData.state[3] << " " ;
         LF << carData.state[4] << " " ;
         LF << m_tempArray[0] << " " << m_tempArray[1] << "\n";
-        LF.close();
     }
+    double t2 = omp_get_wtime();
+    qDebug() << "time log: " << t2 - t1;
 #endif
 }
 
@@ -667,7 +631,7 @@ void IOControl::assistedControl(float turnSignal, CarData &carData)
     voltArray[1] = turnSignal;
     // Dummy value to avoid warnings
     voltArray[0] = 0;
-    decimalToVoltage(voltArray);
+    decimalToVoltage(voltArray, false);
 
     // Write gas signal from hand controller.
     voltArray[0] = m_tempArray[0];
@@ -677,13 +641,6 @@ void IOControl::assistedControl(float turnSignal, CarData &carData)
 
     if (writeVoltageLogAss)
     {
-        std::stringstream str;
-        str.clear();
-        str.str(std::string());
-        str << "outdata/logFiles/logVoltageAss.txt";
-        std::ofstream LF;
-        LF.open(str.str(),std::ofstream::app);
-        // "time carID xPos yPos speed yaw yawVel Ugas Uturn turn\n"
 
         LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
         LF << carData.state[0] << " " << carData.state[1] << " " ;
@@ -691,7 +648,7 @@ void IOControl::assistedControl(float turnSignal, CarData &carData)
         LF << carData.state[4] << " " ;
         LF << voltArray[0] << " " << voltArray[1] << " ";
         LF << turnSignal << "\n" ;
-        LF.close();
+
     }
 
 #endif
@@ -752,7 +709,7 @@ void IOControl::voltageToDecimal(float64 *voltage)
 }
 
 // Map interval [-1,1] to [m_minVal,m_maxVal].
-void IOControl::decimalToVoltage(float64 *decimal)
+void IOControl::decimalToVoltage(float64 *decimal, bool isBacking)
 {
     // Transform gas signal
     // If gas is 0
@@ -761,23 +718,18 @@ void IOControl::decimalToVoltage(float64 *decimal)
     {
         decimal[0] = m_gasNeutral;
     }
-    // If gas is 0 - m_linearizationBreak
-    /*else if (0)//decimal[0] > 0 && decimal[0] <= m_linearizationBreak)
+    else if (decimal[0] > 0 && decimal[0] <= 1) // If positive gas signal
     {
-        decimal[0] = m_voltGasThreshold - decimal[0] / m_linearizationBreak * (m_voltGasThreshold - m_voltGasIntervall);
-    }*/
-    // If gas is m_linearizationBreak - 100%
-    else if (decimal[0] > 0 && decimal[0] <= 1)//m_linearizationBreak && decimal[0] <= 1)
-    {
-        //decimal[0] = m_voltGasIntervall - (decimal[0] - m_linearizationBreak) / (1 - m_linearizationBreak)* (m_voltGasIntervall - m_minGasVolt);
-        //decimal[0] = -0.33 + m_voltGasIntervall - (decimal[0] - m_linearizationBreak) / (1 - m_linearizationBreak)* (m_voltGasIntervall - m_minGasVolt);
         decimal[0] = m_voltGasSlope*decimal[0] + m_voltGasIntervall;
     }
     // If break/reverse
-    else if (decimal[0] < 0 && decimal[0] >= -1)
+    else if (isBacking && decimal[0] < 0 && decimal[0] >= -1)
     {
         decimal[0] = m_voltReverseThreshold  - decimal[0] * m_reverseGasSlope;
-        //decimal[0] = -0.2 + m_voltReverseThreshold + -decimal[0] * (m_maxGasVolt - m_voltReverseThreshold)*4;
+    }
+    else if (decimal[0] < 0 && decimal[0] >= -1)
+    {
+        decimal[0] = m_voltBrakeThreshold  - decimal[0] * m_reverseGasSlope;
     }
     // If out of bounds
     else
@@ -856,37 +808,15 @@ void IOControl::sendSignalsVolt(float64 *signal)
     {
     case HandController::HandControl_1:
 #ifdef NIDAQ_IS_AVALIABLE
+        printError(DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL),866);
         //qDebug() << "gas voltage: " << signal[0];
-        if ((signal[0] < m_minGasVolt) | (signal[0] > m_maxGasVolt) | (signal[1] < m_minTurnVolt) | (signal[1] > m_maxTurnVolt))
-        {
-            std::cout << "Output voltage is smaller than m_minVal, or larger than m_maxVal" << std::endl;
-            std::cout << "Gas voltage: " << signal[0] << ", Turn voltage: " << signal[1] << std::endl;
-        }
-        else
-        {
-            printError(DAQmxWriteAnalogF64(m_hTaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, signal, NULL, NULL),866);
-        }
 #endif
         break;
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
         //qDebug() << "gas voltage: " << signal[0];
-        if ((signal[0] < m_minGasVolt) | (signal[0] > m_maxGasVolt))
-        {
-            std::cout << "Output gas voltage is smaller than m_minVal, or larger than m_maxVal" << std::endl;
-            std::cout << "Gas voltage: " << signal[0] << std::endl;
-        }
-        if ((signal[1] < m_minTurnVolt) | (signal[1] > m_maxTurnVolt))
-        {
-            std::cout << "Output turn voltage is smaller than m_minVal, or larger than m_maxVal" << std::endl;
-            std::cout << "Turn voltage: " << signal[1] << std::endl;
-        }
-        if((signal[0] >= m_minGasVolt) && (signal[0] <= m_maxGasVolt) && (signal[1] >= m_minTurnVolt) && (signal[1] <= m_maxTurnVolt))
-        {
-            voltageToDutyCycle(signal);
-            qDebug() << "gas duty cycle: " << signal[0];
-            printError(DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL), 887);
-        }
+        voltageToDutyCycle(signal);
+        printError(DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL), 887);
 #endif
         break;
     default:

@@ -7,6 +7,8 @@ doubleplotdialog::doubleplotdialog(QWidget *parent) :
     ui(new Ui::doubleplotdialog)
 {
     ui->setupUi(this);
+    ui->plotArea->addGraph();
+    ui->plotArea->addGraph();
 
 }
 
@@ -39,17 +41,21 @@ void doubleplotdialog::firstLeftPlot(float numSections, std::vector<int> section
         refSpeedStart[i] = refSpeed[i];
     }
 
+    QVector<double> f = refSpeedStart;
+    f[numSections - 1] = 8;
+
     qDebug("calcs done");
-    ui->leftPlot->addGraph();
-    ui->leftPlot->graph(0)->setData(leftX,refSpeedStart);
-    ui->leftPlot->xAxis->setRange(0,numSections);
-    ui->leftPlot->yAxis->setRange(0,4);
+
+    ui->plotArea->graph(0)->setData(leftX,refSpeedStart);
+    ui->plotArea->graph(1)->setData(leftX, f);
+    ui->plotArea->xAxis->setRange(0,numSections);
+    ui->plotArea->yAxis->setRange(0,15);
     QPen pen;
     pen.setColor(QColor(0, 0, 0));
-    ui->leftPlot->graph(0)->setPen(pen);
+    ui->plotArea->graph(0)->setPen(pen);
     qDebug("before reploit");
 
-    //ui->leftPlot->replot();
+    ui->plotArea->replot();
     qDebug("replot done");
     //Sleep(100);
 }
@@ -72,17 +78,17 @@ void doubleplotdialog::updatePlots(float numSections, std::vector<float> refSpee
 
 
     //left plot
-    ui->leftPlot->addGraph();
-    ui->leftPlot->graph(1)->setData(leftX,refSpeedB);
-    //ui->leftPlot->xAxis->setRange(0,numSections);
+    ui->plotArea->addGraph();
+    ui->plotArea->graph(1)->setData(leftX,refSpeedB);
+    //ui->plotArea->xAxis->setRange(0,numSections);
     //ui->leftPlot->yAxis->setRange(0,4);
     QPen pen;
     pen.setColor(QColor(50, 50, 50));
-    ui->leftPlot->graph(1)->setPen(pen);
+    ui->plotArea->graph(1)->setPen(pen);
 
-    ui->leftPlot->replot();
+    ui->plotArea->replot();
 
-
+/*
     //right plot
     ui->rigthPlot->addGraph();
     ui->rigthPlot->graph(0)->setData(x2,timesB);
@@ -99,7 +105,7 @@ void doubleplotdialog::updatePlots(float numSections, std::vector<float> refSpee
     ui->rigthPlot->graph(1)->setPen(pen);
 
     ui->rigthPlot->replot();
-    Sleep(100);
+    Sleep(100);*/
 }
 
 void doubleplotdialog::on_pushButton_released()

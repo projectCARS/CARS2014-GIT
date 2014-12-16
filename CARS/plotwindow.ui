@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>doubleplotdialog</class>
- <widget class="QDialog" name="doubleplotdialog">
+ <class>plotWindow</class>
+ <widget class="QWidget" name="plotWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>575</width>
-    <height>545</height>
+    <width>706</width>
+    <height>617</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Form</string>
   </property>
   <widget class="QCustomPlot" name="plotArea" native="true">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>521</width>
-     <height>391</height>
+     <x>30</x>
+     <y>90</y>
+     <width>641</width>
+     <height>481</height>
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="plotLabel">
+  <widget class="QPushButton" name="closeButton">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>70</y>
-     <width>521</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton">
-   <property name="geometry">
-    <rect>
-     <x>460</x>
-     <y>510</y>
+     <x>570</x>
+     <y>580</y>
      <width>75</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
     <string>Close</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="titleLabel">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>30</y>
+     <width>481</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;nflkjgndanfg&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
  </widget>

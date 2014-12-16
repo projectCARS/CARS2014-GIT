@@ -16,7 +16,7 @@
 struct DrawThreadData drawThreadData;
 struct ControllerThreadData controllerThreadData;
 struct LapData lapData;
-CRITICAL_SECTION csDrawThreadData, csControllerThreadData;
+CRITICAL_SECTION csDrawThreadData, csControllerThreadData, csPlotData;
 HANDLE hDrawThreadEvent;
 HANDLE hControllerThreadEvent1, hControllerThreadEvent_signalsWritten, hControllerThreadEvent_signalsRead;
 std::vector<float> gRef;
@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
     // Initialize critical sections.
     InitializeCriticalSection(&csDrawThreadData);
     InitializeCriticalSection(&csControllerThreadData);
+    InitializeCriticalSection(&csPlotData);
     // Create events. Initial state for hControllerThreadEvent1 is not signaled.
     hDrawThreadEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     hControllerThreadEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);

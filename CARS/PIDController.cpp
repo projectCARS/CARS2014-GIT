@@ -19,7 +19,7 @@ PIDController::PIDController(int ID)
             #define minSpeed 0.5f
             #define maxSpeed 1.6f
 
-            m_turnPID[0] = 2.2f;// 1.5f;    //P
+            m_turnPID[0] = 1.5f;// 1.5f;    //P
             m_turnPID[1] = 0.3f;            //I
             m_turnPID[2] = 0.0f;            //D
 
@@ -274,7 +274,7 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 			turnSignal = -1;
         }
         m_prevIturn = I;
-        qDebug() << "I: " << I << "P: " << P;
+        //qDebug() << "I: " << I << "P: " << P;
 	}
 	// Return Turning voltage.
 	return turnSignal;

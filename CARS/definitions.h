@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 
 #include <QElapsedTimer>
+#include <QVector>
 
 
 #include <windows.h>
@@ -159,7 +160,7 @@ struct LapData
     //int checkPoint = 730;
     //int check1, check2;
     //clock_t startTime, t2;
-    float currTime;             // used to get time for log file.
+    //float currTime;             // used to get time for log file.
 
     QElapsedTimer lapTimer;
     float lapTime, bestTime, lastLapTime;
@@ -181,6 +182,14 @@ struct CarData
     std::vector<float> state;
     LapData lapData;
     HandController::Enum handController;
+};
+
+//Struct to pass plot data from controller to mainWindow
+struct PlotData
+{
+    bool makeRefplot = false;
+    QVector<double> Xvalues,Yvalues1,Yvalues2,axisRange;
+
 };
 
 // Perhaps: struct IOControllerData ?
@@ -220,9 +229,10 @@ struct ControllerThreadData
 // ---------- External declarations ----------
 extern struct DrawThreadData drawThreadData;
 extern struct ControllerThreadData controllerThreadData;
+extern struct PlotData plotData;
 //extern struct RaceSettings raceSettings;
 // Critical section that is used during communication between main thread and draw thread.
-extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData;
+extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData, csPlotData;
 extern HANDLE hDrawThreadEvent;
 extern HANDLE hControllerThreadEvent1, hControllerThreadEvent_signalsWritten, hControllerThreadEvent_signalsRead;
 // Reference signals. Should be placed in regulatorThreadData?

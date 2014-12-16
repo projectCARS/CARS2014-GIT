@@ -17,6 +17,8 @@
 #include <QLabel>
 #include <QDebug>
 
+struct PlotData plotData;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -88,6 +90,7 @@ MainWindow::~MainWindow()
     // Release resources used by the critical sections.
     DeleteCriticalSection(&csDrawThreadData);
     DeleteCriticalSection(&csControllerThreadData);
+    DeleteCriticalSection(&csPlotData);
 
     // Destroy OpenCV windows.
     //cv::destroyAllWindows();
@@ -107,7 +110,15 @@ void MainWindow::startThreads(void)
     // Load reference curve from file.
     loadReference();
     // Start threads.
-    //dialog.show();
+
+    // init the plot window
+    adaptiveRefWindow.init(2,"<h1>title</h1>","x","y");
+    adaptiveRefWindow.show();
+    plotData.makeRefplot = true;
+
+    //adaptiveTimeWindow.init(2);
+    //adaptiveTimeWindow.show();
+
     m_processingThread->start();
     m_controllerThread->start();
     qDebug() << "Threads started.";
@@ -433,6 +444,7 @@ void MainWindow::initFrame(void)
 
 void MainWindow::updateFrame(void)
 {
+
     std::vector<float> positionPix(2);
     float angle;
     double timeDiff;
@@ -442,20 +454,49 @@ void MainWindow::updateFrame(void)
     // Get background image.
     drawThreadData.background[m_loopCounter%drawThreadData.background.size()].copyTo(m_tmpMat);
     raceSettings = drawThreadData.raceData;
-    LeaveCriticalSection(&csDrawThreadData);
 
-    EnterCriticalSection(&csDrawThreadData);
     // Get states from struct drawThreadData.
     m_carData = drawThreadData.carData;
     m_carTimerID = drawThreadData.carTimerID;
     LeaveCriticalSection(&csDrawThreadData);
+
+
+    QVector<double> range(4),x(3),y(3),y2(3);
+    range[0] = 0;
+    range[1] = 40;
+    range[2] = 0;
+    range[3] = 10;
+
+    x[0] = 1;
+    x[1] = 2;
+    x[2] = 3;
+
+    y[0] = 2;
+    y[1] = 5;
+    y[2] = 6;
+    y2[0] = 8;
+    y2[1] = 8;
+    y2[2] = m_carData[0].lapData.lapTime;
+
+EnterCriticalSection(&csPlotData);
+    if (enbool)
+    {
+    adaptiveRefWindow.updatePlot(0,range, plotData.Xvalues, plotData.Yvalues1);
+    enbool = false;
+    }
+    adaptiveRefWindow.updatePlot(1,range, plotData.Xvalues, plotData.Yvalues2);
+    //re[2] = 10;
+    //adaptiveTimeWindow.updatePlot(4, se, re);
+
+LeaveCriticalSection(&csPlotData);
+
 
     // Only draw the winner of the race if the race is done
     if(raceSettings.doRace && raceSettings.raceDone)
     {
         char output[4];
         sprintf(output,"THE WINNER IS CAR %i", raceSettings.winnerID);
-        cv::putText(m_tmpMat, output, cv::Point(310, 550), 1, 4, cv::Scalar(255, 255, 255), 2, 8, false);
+        cv::putText(m_tmpMat, output, cv::Point(365, 550), 1, 4, cv::Scalar(255, 255, 255), 2, 8, false);
     }
 
     // Only draw cars if carData is not empty. carData could be empty if the processingthread

@@ -94,7 +94,8 @@ SOURCES += main.cpp\
     racegroupbox.cpp \
     STModel.cpp \
     qcustomplot.cpp \
-    doubleplotdialog.cpp
+    doubleplotdialog.cpp \
+    plotwindow.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -129,7 +130,8 @@ HEADERS  += mainwindow.h \
     racegroupbox.h \
     STModel.h \
     qcustomplot.h \
-    doubleplotdialog.h
+    doubleplotdialog.h \
+    plotwindow.h
 
 
 FORMS    += mainwindow.ui \
@@ -139,6 +141,7 @@ FORMS    += mainwindow.ui \
     drawsettingsdialog.ui \
     racedialog.ui \
     racegroupbox.ui \
+    plotwindow.ui \
     doubleplotdialog.ui
 
 #RESOURCES += \

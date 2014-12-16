@@ -14,9 +14,21 @@ class plotWindow : public QWidget
 public:
     explicit plotWindow(QWidget *parent = 0);
     ~plotWindow();
+    void init(int numGraphs, QString title, QString xlabel, QString ylabel);
+
+    void updatePlot(int graph, QVector<double> axisRange, QVector<double> xvalues, QVector<double> yvalues );
+
+private slots:
+    void on_closeButton_released();
 
 private:
     Ui::plotWindow *ui;
+
+    void closeEvent(QCloseEvent *event);
+
+    QVector<double> Xvalues;
+    QVector<double> Yvalues0;
+    QVector<double> Yvalues1;
 };
 
 #endif // PLOTWINDOW_H
