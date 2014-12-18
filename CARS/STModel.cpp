@@ -179,7 +179,7 @@ void STModel::decimalToVoltage(float64 *decimal)
 {
 
     m_linearizationBreak = 0.35;
-    m_voltGasThreshold = 1.4710;
+    m_voltGasMin = 1.4710;
     m_voltGasIntervall = 1.4693;
 
     m_voltReverseThreshold = 1.68;
@@ -203,7 +203,7 @@ void STModel::decimalToVoltage(float64 *decimal)
     // If gas is 0 - m_linearizationBreak
     else if (decimal[0] > 0 && decimal[0] <= m_linearizationBreak)
     {
-        decimal[0] = m_voltGasThreshold - decimal[0] / m_linearizationBreak * (m_voltGasThreshold - m_voltGasIntervall);
+        decimal[0] = m_voltGasMin - decimal[0] / m_linearizationBreak * (m_voltGasMin - m_voltGasIntervall);
     }
     // If gas is m_linearizationBreak - 100%
     else if (decimal[0] > m_linearizationBreak && decimal[0] <= 1)//m_linearizationBreak && decimal[0] <= 1)

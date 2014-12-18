@@ -95,7 +95,8 @@ SOURCES += main.cpp\
     STModel.cpp \
     qcustomplot.cpp \
     doubleplotdialog.cpp \
-    plotwindow.cpp
+    plotwindow.cpp \
+    plotsettingsdialog.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -131,7 +132,8 @@ HEADERS  += mainwindow.h \
     STModel.h \
     qcustomplot.h \
     doubleplotdialog.h \
-    plotwindow.h
+    plotwindow.h \
+    plotsettingsdialog.h
 
 
 FORMS    += mainwindow.ui \
@@ -142,7 +144,8 @@ FORMS    += mainwindow.ui \
     racedialog.ui \
     racegroupbox.ui \
     plotwindow.ui \
-    doubleplotdialog.ui
+    doubleplotdialog.ui \
+    plotsettingsdialog.ui
 
 #RESOURCES += \
 #    CARS.qrc

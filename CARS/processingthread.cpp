@@ -325,11 +325,11 @@ void ProcessingThread::drawStatesToImage(const std::vector<CarData> &oldCarData,
                 if (distSquared < maxDistSquared)
                 {
                     if (gas > 0)
-                        line(evaluatedImage, cv::Point(positionPix1[0], positionPix1[1]), cv::Point(positionPix2[0], positionPix2[1]), cv::Scalar(20 + 235 * gas, 0, 0), 3);
+                        line(evaluatedImage, cv::Point(positionPix1[0], positionPix1[1]), cv::Point(positionPix2[0], positionPix2[1]), cv::Scalar(0, 255 - 255 * gas * 8, 255), 3);
                     else if (gas == 0)
                         line(evaluatedImage, cv::Point(positionPix1[0], positionPix1[1]), cv::Point(positionPix2[0], positionPix2[1]), cv::Scalar(0, 70, 0), 3);
                     else
-                        line(evaluatedImage, cv::Point(positionPix1[0], positionPix1[1]), cv::Point(positionPix2[0], positionPix2[1]), cv::Scalar(0, 0, 255 * (1 + gas)), 3);
+                        line(evaluatedImage, cv::Point(positionPix1[0], positionPix1[1]), cv::Point(positionPix2[0], positionPix2[1]), cv::Scalar(20 + 235 * -gas, 20 + 235 * -gas, 20 + 235 * -gas/*255 * (1 + gas)*/), 3);
                 }
             }
 

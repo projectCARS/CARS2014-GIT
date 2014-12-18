@@ -30,7 +30,6 @@ private:
     //For testing plot
     plotWindow adaptiveRefWindow;
     plotWindow adaptiveTimeWindow;
-    bool enbool = true;
 
     QSettings m_settings;
     QImage m_image;
@@ -83,6 +82,7 @@ private slots:
 
     void on_carSettingsButton_clicked();
     void on_drawSettingsButton_clicked();
+    void on_plotSettingsButton_clicked();
     void on_calibrateCameraButton_clicked();
     void on_raceButton_clicked();
     void on_initRace_clicked();

@@ -53,15 +53,17 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_minValChannel = 0;
             m_maxValChannel = 3;
 
-            m_linearizationBreak = 0.35;
-            m_voltGasThreshold = 1.4710;
             m_voltGasIntervall = 1.4693;
-            m_voltGasSlope = -0.533;
+            m_linearizationBreak = 0.35;
+
+            m_voltGasMin = 1.4710;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
 
             m_voltReverseThreshold = 1.68;
             m_voltBrakeThreshold = 1.472;
 
-            m_reverseGasSlope = 0.47;
+            m_reverseGasSlope = 0.51;
 
             m_minGasVolt = 0.91; // 1.14;
             m_maxGasVolt = 2.21; // 2.31;
@@ -86,10 +88,12 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 
             m_reverseGasSlope = 0.47;
 
-            m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
             m_voltGasIntervall = 1.4693;
-            m_voltGasSlope = -0.533;
+            m_linearizationBreak = 0.38;
+
+            m_voltGasMin = 1.4706;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
 
             m_minGasVolt = 0.91; // 1.14;
             m_maxGasVolt = 2.10; // 2.31;
@@ -113,10 +117,12 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 
             m_reverseGasSlope = 0.47;
 
+            m_voltGasMin = 1.4706;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
+
             m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
             m_voltGasIntervall = 1.4693;
-            m_voltGasSlope = -0.533;
 
             m_minGasVolt = 0.91; // 1.14;
             m_maxGasVolt = 2.10; // 2.31;
@@ -137,12 +143,15 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 
             m_voltReverseThreshold = 1.68;
             m_voltBrakeThreshold = 1.472;
+
             m_reverseGasSlope = 0.47;
 
             m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
+            m_voltGasMin = 1.4706;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
+
             m_voltGasIntervall = 1.4693;
-            m_voltGasSlope = -0.533;
 
             m_minGasVolt = 0.3;
             m_maxGasVolt = 2.7;
@@ -209,9 +218,11 @@ IOControl::IOControl(int ID, HandController::Enum handController)
            m_maxValChannel = 3;
 
             m_linearizationBreak = 0.35;
-            m_voltGasThreshold = 1.4710;
+            m_voltGasMin = 1.4710;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
+
             m_voltGasIntervall = 1.4693;
-            m_voltGasSlope = -0.533;
 
             m_voltReverseThreshold = 1.63;
             m_voltBrakeThreshold = 1.472;
@@ -243,9 +254,11 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_maxValChannel = 3;
 
             m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
+            m_voltGasMin = 1.4706;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
+
             m_voltGasIntervall = 1.44;//1.4693;
-            m_voltGasSlope = -0.59;
 
             m_voltReverseThreshold = 1.57;//1.68;
             m_voltBrakeThreshold = 1.472;
@@ -253,7 +266,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
 
             m_minGasVolt = 0.91; // 1.14;
             m_maxGasVolt = 3.5; // 2.31;
-            m_minTurnVolt = 0.17;
+            m_minTurnVolt = 0.11;
             m_maxTurnVolt = 2.9; //3.242;
 
             m_gasNeutral = 1.54;
@@ -275,9 +288,10 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_maxValChannel = 3;
 
             m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
+            m_voltGasMin = 1.4706;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
             m_voltGasIntervall = 1.4693;
-            m_voltGasSlope = -0.533;
 
             m_voltReverseThreshold = 1.68;
             m_voltBrakeThreshold = 1.472;
@@ -306,9 +320,10 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             m_maxValChannel = 3;
 
             m_linearizationBreak = 0.38;
-            m_voltGasThreshold = 1.4706;
+            m_voltGasMin = 1.4706;
+            m_voltGasMax = 0.95;
+            m_voltGasSlope = m_voltGasMax - m_voltGasMin;
             m_voltGasIntervall = 1.4693;
-            m_voltGasSlope = -0.533;
 
             m_voltReverseThreshold = 1.68;
             m_voltBrakeThreshold = 1.472;
@@ -597,7 +612,6 @@ void IOControl::manualControl( CarData &carData)
     // Send signals (m_tempControlSignals) back to the controller
     sendSignalsVolt(m_tempArray);
 
-    double t1 = omp_get_wtime();
     if (writeVoltageLogMan)
     {
         //std::stringstream str;
@@ -614,8 +628,7 @@ void IOControl::manualControl( CarData &carData)
         LF << carData.state[4] << " " ;
         LF << m_tempArray[0] << " " << m_tempArray[1] << "\n";
     }
-    double t2 = omp_get_wtime();
-    qDebug() << "time log: " << t2 - t1;
+
 #endif
 }
 
@@ -641,14 +654,12 @@ void IOControl::assistedControl(float turnSignal, CarData &carData)
 
     if (writeVoltageLogAss)
     {
-
         LF << timeVoltageLog.elapsed()/1000.0 << " " << carData.id << " ";
         LF << carData.state[0] << " " << carData.state[1] << " " ;
         LF << carData.state[2] << " " << carData.state[3] << " " ;
         LF << carData.state[4] << " " ;
         LF << voltArray[0] << " " << voltArray[1] << " ";
         LF << turnSignal << "\n" ;
-
     }
 
 #endif
@@ -661,7 +672,7 @@ void IOControl::voltageToDecimal(float64 *voltage)
     // If voltage results in no gas
 
 
-    if (voltage[0] <= m_voltReverseThreshold && voltage[0] >= m_voltGasThreshold)
+    if (voltage[0] <= m_voltReverseThreshold && voltage[0] >= m_voltGasMin)
     {
         voltage[0] = 0;
     }
@@ -672,10 +683,10 @@ void IOControl::voltageToDecimal(float64 *voltage)
         voltage[0] = -(voltage[0] - m_voltReverseThreshold) / (m_maxGasVolt - m_voltReverseThreshold);
     }
     // If voltage is 0 - m_linearizationBreak
-    else if (voltage[0] < m_voltGasThreshold && voltage[0] >= m_voltGasIntervall)
+    else if (voltage[0] < m_voltGasMin && voltage[0] >= m_voltGasIntervall)
         //else if (voltage[0] < m_gasNeutral && voltage[0] >= m_voltGasIntervall)
     {
-        voltage[0] = m_linearizationBreak * (m_voltGasThreshold - voltage[0]) / (m_voltGasThreshold - m_voltGasIntervall);
+        voltage[0] = m_linearizationBreak * (m_voltGasMin - voltage[0]) / (m_voltGasMin - m_voltGasIntervall);
     }
     // If voltage is m_linearizationBreak - 100%
     else if (voltage[0] < m_voltGasIntervall && voltage[0] >= m_minGasVolt)
@@ -685,7 +696,7 @@ void IOControl::voltageToDecimal(float64 *voltage)
     // If voltage is out of bounds
     else
     {
-        std::cout << "Gas signal is out of bounds: " << voltage[0] << "A" << std::endl;
+        std::cout << "Gas signal is out of bounds: " << voltage[0] << std::endl;
     }
 
     // Transform turn signal
@@ -711,21 +722,21 @@ void IOControl::voltageToDecimal(float64 *voltage)
 // Map interval [-1,1] to [m_minVal,m_maxVal].
 void IOControl::decimalToVoltage(float64 *decimal, bool isBacking)
 {
-    // Transform gas signal
-    // If gas is 0
     //qDebug() << "gas i decimal:  " << decimal[0];
+
+    // Transform gas signal if gas is 0
     if (decimal[0] == 0)
     {
         decimal[0] = m_gasNeutral;
     }
     else if (decimal[0] > 0 && decimal[0] <= 1) // If positive gas signal
     {
-        decimal[0] = m_voltGasSlope*decimal[0] + m_voltGasIntervall;
+        decimal[0] = m_voltGasIntervall + decimal[0] * m_voltGasSlope;
     }
     // If break/reverse
     else if (isBacking && decimal[0] < 0 && decimal[0] >= -1)
     {
-        decimal[0] = m_voltReverseThreshold  - decimal[0] * m_reverseGasSlope;
+        decimal[0] = m_voltReverseThreshold  - decimal[0] *  m_reverseGasSlope;
     }
     else if (decimal[0] < 0 && decimal[0] >= -1)
     {
@@ -786,10 +797,10 @@ void IOControl::receiveSignalsVolt(float64 *signal)
     switch(m_handController)
     {
     case (HandController::HandControl_1) :
-        printError(DAQmxReadAnalogF64(m_hTaskInput, 1, 10.0, DAQmx_Val_GroupByChannel, signal, 2, NULL, NULL), 836);
+        printError(DAQmxReadAnalogF64(m_hTaskInput, 1, 10.0, DAQmx_Val_GroupByChannel, signal, 2, NULL, NULL), 802);
     break;
     case (HandController::HandControl_2) :
-        printError(DAQmxReadAnalogF64(m_c2TaskInput, 1, 10.0, DAQmx_Val_GroupByChannel, signal, 2, NULL, NULL), 839);
+        printError(DAQmxReadAnalogF64(m_c2TaskInput, 1, 10.0, DAQmx_Val_GroupByChannel, signal, 2, NULL, NULL), 805);
     break;
     }
     signal[0] = (signal[0] + m_prevSignals[0]) / 2;
@@ -831,14 +842,28 @@ void IOControl::voltageToDutyCycle(float64 *values)
     voltage[1] = values[1];
     values[0] = voltage[0]/m_factorVol2Duty;
     values[1] = voltage[1]/m_factorVol2Duty;
-    if ( (values[0]<0.0) | (values[0]>1.0) )
+    if ( (values[0]<=0.001))
     {
         qDebug("gas duty cycle is out of bounds");
         qDebug() << values[0];
+        values[0] = 0.001;
     }
-    if ( (values[1]<0.0) | (values[1]>1.0) )
+    else if(values[0]>=0.99)
+    {
+        qDebug("gas duty cycle is out of bounds");
+        qDebug() << values[0];
+        values[0] = 0.99;
+    }
+    if ( (values[1]<=0.001))
     {
         qDebug("turn duty cycle is out of bounds");
         qDebug() << values[1];
+        values[1] = 0.001;
+    }
+    else if(values[1]>=0.99)
+    {
+        qDebug("turn duty cycle is out of bounds");
+        qDebug() << values[1];
+        values[1] = 0.99;
     }
 }

@@ -10,10 +10,12 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 {
     m_ID = ID;
     m_startInd = 0;
+    m_offset = 0.0f;
     m_onPath = false;   //dont update speed reference until car is near the reference path
-    m_vRef = vRef;      //m_vRef is uniqe to each car
+    m_vRef = vRef;   //m_vRef is uniqe to each car
+    m_aRef = aRef;
     m_gain = 1.0f;
-    m_offset = 0.3f;
+
     m_checkPoint = false;
     m_firstLapDone = false;
     timer.start();
@@ -26,27 +28,31 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_prevAngError = 0;
 
     //used for section
-    m_numOfInterval = 30.0;
+    m_numOfInterval = 10.0;
+    m_noIncreaseCounter.resize(0);
+    m_noIncreaseCounter.resize((int)m_numOfInterval);
+    m_noDecreaseCounter.resize(0);
+    m_noDecreaseCounter.resize((int)m_numOfInterval);
     m_intervalLength = gRefLen / m_numOfInterval ;
     m_length2mid = (int) ( m_intervalLength / 2 );
 
 
     m_intervalStartIndexes.resize(0);
-    m_intervalStartIndexes.resize(m_numOfInterval);
+    m_intervalStartIndexes.resize((int)m_numOfInterval);
     m_intervalMidIndexes.resize(0);
-    m_intervalMidIndexes.resize(m_numOfInterval);
+    m_intervalMidIndexes.resize((int)m_numOfInterval);
     m_refSpeedShort.resize(0);
-    m_refSpeedShort.resize(m_numOfInterval);
+    m_refSpeedShort.resize((int)m_numOfInterval);
     m_refSpeedShortBest.resize(0);
-    m_refSpeedShortBest.resize(m_numOfInterval);
+    m_refSpeedShortBest.resize((int)m_numOfInterval);
     m_timerTimes.resize(0);
-    m_timerTimes.resize(m_numOfInterval);
+    m_timerTimes.resize((int)m_numOfInterval);
     m_times.resize(0);
-    m_times.resize(m_numOfInterval);
+    m_times.resize((int)m_numOfInterval);
     m_timesBest.resize(0);
-    m_timesBest.resize(m_numOfInterval);
+    m_timesBest.resize((int)m_numOfInterval);
     m_sectionVisited.resize(0);
-    m_sectionVisited.resize(m_numOfInterval);
+    m_sectionVisited.resize((int)m_numOfInterval);
 
     for (int i = 0; i<m_numOfInterval ; i++ )
     {
@@ -54,6 +60,8 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
         m_intervalMidIndexes[i] = m_intervalStartIndexes[i] + m_length2mid;
         m_refSpeedShort[i] = m_vRef[m_intervalMidIndexes[i]];
         m_sectionVisited[i] = false;
+        m_noDecreaseCounter[i] = 0;
+        m_noIncreaseCounter[i] = 0;
     }
     m_refSpeedShortBest = m_refSpeedShort;
 
@@ -61,29 +69,64 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_firstLapStarted = false;
     //end of: used for section
 
-
-    if (plotData.makeRefplot)
+    EnterCriticalSection(&csPlotData);
+    if (AdaptiveRefPlotData.makePlot)
     {
-        plotData.Xvalues.resize(0);
-        plotData.Xvalues.resize(m_numOfInterval);
-        plotData.Yvalues1.resize(0);
-        plotData.Yvalues1.resize(m_numOfInterval);
-        plotData.Yvalues2.resize(0);
-        plotData.Yvalues2.resize(m_numOfInterval);
+        AdaptiveRefPlotData.newData2plot1 = true;
+        AdaptiveRefPlotData.Xvalues.resize(0);
+        AdaptiveRefPlotData.Xvalues.resize((int)m_numOfInterval);
+        AdaptiveRefPlotData.Xvalues2.resize(0);
+        AdaptiveRefPlotData.Xvalues2.resize(gRefLen);
+        AdaptiveRefPlotData.Yvalues1.resize(0);
+        AdaptiveRefPlotData.Yvalues1.resize((int)m_numOfInterval);
+        AdaptiveRefPlotData.Yvalues2.resize(0);
+        AdaptiveRefPlotData.Yvalues2.resize((int)m_numOfInterval);
+        AdaptiveRefPlotData.Yvalues3.resize(0);
+        AdaptiveRefPlotData.Yvalues3.resize((int)m_numOfInterval);
+        AdaptiveRefPlotData.Yvalues4.resize(0);
+        AdaptiveRefPlotData.Yvalues4.resize((int)gRefLen);
 
-        plotData.axisRange.resize(4);
-        plotData.axisRange[0] = 0;
-        plotData.axisRange[1] = m_numOfInterval;
-        plotData.axisRange[2] = 0;
-        plotData.axisRange[3] = 5;
+        AdaptiveRefPlotData.axisRange.resize(4);
+        AdaptiveRefPlotData.axisRange[0] = 0;
+        AdaptiveRefPlotData.axisRange[1] = gRefLen;
+        AdaptiveRefPlotData.axisRange[2] = 0;
+        AdaptiveRefPlotData.axisRange[3] = 3.5;
 
         for (int i = 0; i<m_numOfInterval ; i++ )
         {
-            plotData.Xvalues[i] = i + 1;
-            plotData.Yvalues1[i] = m_refSpeedShort[i];
+            AdaptiveRefPlotData.Xvalues[i] = m_intervalMidIndexes[i];
+            AdaptiveRefPlotData.Yvalues1[i] = m_refSpeedShort[i];
+        }
+        for(int i = 0; i < gRefLen; i++)
+        {
+            AdaptiveRefPlotData.Xvalues2[i] = i;
         }
 
     }
+    if (AdaptiveTimePlotData.makePlot)
+    {
+        AdaptiveTimePlotData.Xvalues.resize(0);
+        AdaptiveTimePlotData.Xvalues.resize(m_numOfInterval);
+        AdaptiveTimePlotData.Xvalues2.resize(0);
+        AdaptiveTimePlotData.Xvalues2.resize(gRefLen);
+        AdaptiveTimePlotData.Yvalues1.resize(0);
+        AdaptiveTimePlotData.Yvalues1.resize(m_numOfInterval);
+        AdaptiveTimePlotData.Yvalues2.resize(0);
+        AdaptiveTimePlotData.Yvalues2.resize(m_numOfInterval);
+
+        AdaptiveTimePlotData.axisRange.resize(4);
+        AdaptiveTimePlotData.axisRange[0] = 0;
+        AdaptiveTimePlotData.axisRange[1] = m_numOfInterval;
+        AdaptiveTimePlotData.axisRange[2] = 0;
+        AdaptiveTimePlotData.axisRange[3] = 1.5;
+
+        for (int i = 0; i<m_numOfInterval ; i++ )
+        {
+            AdaptiveTimePlotData.Xvalues[i] = i + 1;
+        }
+
+    }
+    LeaveCriticalSection(&csPlotData);
 
 
 
@@ -147,6 +190,14 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     m_refIndCircle = findIntersection(state, m_startInd);
     findClosestReferencePoint(state);  //updates m_refIndClosest and m_dist_lateral
 
+    EnterCriticalSection(&csPlotData);
+    if (AdaptiveRefPlotData.makePlot)
+    {
+        AdaptiveRefPlotData.Yvalues4[m_refIndClosest] = state[2];
+        AdaptiveRefPlotData.newData2plot4 = true;
+    }
+    LeaveCriticalSection(&csPlotData);
+
     //prepare reference speed
     if (adaptiveGain)
         m_refSpeed = calcRefSpeed(state, m_refIndClosest, m_gain, m_offset);
@@ -172,82 +223,48 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     if (section)
     {
         //update speed ref value in section. Number of sections given by: m_numOfInterval
-        m_IndexSection = findClosestSection(state);
-        if ( newSectionEntered(state,m_IndexSection) )
+        // m_refIndClosest - index to closest ref point
+        m_IndexSection = findClosestSection(m_refIndClosest);
+        if (newSectionEntered(m_IndexSection))
         {
             updateSectionTimers(m_IndexSection); //if Indexsection == 0, this function calls updateSpeedReference
             //updateSpeedReference(m_IndexSection);
         }
+        else if(m_IndexSection == 0 && visitedAllSections())
+        {
+            newLapStarted();
+        }
     }
 }
 
-
-int PIDadaptiveGain::findClosestSection(std::vector<float> &state)
+bool PIDadaptiveGain::visitedAllSections()
 {
+    bool r = true;
 
-    float carX, carY;
-    float dist1,dist2, diffX, diffY;
-    int j, index;
-
-    carX = state[0]; carY = state[1];
-    dist1 = 1000;  // A big number
-
-    //sweep all points on update path, find shortest distance and correspoding index
-    for (int i = 0; i < m_numOfInterval ; i++)
+    for (int i = 0; i < m_numOfInterval; i++)
     {
-        j = m_intervalStartIndexes[i];
-        diffX = gRef[2 * j] - carX;
-        diffY = gRef[2 * j + 1] - carY;
-        dist2 = diffX*diffX + diffY*diffY;
-        if (dist2<dist1)    //if new distance is shorter save distance and corresponding index.
-        {
-            dist1 = dist2;
-            index = i;
-        }
-    } // index is now refering to index in m_intervalStartIndexes vector correspodning to the closest start of section
-    // equvialent to the section that has its start closest to the car
-    //qDebug() << "findClosestSection, index:  " << index ;
-    return index;
+        r &= m_sectionVisited[i];
+    }
+    return r;
 }
 
-bool PIDadaptiveGain::newSectionEntered(std::vector<float> &state, int IndexCurrent)
+void PIDadaptiveGain::newLapStarted()
 {
-    if (!m_sectionVisited[IndexCurrent])
+    for (int i = 1; i < m_numOfInterval; i++)
     {
-        if ( m_IndexSectionOld == IndexCurrent )
-        {
-            return false;
-        }
-        else
-        {
-            m_IndexSectionOld = IndexCurrent;
-            return true;
-            m_sectionVisited[IndexCurrent] = true;
-        }
-    } else
-        return false;
-}
+        m_sectionVisited[i] = false;
+    }
 
-void PIDadaptiveGain::updateSectionTimers(int IndexSection)
-{
-    qDebug() << "updateSectionTimers( " << IndexSection << " )";
     if ( m_firstLapDone )
     {
-        if ( IndexSection == 0)
-        {
             m_timerTimes[m_numOfInterval-1] = timerSection.elapsed()/1000.0;
             timerSection.restart();     //restart timer on every new lap
             updateSpeedReference();
-        }
-        else
-        {
-            m_timerTimes[IndexSection-1] = timerSection.elapsed()/1000.0;
-        }
+
     }
     else if ( m_firstLapStarted )
     {
-        if ( IndexSection == 0)
-        {
+
             m_timerTimes[m_numOfInterval-1] = timerSection.elapsed()/1000.0;
             timerSection.restart();     //restart timer on every new lap
             m_firstLapDone = true;
@@ -260,18 +277,43 @@ void PIDadaptiveGain::updateSectionTimers(int IndexSection)
                 m_timesBest[i] = m_timerTimes[i] - m_timerTimes[i-1];
             }
             updateSpeedReference();
-        }
-        else
-        {
-            m_timerTimes[IndexSection-1] = timerSection.elapsed()/1000.0;
-        }
     }
-    else if ( IndexSection == 0 )
+    else
     {
         timerSection.restart();
         m_firstLapStarted = true;
-        qDebug() << "m_firstLapStarted = true;";
     }
+
+}
+
+int PIDadaptiveGain::findClosestSection(int index)
+{
+    for (int i = 0; i < m_numOfInterval - 1; i++)
+    {
+        if ((index >= m_intervalStartIndexes[i]) && (index < m_intervalMidIndexes[i+1]))
+            return i;
+    }
+    if (index>=m_intervalMidIndexes[m_numOfInterval-1])
+        return m_numOfInterval-1;
+    return -1;
+}
+
+bool PIDadaptiveGain::newSectionEntered(int IndexCurrent)
+{
+    if (!m_sectionVisited[IndexCurrent])
+    {
+        m_sectionVisited[IndexCurrent] = true;
+        return true;
+    }
+    else
+        return false;
+}
+
+void PIDadaptiveGain::updateSectionTimers(int IndexSection)
+{
+    if (m_firstLapStarted)
+        m_timerTimes[IndexSection-1] = timerSection.elapsed()/1000.0;
+
 }
 
 void PIDadaptiveGain::updateSpeedReference()
@@ -279,46 +321,102 @@ void PIDadaptiveGain::updateSpeedReference()
     //qDebug() << "updateSpeedReference";
     // make m_times from m_timerTimes
     m_times[0] = m_timerTimes[0];
-    for (int i = 1; i<m_numOfInterval; i++)
+    for (int i = 1; i < m_numOfInterval; i++)
     {
         m_times[i] = m_timerTimes[i] - m_timerTimes[i-1];
         m_sectionVisited[i] = false;
     }
 
     // update m_timesBest and m_refSpeedShortBest;
-    for (int i = 0; i<m_numOfInterval; i++)
+    for (int i = 0; i < m_numOfInterval; i++)
     {
-        if (( m_times[i]>0) && (m_times[i]<m_timesBest[i] )) //time för section must be postive. Else something has gone wrong...
+        if (( m_times[i] > 0) && (m_times[i] < m_timesBest[i] )) //time för section must be postive. Else something has gone wrong...
         {
             m_timesBest[i] = m_times[i];
             m_refSpeedShortBest[i] = m_refSpeedShort[i];
+            m_noIncreaseCounter[i] = 0;
+            m_noDecreaseCounter[i] = 0;
         }
+        float K = 0.17;
+        float K2 = 0.1;
+
         // make new m_refSpeedShort
-        m_refSpeedShort[i] = m_refSpeedShortBest[i] + 0.4*(rand()/((float)RAND_MAX)- 0.2);
-        if (m_refSpeedShort[i] < 0.1)   //dont allow negativ and close to zero speed...
-            m_refSpeedShort[i] = 0.2f;
+        if (rand()/(float)RAND_MAX < .7)
+        {
+
+            newIncrease = K2/(0.15*m_noIncreaseCounter[i]+1) * (rand()/((float)RAND_MAX) + .3);
+            m_noIncreaseCounter[i]++;
+        }
+        else
+        {
+            newIncrease = -K2/(0.15*m_noIncreaseCounter[i]+1) * (rand()/((float)RAND_MAX) + .3);
+            m_noDecreaseCounter[i]++;
+        }
+        // Update current section with current and previous section data
+        m_refSpeedShort[i] = m_refSpeedShortBest[i] + newIncrease;
+        m_refSpeedShort[i] += K * oldIncrease;
+
+        // Update previous section with new data
+        if(i == 0)
+        {
+            m_refSpeedShort[m_numOfInterval - 1] = m_refSpeedShort[m_numOfInterval - 1] + K * newIncrease;
+            if (m_refSpeedShort[m_numOfInterval - 1] < 0.3)
+                m_refSpeedShort[m_numOfInterval - 1] = 0.3f;
+        }
+        else
+        {
+            m_refSpeedShort[i - 1] = m_refSpeedShort[i - 1] + K * newIncrease;
+            if (m_refSpeedShort[i - 1] < 0.3)
+                m_refSpeedShort[i - 1] = 0.3f;
+        }
+        oldIncrease = newIncrease;
+
+        if (m_refSpeedShort[i] < 0.3)   //dont allow negativ and close to zero speed...
+            m_refSpeedShort[i] = 0.3f;
     }
 
     // update plotdata with current refSpeedShort
-    if (plotData.makeRefplot)
+    EnterCriticalSection(&csPlotData);
+
+    if (AdaptiveRefPlotData.makePlot)
     {
-        for (int i = 0; i<m_numOfInterval ; i++ )
+        AdaptiveRefPlotData.newData2plot2 = true;
+        AdaptiveRefPlotData.newData2plot3 = true;
+        AdaptiveRefPlotData.newData2plot4 = true;
+        for (int i = 0; i < m_numOfInterval ; i++ )
         {
-            plotData.Yvalues2[i] = m_refSpeedShort[i];
+            AdaptiveRefPlotData.Yvalues2[i] = m_refSpeedShort[i];
+            AdaptiveRefPlotData.Yvalues3[i] = m_refSpeedShortBest[i];
+        }
+        for (int i = 0; i < gRefLen; i ++)
+        {
+           // AdaptiveRefPlotData.Yvalues4[i] = 0;
         }
     }
+    if (AdaptiveTimePlotData.makePlot)
+    {
+        AdaptiveTimePlotData.newData2plot1 = true;
+        AdaptiveTimePlotData.newData2plot2 = true;
+        for (int i = 0; i < m_numOfInterval ; i++ )
+        {
+            AdaptiveTimePlotData.Yvalues1[i] = m_timesBest[i];
+            AdaptiveTimePlotData.Yvalues2[i] = m_times[i];
+        }
+    }
+    LeaveCriticalSection(&csPlotData);
 
 
     // construct m_vRef from m_refSpeedShort with cubic spline - not a knot BC
     double *x,*f,*b,*c,*d;
     int n;
-    n = m_numOfInterval;
+    n = m_numOfInterval+2;
     x = new double [n];
     f = new double [n];
     b = new double [n];
     c = new double [n];
     d = new double [n];
 
+    x[0] =(int) m_intervalMidIndexes[i] - m_intervalLength;
     for (int i = 0; i<m_numOfInterval;i++)
     {
         x[i] = (double) m_intervalMidIndexes[i];
@@ -329,6 +427,7 @@ void PIDadaptiveGain::updateSpeedReference()
     for (int i = 0; i<gRefLen; i++)
     {
         m_vRef[i] = spline_eval(n, x, f, b, c, d, (double)i);
+        qDebug() << m_vRef[i];
     }
     for (int i = 0; i<m_numOfInterval; i++)
     {
@@ -348,6 +447,8 @@ void PIDadaptiveGain::calcTurnSignal(std::vector<float> &state, float &turn)
 float PIDadaptiveGain::calcGasSignal(std::vector<float> &state, float refSpeed){
 
     float error = (refSpeed - state[2]);
+
+    //qDebug() << "refSpeed: " << refSpeed;
 
     start = std::chrono::system_clock::now();
     std::chrono::duration<double> T = start - end;
@@ -577,11 +678,11 @@ float PIDadaptiveGain::calcRefSpeed(std::vector<float> &state, int refInd, doubl
     refSpeed = m_vRef[refInd]*gain + offset;
     //qDebug() << refSpeed;
     //refSpeed = m_vRef[refInd];
-    if(refSpeed > state[2] + 0.5)
+    /*if(refSpeed > state[2] + 0.5)
     {
         refSpeed = state[2] + 0.5;
         //qDebug() << "limited";
-    }
+    }*/
     // Return refSpeed.
     return refSpeed;
 }

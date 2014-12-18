@@ -25,8 +25,10 @@ private:
 
 	// At what percentage the linearization will change.
 	float64 m_linearizationBreak; 
-	// Highest voltage for gas.
-	float64 m_voltGasThreshold; 
+    // Highest voltage for gas -> lowest gas
+    float64 m_voltGasMin;
+    // Lowest voltage for gas -> highest gas
+    float64 m_voltGasMax;
     // Slope of the gas curve
     float64 m_voltGasSlope;
     // Slope of the reverse curve

@@ -21,6 +21,7 @@ HANDLE hDrawThreadEvent;
 HANDLE hControllerThreadEvent1, hControllerThreadEvent_signalsWritten, hControllerThreadEvent_signalsRead;
 std::vector<float> gRef;
 std::vector<float> vRef;
+std::vector<float> aRef;
 int gRefLen;
 
 int main(int argc, char *argv[])

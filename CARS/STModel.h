@@ -50,7 +50,7 @@ private:
     // At what percentage the linearization will change.
     float64 m_linearizationBreak;
     // Highest voltage for gas.
-    float64 m_voltGasThreshold;
+    float64 m_voltGasMin;
     // When linearization algorithm switch.
     float64 m_voltGasIntervall;
     // Lowest voltage to reverse the car

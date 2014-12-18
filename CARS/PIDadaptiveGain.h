@@ -39,6 +39,7 @@ private:
     bool m_onPath;
     float m_oldRefInd;
     std::vector<float> m_vRef;
+    std::vector<float> m_aRef;
     double m_gain, m_bGain, m_gainBest;
     double m_offset;
     std::vector<float> m_LapError;
@@ -49,9 +50,13 @@ private:
     int m_IndexSection;
     int m_IndexSectionOld;
 
+    float oldIncrease = 0;
+    float newIncrease = 0;
 
     //for section
     float m_numOfInterval;
+    std::vector<int> m_noIncreaseCounter;
+    std::vector<int> m_noDecreaseCounter;
     float m_intervalLength;
     int m_length2mid;
     std::vector<int> m_intervalStartIndexes;
@@ -105,9 +110,13 @@ private:
     //
     bool lapDone(std::vector<float> &state);
     //
-    int findClosestSection(std::vector<float> &state);
+    int findClosestSection(int index);
     //
-    bool newSectionEntered(std::vector<float> &state, int IndexCurrent);
+    bool newSectionEntered(int IndexCurrent);
+
+    bool visitedAllSections();
+
+    void newLapStarted();
 
 };
 #endif // PIDADAPTIVEGAIN_H

@@ -15,6 +15,7 @@ private:
     float Kp_brake;
     float Ki;
     float Kd;
+    float Ka;
     std::vector<float> m_turnPID;
 
     float m_prevI = 0;
@@ -23,6 +24,7 @@ private:
     float m_prevAngError;
     float m_prevSpeed;
     float m_refSpeed;
+    float m_refAngle;
     float m_refGas;
 
     std::chrono::time_point<std::chrono::system_clock> start, end, startTurn, endTurn;

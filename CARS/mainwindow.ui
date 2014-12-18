@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>948</width>
+    <width>1035</width>
     <height>404</height>
    </rect>
   </property>
@@ -63,6 +63,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="plotSettingsButton">
+        <property name="text">
+         <string>Plot Settings</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="drawSettingsButton">
         <property name="text">
          <string>Draw Settings</string>
@@ -94,6 +101,13 @@
        <widget class="QPushButton" name="calibrateCameraButton">
         <property name="text">
          <string>Calibrate Camera</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line_4">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
         </property>
        </widget>
       </item>
@@ -150,7 +164,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>948</width>
+     <width>1035</width>
      <height>21</height>
     </rect>
    </property>

@@ -187,8 +187,12 @@ struct CarData
 //Struct to pass plot data from controller to mainWindow
 struct PlotData
 {
-    bool makeRefplot = false;
-    QVector<double> Xvalues,Yvalues1,Yvalues2,axisRange;
+    bool makePlot = false;
+    bool newData2plot1 = false;
+    bool newData2plot2 = false;
+    bool newData2plot3 = false;
+    bool newData2plot4 = false;
+    QVector<double> Xvalues,Xvalues2,Yvalues1,Yvalues2,Yvalues3,Yvalues4,axisRange;
 
 };
 
@@ -229,7 +233,7 @@ struct ControllerThreadData
 // ---------- External declarations ----------
 extern struct DrawThreadData drawThreadData;
 extern struct ControllerThreadData controllerThreadData;
-extern struct PlotData plotData;
+extern struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData;
 //extern struct RaceSettings raceSettings;
 // Critical section that is used during communication between main thread and draw thread.
 extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData, csPlotData;
@@ -238,6 +242,7 @@ extern HANDLE hControllerThreadEvent1, hControllerThreadEvent_signalsWritten, hC
 // Reference signals. Should be placed in regulatorThreadData?
 extern std::vector<float> gRef;
 extern std::vector<float> vRef;
+extern std::vector<float> aRef;
 // Length of reference signal (number of coordinate pairs).
 extern int gRefLen;
 

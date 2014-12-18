@@ -3,6 +3,7 @@
 #include "ui_mainwindow.h"
 #include "referencedialog.h"
 #include "drawsettingsdialog.h"
+#include "plotsettingsdialog.h"
 #include "racedialog.h"
 
 #include "functions.h"
@@ -17,7 +18,7 @@
 #include <QLabel>
 #include <QDebug>
 
-struct PlotData plotData;
+struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -26,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     // Fixates the size of the MainWindow.
-    setFixedSize(900,800);
+    setFixedSize(980,800);
 
     // If Qt should be used to draw images, instead of OpenCV:
     //QDesktopWidget *desktop = QApplication::desktop();
@@ -111,13 +112,28 @@ void MainWindow::startThreads(void)
     loadReference();
     // Start threads.
 
-    // init the plot window
-    adaptiveRefWindow.init(2,"<h1>title</h1>","x","y");
-    adaptiveRefWindow.show();
-    plotData.makeRefplot = true;
+    // init the plot windows
+    if(m_settings.value("plotSettings/adGainReferencePlot").toBool())
+    {
+        AdaptiveRefPlotData.makePlot = true;
+        adaptiveRefWindow.init(4,"<h1>Speedreference in each section</h1>","Section","Speed reference [m/s]");
+        adaptiveRefWindow.setLegend(0,"Original speed reference");
+        adaptiveRefWindow.setLegend(1,"Best speed reference");
+        adaptiveRefWindow.setLegend(2,"Current speed reference");
+        adaptiveRefWindow.setLegend(3,"Current speed");
+        adaptiveRefWindow.show();
 
-    //adaptiveTimeWindow.init(2);
-    //adaptiveTimeWindow.show();
+
+    }
+    if(m_settings.value("plotSettings/adSectionTimePlot").toBool())
+    {
+        AdaptiveTimePlotData.makePlot = true;
+        adaptiveTimeWindow.init(2,"<h1>Time spent in each section</h1>","Section","Time [m/s]");
+        adaptiveTimeWindow.setLegend(0,"Best time");
+        adaptiveTimeWindow.setLegend(1,"Last time");
+        adaptiveTimeWindow.show();
+
+    }
 
     m_processingThread->start();
     m_controllerThread->start();
@@ -140,6 +156,7 @@ void MainWindow::startThreads(void)
     ui->raceButton->setEnabled(false);
     ui->startRaceButton->setEnabled(false);
     ui->initRace->setEnabled(false);
+    ui->plotSettingsButton->setEnabled(false);
 
     // Start timer used to draw images.
     // Tell the GUI thread to redraw images as fast as possible by passing the value 0.
@@ -166,9 +183,9 @@ void MainWindow::initializeRace()
     raceSettings.carID.clear();
     while(m_settings.contains(QString("race_settings/id%1/race").arg(j)))
     {
-            m_settings.beginGroup(QString("race_settings/id%1").arg(j));
-            raceSettings.carID.push_back(m_settings.value("race").toInt());
-            m_settings.endGroup();
+        m_settings.beginGroup(QString("race_settings/id%1").arg(j));
+        raceSettings.carID.push_back(m_settings.value("race").toInt());
+        m_settings.endGroup();
         j++;
     }
 
@@ -344,6 +361,7 @@ void MainWindow::stopThreads(void)
     ui->raceButton->setEnabled(true);
     ui->initRace->setEnabled(true);
     ui->startRaceButton->setEnabled(true);
+    ui->plotSettingsButton->setEnabled(true);
 
     raceSettings.doRace = false;
     raceSettings.raceDone = false;
@@ -461,34 +479,39 @@ void MainWindow::updateFrame(void)
     LeaveCriticalSection(&csDrawThreadData);
 
 
-    QVector<double> range(4),x(3),y(3),y2(3);
-    range[0] = 0;
-    range[1] = 40;
-    range[2] = 0;
-    range[3] = 10;
 
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 3;
-
-    y[0] = 2;
-    y[1] = 5;
-    y[2] = 6;
-    y2[0] = 8;
-    y2[1] = 8;
-    y2[2] = m_carData[0].lapData.lapTime;
-
-EnterCriticalSection(&csPlotData);
-    if (enbool)
+    EnterCriticalSection(&csPlotData);
+    if (AdaptiveRefPlotData.newData2plot1)
     {
-    adaptiveRefWindow.updatePlot(0,range, plotData.Xvalues, plotData.Yvalues1);
-    enbool = false;
+        adaptiveRefWindow.updatePlot(0,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues, AdaptiveRefPlotData.Yvalues1);
+        AdaptiveRefPlotData.newData2plot1 = false;
     }
-    adaptiveRefWindow.updatePlot(1,range, plotData.Xvalues, plotData.Yvalues2);
-    //re[2] = 10;
-    //adaptiveTimeWindow.updatePlot(4, se, re);
-
-LeaveCriticalSection(&csPlotData);
+    if (AdaptiveRefPlotData.newData2plot2)
+    {
+        adaptiveRefWindow.updatePlot(1,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues, AdaptiveRefPlotData.Yvalues2);
+        AdaptiveRefPlotData.newData2plot2 = false;
+    }
+    if (AdaptiveRefPlotData.newData2plot3)
+    {
+        adaptiveRefWindow.updatePlot(2,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues, AdaptiveRefPlotData.Yvalues3);
+        AdaptiveRefPlotData.newData2plot3 = false;
+    }
+    if (AdaptiveRefPlotData.newData2plot4)
+    {
+        adaptiveRefWindow.updatePlot(3,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues2, AdaptiveRefPlotData.Yvalues4);
+        AdaptiveRefPlotData.newData2plot4 = false;
+    }
+    if (AdaptiveTimePlotData.newData2plot1)
+    {
+        adaptiveTimeWindow.updatePlot(0,AdaptiveTimePlotData.axisRange,AdaptiveTimePlotData.Xvalues,AdaptiveTimePlotData.Yvalues1);
+        AdaptiveTimePlotData.newData2plot1 = false;
+    }
+    if (AdaptiveTimePlotData.newData2plot2)
+    {
+        adaptiveTimeWindow.updatePlot(1,AdaptiveTimePlotData.axisRange,AdaptiveTimePlotData.Xvalues,AdaptiveTimePlotData.Yvalues2);
+        AdaptiveTimePlotData.newData2plot2 = false;
+    }
+    LeaveCriticalSection(&csPlotData);
 
 
     // Only draw the winner of the race if the race is done
@@ -543,8 +566,8 @@ LeaveCriticalSection(&csPlotData);
                 angle = m_carData[j].state[3]*180.0/M_PI;
 
                 cv::RotatedRect rRect = cv::RotatedRect(cv::Point2f(positionPix[0], positionPix[1]),
-                    cv::Size2f(55, 27
-                    ), angle);
+                        cv::Size2f(55, 27
+                                   ), angle);
                 cv::Point2f vertices2f[4];
                 cv::Point vertices[4];
                 rRect.points(vertices2f);
@@ -733,24 +756,27 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     switch (ret)
     {
-        case (QMessageBox::Yes):
-            stopThreads();
-            // Close Qt labels without parents.
-            //imageLabelProjector->close();
-            //imageLabelGui->close();
-            cv::destroyAllWindows();
-            event->accept();
-            break;
-        default:
-            event->ignore();
+    case (QMessageBox::Yes):
+        stopThreads();
+
+        adaptiveRefWindow.close();
+        adaptiveTimeWindow.close();
+        // Close Qt labels without parents.
+        //imageLabelProjector->close();
+        //imageLabelGui->close();
+        cv::destroyAllWindows();
+        event->accept();
+        break;
+    default:
+        event->ignore();
     }
 }
 
 void MainWindow::openReferenceDialog(void)
 {
-   ReferenceDialog refDialog;
-   refDialog.setModal(true);
-   refDialog.exec();
+    ReferenceDialog refDialog;
+    refDialog.setModal(true);
+    refDialog.exec();
 }
 
 void MainWindow::on_carSettingsButton_clicked()
@@ -763,6 +789,13 @@ void MainWindow::on_carSettingsButton_clicked()
 void MainWindow::on_drawSettingsButton_clicked()
 {
     DrawSettingsDialog dialog;
+    dialog.setModal(true);
+    dialog.exec();
+}
+
+void MainWindow::on_plotSettingsButton_clicked()
+{
+    plotsettingsdialog dialog;
     dialog.setModal(true);
     dialog.exec();
 }
@@ -793,11 +826,12 @@ void MainWindow::loadReference()
     // Delete old reference vectors.
     gRef.resize(0);
     vRef.resize(0);
+    aRef.resize(0);
     // Allocate memory for vector with reference curves.
     gRef.resize(gRefLen * 2);
     vRef.resize(gRefLen);
+    aRef.resize(gRefLen);
     // Get values from reference curve and convert from pixels to meters.
-    qDebug("hej");
     if(m_settings.value("reference/reverse").toInt() == 0 ){
         for (int i = 0; i < gRefLen; i++)
         {
@@ -809,6 +843,7 @@ void MainWindow::loadReference()
             //gRef[i * 2 + 1] = gRef[i * 2 + 1];
             // v_i - speed reference at point (x_i,y_i)
             file >> vRef[i];  //speed must be stored in global coordinates in reference.txt
+            // file >> aRef[i]; // angle must be stored in reference.txt
 
             numPoints++;
         }
@@ -825,6 +860,7 @@ void MainWindow::loadReference()
             //gRef[i * 2 + 1] = gRef[i * 2 + 1];
             // v_i - speed reference at point (x_i,y_i)
             file >> vRef[i - 1];  //speed must be stored in global coordinates in reference.txt
+            //file >> aRef[i]; // angle must be stored in reference.txt
 
             numPoints++;
         }

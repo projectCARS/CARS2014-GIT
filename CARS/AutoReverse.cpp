@@ -40,8 +40,6 @@ void AutoReverse::calcTurnSignal(std::vector<float> &state, float &turn)
 
 float AutoReverse::backingSequence(std::vector<float> &state)
 {
-    qDebug("starting back sequence");
-
 	float signal = 0;
 	m_isBacking = true;
 	

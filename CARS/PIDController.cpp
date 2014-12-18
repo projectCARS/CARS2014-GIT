@@ -19,14 +19,15 @@ PIDController::PIDController(int ID)
             #define minSpeed 0.5f
             #define maxSpeed 1.6f
 
-            m_turnPID[0] = 1.5f;// 1.5f;    //P
+            m_turnPID[0] = 2.5f;// 1.5f;    //P
             m_turnPID[1] = 0.3f;            //I
             m_turnPID[2] = 0.0f;            //D
 
-            Kp_forward = 0.26f;
-            Kp_brake = 0.8f;
+            Kp_forward = 0.25f;
+            Kp_brake = 3.9f;
             Ki = 0.05f;
             Kd = 0.001f;
+            Ka = 0.0f;
 #endif
 
         #ifdef fullForce
@@ -53,7 +54,7 @@ PIDController::PIDController(int ID)
             m_turnPID[2] = 0;		//D
 
             Kp_forward = 0.16f;
-            Kp_brake = 0.8f;
+            Kp_brake = 0.56f;//0.8f;
             Ki = 0.01f;
             Kd = 0.008f;
             break;
@@ -103,7 +104,9 @@ void PIDController::calcSignals(std::vector<float> &state, float &gas, float &tu
 
 float PIDController::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
 
+    //m_refAngle = aRef[m_refInd];
     float error = (refSpeed - state[2]);
+    //float angleError = abs(m_refAngle - state[3]);
 
     start = std::chrono::system_clock::now();
     std::chrono::duration<double> T = start - end;
@@ -125,7 +128,8 @@ float PIDController::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
 
     float signal = KP * error +
                    Ki * Ierror +
-                  Kd * Derror;
+                   Kd * Derror;// +
+                   //Ka * angleError;
 
     m_prevAngError = error;
     m_prevI = Ierror;
@@ -261,7 +265,7 @@ float PIDController::calcTurnSignal(std::vector<float> &state, int refInd)
 	}
 	else
     {
-        float KturnVel = 0.1;
+        float KturnVel = 0.20;
         float I = m_turnPID[1]*(m_prevIturn + diffAngle*dt);
         float P = m_turnPID[0]*diffAngle / M_PI_2 - KturnVel*state[4];
         turnSignal = P + I;
