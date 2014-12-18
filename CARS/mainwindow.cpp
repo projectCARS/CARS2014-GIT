@@ -113,10 +113,20 @@ void MainWindow::startThreads(void)
     // Start threads.
 
     // init the plot windows
+    EnterCriticalSection(&csPlotData);
     if(m_settings.value("plotSettings/adGainReferencePlot").toBool())
     {
         AdaptiveRefPlotData.makePlot = true;
-        adaptiveRefWindow.init(4,"<h1>Speedreference in each section</h1>","Section","Speed reference [m/s]");
+        AdaptiveRefPlotData.numOfGraphs = 4;
+        AdaptiveRefPlotData.newDataReady.resize(0);
+        AdaptiveRefPlotData.newDataReady.resize(AdaptiveRefPlotData.numOfGraphs);
+        AdaptiveRefPlotData.X.resize(0);
+        AdaptiveRefPlotData.X.resize(AdaptiveRefPlotData.numOfGraphs);
+        AdaptiveRefPlotData.Y.resize(0);
+        AdaptiveRefPlotData.Y.resize(AdaptiveRefPlotData.numOfGraphs);
+
+
+        adaptiveRefWindow.init(AdaptiveRefPlotData.numOfGraphs,"<h1>Speedreference in each section</h1>","Section","Speed reference [m/s]");
         adaptiveRefWindow.setLegend(0,"Original speed reference");
         adaptiveRefWindow.setLegend(1,"Best speed reference");
         adaptiveRefWindow.setLegend(2,"Current speed reference");
@@ -128,12 +138,14 @@ void MainWindow::startThreads(void)
     if(m_settings.value("plotSettings/adSectionTimePlot").toBool())
     {
         AdaptiveTimePlotData.makePlot = true;
-        adaptiveTimeWindow.init(2,"<h1>Time spent in each section</h1>","Section","Time [m/s]");
-        adaptiveTimeWindow.setLegend(0,"Best time");
-        adaptiveTimeWindow.setLegend(1,"Last time");
+        AdaptiveTimePlotData.numOfGraphs = 2;
+        adaptiveTimeWindow.init(AdaptiveTimePlotData.numOfGraphs ,"<h1>Time spent in each section</h1>","Section","Time [m/s]");
+        adaptiveTimeWindow.setLegend(0,"Best time for section in all laps");
+        adaptiveTimeWindow.setLegend(1,"Time for section on last lap");
         adaptiveTimeWindow.show();
 
     }
+    LeaveCriticalSection(&csPlotData);
 
     m_processingThread->start();
     m_controllerThread->start();
@@ -481,35 +493,25 @@ void MainWindow::updateFrame(void)
 
 
     EnterCriticalSection(&csPlotData);
-    if (AdaptiveRefPlotData.newData2plot1)
+    if (AdaptiveRefPlotData.makePlot)
     {
-        adaptiveRefWindow.updatePlot(0,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues, AdaptiveRefPlotData.Yvalues1);
-        AdaptiveRefPlotData.newData2plot1 = false;
+        for (int i = 0; i < AdaptiveRefPlotData.numOfGraphs ; i++)
+        {
+            if (AdaptiveRefPlotData.newDataReady[i])
+            {
+              adaptiveRefWindow.updatePlot(i,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.X[i], AdaptiveRefPlotData.Y[i]);
+            }
+        }
     }
-    if (AdaptiveRefPlotData.newData2plot2)
+    if (AdaptiveTimePlotData.makePlot)
     {
-        adaptiveRefWindow.updatePlot(1,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues, AdaptiveRefPlotData.Yvalues2);
-        AdaptiveRefPlotData.newData2plot2 = false;
-    }
-    if (AdaptiveRefPlotData.newData2plot3)
-    {
-        adaptiveRefWindow.updatePlot(2,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues, AdaptiveRefPlotData.Yvalues3);
-        AdaptiveRefPlotData.newData2plot3 = false;
-    }
-    if (AdaptiveRefPlotData.newData2plot4)
-    {
-        adaptiveRefWindow.updatePlot(3,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.Xvalues2, AdaptiveRefPlotData.Yvalues4);
-        AdaptiveRefPlotData.newData2plot4 = false;
-    }
-    if (AdaptiveTimePlotData.newData2plot1)
-    {
-        adaptiveTimeWindow.updatePlot(0,AdaptiveTimePlotData.axisRange,AdaptiveTimePlotData.Xvalues,AdaptiveTimePlotData.Yvalues1);
-        AdaptiveTimePlotData.newData2plot1 = false;
-    }
-    if (AdaptiveTimePlotData.newData2plot2)
-    {
-        adaptiveTimeWindow.updatePlot(1,AdaptiveTimePlotData.axisRange,AdaptiveTimePlotData.Xvalues,AdaptiveTimePlotData.Yvalues2);
-        AdaptiveTimePlotData.newData2plot2 = false;
+        for (int i = 0; i < AdaptiveTimePlotData.numOfGraphs ; i++)
+        {
+            if (AdaptiveTimePlotData.newDataReady[i])
+            {
+              adaptiveTimeWindow.updatePlot(i,AdaptiveTimePlotData.axisRange, AdaptiveTimePlotData.X[i], AdaptiveTimePlotData.Y[i]);
+            }
+        }
     }
     LeaveCriticalSection(&csPlotData);
 

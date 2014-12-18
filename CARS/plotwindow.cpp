@@ -17,6 +17,9 @@ plotWindow::~plotWindow()
 
 void plotWindow::init(int numGraphs, QString title, QString xlabel, QString ylabel)
 {
+
+
+
     ui->plotArea->clearGraphs();
     ui->plotArea->xAxis->setLabel(xlabel);
     ui->plotArea->yAxis->setLabel(ylabel);
