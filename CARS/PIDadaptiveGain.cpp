@@ -103,29 +103,27 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
             AdaptiveRefPlotData.X[3][i] = i;
         }
     }
-    /*if (AdaptiveTimePlotData.makePlot)
+    if (AdaptiveTimePlotData.makePlot)
     {
-        AdaptiveTimePlotData.Xvalues.resize(0);
-        AdaptiveTimePlotData.Xvalues.resize(m_numOfInterval);
-        AdaptiveTimePlotData.Xvalues2.resize(0);
-        AdaptiveTimePlotData.Xvalues2.resize(gRefLen);
-        AdaptiveTimePlotData.Yvalues1.resize(0);
-        AdaptiveTimePlotData.Yvalues1.resize(m_numOfInterval);
-        AdaptiveTimePlotData.Yvalues2.resize(0);
-        AdaptiveTimePlotData.Yvalues2.resize(m_numOfInterval);
-
+        for (int i = 0; i < AdaptiveRefPlotData.numOfGraphs; i++)
+        {
+            AdaptiveRefPlotData.X[i].resize(0);
+            AdaptiveRefPlotData.X[i].resize((int)m_numOfInterval);
+            AdaptiveRefPlotData.Y[i].resize(0);
+            AdaptiveRefPlotData.Y[i].resize((int)m_numOfInterval);
+        }
+        for (int i = 0; i<m_numOfInterval ; i++ )
+        {
+            AdaptiveTimePlotData.X[0][i] = i;
+            AdaptiveTimePlotData.X[1][i] = i;
+        }
         AdaptiveTimePlotData.axisRange.resize(4);
         AdaptiveTimePlotData.axisRange[0] = 0;
         AdaptiveTimePlotData.axisRange[1] = m_numOfInterval;
         AdaptiveTimePlotData.axisRange[2] = 0;
         AdaptiveTimePlotData.axisRange[3] = 1.5;
 
-        for (int i = 0; i<m_numOfInterval ; i++ )
-        {
-            AdaptiveTimePlotData.Xvalues[i] = i + 1;
-        }
-
-    }*/
+    }
     LeaveCriticalSection(&csPlotData);
 
 
@@ -388,50 +386,51 @@ void PIDadaptiveGain::updateSpeedReference()
             AdaptiveRefPlotData.Y[1][i] = m_refSpeedShort[i];
             AdaptiveRefPlotData.Y[2][i] = m_refSpeedShortBest[i];
         }
-        for (int i = 0; i < gRefLen; i ++)
-        {
-           // AdaptiveRefPlotData.Yvalues4[i] = 0;
-        }
     }
-    /*if (AdaptiveTimePlotData.makePlot)
+    if (AdaptiveTimePlotData.makePlot)
     {
-        AdaptiveTimePlotData.newData2plot1 = true;
-        AdaptiveTimePlotData.newData2plot2 = true;
         for (int i = 0; i < m_numOfInterval ; i++ )
         {
-            AdaptiveTimePlotData.Yvalues1[i] = m_timesBest[i];
-            AdaptiveTimePlotData.Yvalues2[i] = m_times[i];
+            AdaptiveTimePlotData.Y[0][i] = m_timesBest[i];
+            AdaptiveTimePlotData.Y[1][i] = m_times[i];
         }
-    }*/
+        AdaptiveTimePlotData.newDataReady[0] = true;
+        AdaptiveTimePlotData.newDataReady[1] = true;
+    }
     LeaveCriticalSection(&csPlotData);
 
 
     // construct m_vRef from m_refSpeedShort with cubic spline - not a knot BC
+    /*
+     *  to make the boundaries better fitted m_refSpeedShort is extended within both directions
+     *  with the value at the opposite end. This gives the result that the trend is in the begining and
+     *  end of m_vRef is compatible. But m_vRef is not contionus at the end points.
+     * */
+
     double *x,*f,*b,*c,*d;
     int n;
-    n = m_numOfInterval+2;
+    n = m_numOfInterval+2; // all vectors is 2 samples longer then the number of intervals.
     x = new double [n];
     f = new double [n];
     b = new double [n];
     c = new double [n];
     d = new double [n];
 
+
     x[0] = m_intervalMidIndexes[0] - m_intervalLength;
-    f[0] = m_refSpeedShort[m_numOfInterval-1];
+    f[0] = m_refSpeedShort[m_numOfInterval-1];          //first function value is equal to the last value in m_refSpeedShort
     for (int i = 0; i<m_numOfInterval; i++)
     {
         x[i+1] = (double) m_intervalMidIndexes[i];
         f[i+1] = m_refSpeedShort[i];
     }
     x[n-1] = m_intervalMidIndexes[m_numOfInterval-1] + m_intervalLength;
-    f[n-1] = m_refSpeedShort[0];
+    f[n-1] = m_refSpeedShort[0];                        //last function value is equal to the first value in m_refSpeedShort
 
-    cubic_nak(n, x, f, b, c, d);
+    cubic_nak(n, x, f, b, c, d);        //make spline coefficents.
     for (int i = 0; i<gRefLen; i++)
     {
-        m_vRef[i] = spline_eval(n, x, f, b, c, d, (double)i);
-        if (m_vRef[i]<0.3)
-        qDebug() << m_vRef[i];
+        m_vRef[i] = spline_eval(n, x, f, b, c, d, (double)i);       //eval cooefficents to make new reference
     }
     for (int i = 0; i<m_numOfInterval; i++)
     {

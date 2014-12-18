@@ -125,7 +125,6 @@ void MainWindow::startThreads(void)
         AdaptiveRefPlotData.Y.resize(0);
         AdaptiveRefPlotData.Y.resize(AdaptiveRefPlotData.numOfGraphs);
 
-
         adaptiveRefWindow.init(AdaptiveRefPlotData.numOfGraphs,"<h1>Speedreference in each section</h1>","Section","Speed reference [m/s]");
         adaptiveRefWindow.setLegend(0,"Original speed reference");
         adaptiveRefWindow.setLegend(1,"Best speed reference");
@@ -133,12 +132,18 @@ void MainWindow::startThreads(void)
         adaptiveRefWindow.setLegend(3,"Current speed");
         adaptiveRefWindow.show();
 
-
     }
     if(m_settings.value("plotSettings/adSectionTimePlot").toBool())
     {
         AdaptiveTimePlotData.makePlot = true;
         AdaptiveTimePlotData.numOfGraphs = 2;
+        AdaptiveTimePlotData.newDataReady.resize(0);
+        AdaptiveTimePlotData.newDataReady.resize(AdaptiveTimePlotData.numOfGraphs);
+        AdaptiveTimePlotData.X.resize(0);
+        AdaptiveTimePlotData.X.resize(AdaptiveTimePlotData.numOfGraphs);
+        AdaptiveTimePlotData.Y.resize(0);
+        AdaptiveTimePlotData.Y.resize(AdaptiveTimePlotData.numOfGraphs);
+
         adaptiveTimeWindow.init(AdaptiveTimePlotData.numOfGraphs ,"<h1>Time spent in each section</h1>","Section","Time [m/s]");
         adaptiveTimeWindow.setLegend(0,"Best time for section in all laps");
         adaptiveTimeWindow.setLegend(1,"Time for section on last lap");
