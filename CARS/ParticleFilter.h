@@ -71,7 +71,8 @@ private:
     bool m_newMeasurement;
 
     //Parameters for the ST model
-    float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kSteer, mSteer, kThrottle, mThrottle;
+    float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kTurn, mTurn, kThrottle, mThrottle, k_alphaF;
+    float p1, p2, p3, p4, p5, q1, q2, q3, q4;
     float dutyCycles, thetaF;
 
     float gaussianNoise(void);
@@ -100,7 +101,9 @@ public:
     float calcThetaF();
     float calcAlphaF(float Vy, float Vx, float omegaZ, float thetaF);
     float calcLatForce(float alphaF);
-
+    float calcFyFront(float Vx, float thetaF, float alphaF);
+    float calcFxFront(float thetaF, float alphaF);
+    float calcFxRear(float D, float Vx, float Fxfront);
     void nonLinearUndistort(float input[2], float output[2]);
     void cameraToWorldCoordinates(float cameraPoint[2], float worldPoint[2]);
 

@@ -4,6 +4,7 @@
 #include "ParticleFilter.h"
 #include "Filter.h"
 #include "CTModel.h"
+#include "STModel.h"
 #include <Eigen/Dense>
 #include <math.h>
 #include <cmath>
@@ -26,6 +27,30 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
         {
             mType = motionModelType;
             M = new STModel();
+
+            m = 0.0406f;
+            Cm1 = 0.6148f;
+            Cm2 = 0.0477f;
+            Cm3 = 0.0357f;
+            Cf = 0.4835f;
+            lf = 0.003f;
+            Iz = 0.000016344f;
+            kTurn = 0.10f;
+            mTurn = -1.355f;
+            kThrottle = -2.259f;
+            mThrottle = -0.0437f;
+            k_alphaF = 0.4835f;
+            m_gas = 0;
+            m_turn = 0;
+            p1 = 1.0989f;
+            p2 = -7.7212f;
+            p3 = 20.2859f;
+            p4 = -23.6540f;
+            p5 = 10.3348f;
+            q1 = -6.9779f;
+            q2 = 17.8926f;
+            q3 = -20.1442f;
+            q4 = 8.5883f;
         }
             break;
         default:
@@ -53,8 +78,6 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
     sumStates[3] = 0;
     sumStates[4] = 0;
     sumStates[5] = 0;
-    sumStates[6] = 0;
-    sumStates[7] = 0;
 
     m_img = cv::imread("indata/ImageWithCar.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
@@ -1114,20 +1137,37 @@ void ParticleFilter::LoadTrack() {
 
 float ParticleFilter::calcDutycycles()
 {
-    return kThrottle*m_gas + mThrottle;
+    return  mThrottle + ((p1*pow(m_gas,4) + p2*pow(m_gas,3) + p3*pow(m_gas,2) + p4*m_gas + p5) / (pow(m_gas,4) + q1*pow(m_gas,3) + q2*pow(m_gas,2) + q3*m_gas + q4));
 }
 
 float ParticleFilter::calcThetaF()
 {
-    return kSteer*m_turn + mSteer;
+    return kTurn*m_turn + mTurn;
 }
 
-float ParticleFilter::calcAlphaF(float Vx, float Vy, float omegaZ, float thetaF)
+float ParticleFilter::calcAlphaF(float Vx, float Vy, float w, float thetaF)
 {
-    return atan((Vy + lf*omegaZ)/Vx) - thetaF;
+    if(Vx == 0)
+    {
+        Vx = 0.001f;
+    }
+    return thetaF - atan((Vy+lf*w)/Vx);
 }
 
-float ParticleFilter::calcLatForce(float alphaF)
+float ParticleFilter::calcFyFront(float Vx, float thetaF, float alphaF)
 {
-    return -Cf*alphaF;
+    if(Vx == 0)
+        Vx = 0.001f;
+
+    return (sin(thetaF)*k_alphaF*alphaF)+thetaF*0.035*(1/Vx);
+}
+
+float ParticleFilter::calcFxFront(float thetaF, float alphaF)
+{
+    return -3*sin(thetaF)*k_alphaF*alphaF;
+}
+
+float ParticleFilter::calcFxRear(float D, float Vx, float Fxfront)
+{
+    return Cm1*D - Cm2*D*Vx - Cm3*Fxfront;
 }
