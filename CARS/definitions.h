@@ -184,15 +184,26 @@ struct CarData
     HandController::Enum handController;
 };
 
-//Struct to pass plot data from controller to mainWindow
+//Struct to pass plot data to mainWindow
+/*
+ *  Every plot window has its own global struct.
+ *
+ *  makePlot - indicates wheter or not to makes plots.  if false no data will be saved
+ *             to the struct and no data will be read. On program start up settingsfile
+ *             is read, and makePlot is updated accordingly.
+ *  newDeataReady - vector with booleans indicating if the data in Y[i] is updated
+ *  X - vector containg all x-vectors
+ *  Y - vector containg all y-vectors
+ *  axisRange - vector with max-min values. [Xmin Xmax Ymin Ymax]
+ *  numOfGraphs - the number of graphs currently active in plotWindow
+ * */
 struct PlotData
 {
     bool makePlot = false;
-    bool newData2plot1 = false;
-    bool newData2plot2 = false;
-    bool newData2plot3 = false;
-    bool newData2plot4 = false;
-    QVector<double> Xvalues,Xvalues2,Yvalues1,Yvalues2,Yvalues3,Yvalues4,axisRange;
+    std::vector<bool> newDataReady;
+    QVector<QVector<double>> X,Y;
+    QVector<double> axisRange;
+    int numOfGraphs = 1;
 
 };
 

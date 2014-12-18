@@ -10,11 +10,11 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 {
     m_ID = ID;
     m_startInd = 0;
-    m_offset = 0.0f;
     m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;   //m_vRef is uniqe to each car
     m_aRef = aRef;
     m_gain = 1.0f;
+        m_offset = 0.3f;
 
     m_checkPoint = false;
     m_firstLapDone = false;
@@ -72,19 +72,17 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     EnterCriticalSection(&csPlotData);
     if (AdaptiveRefPlotData.makePlot)
     {
-        AdaptiveRefPlotData.newData2plot1 = true;
-        AdaptiveRefPlotData.Xvalues.resize(0);
-        AdaptiveRefPlotData.Xvalues.resize((int)m_numOfInterval);
-        AdaptiveRefPlotData.Xvalues2.resize(0);
-        AdaptiveRefPlotData.Xvalues2.resize(gRefLen);
-        AdaptiveRefPlotData.Yvalues1.resize(0);
-        AdaptiveRefPlotData.Yvalues1.resize((int)m_numOfInterval);
-        AdaptiveRefPlotData.Yvalues2.resize(0);
-        AdaptiveRefPlotData.Yvalues2.resize((int)m_numOfInterval);
-        AdaptiveRefPlotData.Yvalues3.resize(0);
-        AdaptiveRefPlotData.Yvalues3.resize((int)m_numOfInterval);
-        AdaptiveRefPlotData.Yvalues4.resize(0);
-        AdaptiveRefPlotData.Yvalues4.resize((int)gRefLen);
+        for (int i = 0; i < AdaptiveRefPlotData.numOfGraphs-1; i++)
+        {
+            AdaptiveRefPlotData.X[i].resize(0);
+            AdaptiveRefPlotData.X[i].resize((int)m_numOfInterval);
+            AdaptiveRefPlotData.Y[i].resize(0);
+            AdaptiveRefPlotData.Y[i].resize((int)m_numOfInterval);
+        }
+        AdaptiveRefPlotData.X[3].resize(0);
+        AdaptiveRefPlotData.X[3].resize((int) gRefLen);
+        AdaptiveRefPlotData.Y[3].resize(0);
+        AdaptiveRefPlotData.Y[3].resize((int )gRefLen);
 
         AdaptiveRefPlotData.axisRange.resize(4);
         AdaptiveRefPlotData.axisRange[0] = 0;
@@ -94,16 +92,18 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
 
         for (int i = 0; i<m_numOfInterval ; i++ )
         {
-            AdaptiveRefPlotData.Xvalues[i] = m_intervalMidIndexes[i];
-            AdaptiveRefPlotData.Yvalues1[i] = m_refSpeedShort[i];
+            AdaptiveRefPlotData.X[0][i] = m_intervalMidIndexes[i];
+            AdaptiveRefPlotData.X[1][i] = m_intervalMidIndexes[i];
+            AdaptiveRefPlotData.X[2][i] = m_intervalMidIndexes[i];
+            AdaptiveRefPlotData.Y[0][i] = m_refSpeedShort[i];
         }
+        AdaptiveRefPlotData.newDataReady[0] = true;
         for(int i = 0; i < gRefLen; i++)
         {
-            AdaptiveRefPlotData.Xvalues2[i] = i;
+            AdaptiveRefPlotData.X[3][i] = i;
         }
-
     }
-    if (AdaptiveTimePlotData.makePlot)
+    /*if (AdaptiveTimePlotData.makePlot)
     {
         AdaptiveTimePlotData.Xvalues.resize(0);
         AdaptiveTimePlotData.Xvalues.resize(m_numOfInterval);
@@ -125,7 +125,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
             AdaptiveTimePlotData.Xvalues[i] = i + 1;
         }
 
-    }
+    }*/
     LeaveCriticalSection(&csPlotData);
 
 
@@ -193,8 +193,8 @@ void PIDadaptiveGain::calcSignals(std::vector<float> &state, float &gas, float &
     EnterCriticalSection(&csPlotData);
     if (AdaptiveRefPlotData.makePlot)
     {
-        AdaptiveRefPlotData.Yvalues4[m_refIndClosest] = state[2];
-        AdaptiveRefPlotData.newData2plot4 = true;
+        AdaptiveRefPlotData.Y[3][m_refIndClosest] = state[2];
+        AdaptiveRefPlotData.newDataReady[3] = true;
     }
     LeaveCriticalSection(&csPlotData);
 
@@ -380,20 +380,20 @@ void PIDadaptiveGain::updateSpeedReference()
 
     if (AdaptiveRefPlotData.makePlot)
     {
-        AdaptiveRefPlotData.newData2plot2 = true;
-        AdaptiveRefPlotData.newData2plot3 = true;
-        AdaptiveRefPlotData.newData2plot4 = true;
+        AdaptiveRefPlotData.newDataReady[1] = true;
+        AdaptiveRefPlotData.newDataReady[2] = true;
+        AdaptiveRefPlotData.newDataReady[3] = true;
         for (int i = 0; i < m_numOfInterval ; i++ )
         {
-            AdaptiveRefPlotData.Yvalues2[i] = m_refSpeedShort[i];
-            AdaptiveRefPlotData.Yvalues3[i] = m_refSpeedShortBest[i];
+            AdaptiveRefPlotData.Y[1][i] = m_refSpeedShort[i];
+            AdaptiveRefPlotData.Y[2][i] = m_refSpeedShortBest[i];
         }
         for (int i = 0; i < gRefLen; i ++)
         {
            // AdaptiveRefPlotData.Yvalues4[i] = 0;
         }
     }
-    if (AdaptiveTimePlotData.makePlot)
+    /*if (AdaptiveTimePlotData.makePlot)
     {
         AdaptiveTimePlotData.newData2plot1 = true;
         AdaptiveTimePlotData.newData2plot2 = true;
@@ -402,7 +402,7 @@ void PIDadaptiveGain::updateSpeedReference()
             AdaptiveTimePlotData.Yvalues1[i] = m_timesBest[i];
             AdaptiveTimePlotData.Yvalues2[i] = m_times[i];
         }
-    }
+    }*/
     LeaveCriticalSection(&csPlotData);
 
 
@@ -416,17 +416,21 @@ void PIDadaptiveGain::updateSpeedReference()
     c = new double [n];
     d = new double [n];
 
-    x[0] =(int) m_intervalMidIndexes[i] - m_intervalLength;
-    for (int i = 0; i<m_numOfInterval;i++)
+    x[0] = m_intervalMidIndexes[0] - m_intervalLength;
+    f[0] = m_refSpeedShort[m_numOfInterval-1];
+    for (int i = 0; i<m_numOfInterval; i++)
     {
-        x[i] = (double) m_intervalMidIndexes[i];
-        f[i] = m_refSpeedShort[i];
+        x[i+1] = (double) m_intervalMidIndexes[i];
+        f[i+1] = m_refSpeedShort[i];
     }
+    x[n-1] = m_intervalMidIndexes[m_numOfInterval-1] + m_intervalLength;
+    f[n-1] = m_refSpeedShort[0];
 
     cubic_nak(n, x, f, b, c, d);
     for (int i = 0; i<gRefLen; i++)
     {
         m_vRef[i] = spline_eval(n, x, f, b, c, d, (double)i);
+        if (m_vRef[i]<0.3)
         qDebug() << m_vRef[i];
     }
     for (int i = 0; i<m_numOfInterval; i++)

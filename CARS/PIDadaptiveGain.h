@@ -9,7 +9,7 @@
 #include "qtheaders.h"
 #include <stdlib.h>
 #include <time.h>
-#include "doubleplotdialog.h"
+
 
 
 class PIDadaptiveGain : public Controller
