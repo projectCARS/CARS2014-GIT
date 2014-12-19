@@ -25,8 +25,6 @@ public:
 private slots:
     void on_startRaceButton_released();
 
-    void on_carSettingsButton_clicked();
-
     void on_decreaseLapsButton_clicked();
 
     void on_increaseLapsButton_clicked();

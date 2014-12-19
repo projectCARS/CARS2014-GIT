@@ -21,6 +21,19 @@ bool updateRaceData(CarData &cardata, RaceSettings &raceSettings)
     return false;
 }
 
+// Function that reads the returned status message from a DAQmx function. If failed, displays the error message
+// Should be called whenever a DAQmx function is called
+void printError(int32 status, int line, QString str)
+{
+    if( DAQmxFailed(status) )
+    {
+        char errBuff[2048];
+        DAQmxGetExtendedErrorInfo(errBuff,2048);
+        qDebug() << errBuff << "at line " << line << str <<" \n\n";
+    }
+}
+
+
 // Updates the lapdata struct in the car
 void updateLapData(CarData &cardata)
 {

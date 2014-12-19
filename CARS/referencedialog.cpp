@@ -9,8 +9,14 @@ ReferenceDialog::ReferenceDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    setFixedSize(600,550);
+    setFixedSize(620,550);
     ui->imageLabel->setFixedSize(582,464);
+    ui->gainLabel->setFixedWidth(20);
+    ui->offsetLabel->setFixedWidth(20);
+    ui->decreaseGainButton->setFixedWidth(25);
+    ui->increaseGainButton->setFixedWidth(25);
+    ui->decreaseOffsetButton->setFixedWidth(25);
+    ui->increaseOffsetButton->setFixedWidth(25);
 
     if (m_settings.contains("reference/file_name"))
     {
@@ -21,10 +27,14 @@ ReferenceDialog::ReferenceDialog(QWidget *parent) :
         // TODO: choose a default file.
         m_fileName = "";
     }
+    m_gain = m_settings.value("reference/gain").toDouble();
+    m_offset = m_settings.value("reference/offset").toDouble();
 
     QFileInfo fileInfo(m_fileName);
     ui->nameLabel->setText(fileInfo.fileName());
     ui->reversecheckBox->setChecked(m_settings.value("reference/reverse").toBool());
+    ui->gainLabel->setText(m_settings.value("reference/gain").toString());
+    ui->offsetLabel->setText(m_settings.value("reference/offset").toString());
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
@@ -164,4 +174,40 @@ void ReferenceDialog::drawReference(void)
 void ReferenceDialog::on_reversecheckBox_clicked(bool checked)
 {
     m_settings.setValue("reference/reverse",(int)checked);
+}
+
+void ReferenceDialog::on_decreaseGainButton_clicked()
+{
+    if(m_gain > 0.1)
+        m_gain -= 0.1;
+    ui->gainLabel->setText(QString("%1").arg(m_gain));
+    m_settings.setValue("reference/gain", m_gain);
+}
+
+void ReferenceDialog::on_increaseGainButton_clicked()
+{
+    if(m_gain < 3)
+        m_gain += 0.1;
+    ui->gainLabel->setText(QString("%1").arg(m_gain));
+    m_settings.setValue("reference/gain", m_gain);
+}
+
+void ReferenceDialog::on_decreaseOffsetButton_clicked()
+{
+    if(m_offset > -0.9)
+        m_offset -= 0.1;
+    if(m_offset < 0.05 && m_offset > -0.05)
+        m_offset = 0;
+    ui->offsetLabel->setText(QString("%1").arg(m_offset));
+    m_settings.setValue("reference/offset", m_offset);
+}
+
+void ReferenceDialog::on_increaseOffsetButton_clicked()
+{
+    if(m_offset < 0.9)
+        m_offset += 0.1;
+    if(m_offset < 0.05 && m_offset > -0.05)
+        m_offset = 0;
+    ui->offsetLabel->setText(QString("%1").arg(m_offset));
+    m_settings.setValue("reference/offset", m_offset);
 }

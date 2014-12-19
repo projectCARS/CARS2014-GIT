@@ -46,7 +46,6 @@ void CTModel::matrixSetup()
 	Q(1, 1) = 1;
 	Q(2, 2) = 100;
 	Q(3, 3) = 1;
-
 	Q(4, 4) = 60;
 }
 

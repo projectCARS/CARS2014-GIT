@@ -217,7 +217,7 @@ void ParticleFilter::propagateST(void)
     for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
         alphaF = calcAlphaF(velPoints[i], latvelPoints[i], yawPoints[i], thetaF);
-        FLat = calcLatForce(alphaF);
+        //FLat = calcLatForce(alphaF);
 
         velPoints[i] = (dutyCycles * (Cm1 - Cm2*vel[i]) + thetaF * (FLat - Cm3 * FLat) - Cm3 * latvel[i] * angvel[i]) / m - latvel[i]*angvel[i] + gaussianNoise()*0.05;
         angvelPoints[i] = angvel[i] + T*FLat*lf/Iz + M_PI / 7 * gaussianNoise();

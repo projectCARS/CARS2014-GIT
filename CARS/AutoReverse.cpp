@@ -14,7 +14,7 @@ AutoReverse::AutoReverse(int id)
         m_reverseSpeed = -0.078f;
         break;
     case(1) :
-        m_reverseSpeed = -0.078f;
+        m_reverseSpeed = -0.14f;
         break;
     default :
         m_reverseSpeed = -0.078f;

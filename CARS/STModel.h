@@ -45,7 +45,7 @@ private:
      * @brief The parameters used in the STmodel
      */
     float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kTurn, mTurn, kThrottle, mThrottle, k_alphaF;
-    float m_gas, m_turn;
+    float m_gas, m_turn, turngain;
     float p1, p2, p3, p4, p5, q1, q2, q3, q4;
 
     // At what percentage the linearization will change.
@@ -124,10 +124,9 @@ private:
     float calcLatForce(float alphaF);
 
     // returns the force in the car's y-direction for the front wheels
-    float calcFyFront(float Vx, float thetaF, float alphaF);
+    float calcFyFront(float thetaF);
     // returns the force in the car's x-direction for the front wheels
     float calcFxFront(float thetaF, float alphaF);
-
-    float calcFxRear(float D, float Vx, float Fxf);
-
+    // returns the force in car's x-direction from the rear wheels
+    float calcFxRear(float D, float Vx);
 };

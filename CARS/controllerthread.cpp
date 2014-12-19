@@ -1,4 +1,6 @@
 #include "controllerthread.h"
+#include "NIDAQmx.h"
+#include "functions.h"
 
 ControllerThread::ControllerThread(QObject *parent) :
     QThread(parent)
@@ -81,7 +83,11 @@ void ControllerThread::loadModeSettings( std::vector<CarData> &carData)
 
 void ControllerThread::run()
 {
-    qDebug("cthread started");
+    qDebug("ControllerThread started");
+
+    //reset NI-DAQ device. If called it must be done before first object of IOcontrol is created.
+    printError(DAQmxResetDevice("Dev1"),89," in ControllerThread");
+
     // Load controller settings from file.
     loadControllerSettings();
     // Could be a member variable.
@@ -96,6 +102,7 @@ void ControllerThread::run()
     // Load hand controller settings from file
     loadHandControllerSettings(carData);
     loadModeSettings(carData);
+
 
     for (int i = 0; i < m_numCars; i++)
     {

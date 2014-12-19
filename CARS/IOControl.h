@@ -12,16 +12,16 @@ class IOControl
 private:
 	int m_ID;
 
+    TaskHandle m_hTaskInput = 0;
 	TaskHandle m_hTaskPower = 0;
-	TaskHandle m_hTaskInput = 0;
 	TaskHandle m_hTaskOutput = 0;
     //for controller 2
+    TaskHandle m_c2TaskInput = 0;
     TaskHandle m_c2TaskOutput = 0;
     TaskHandle m_c2TaskPower = 0;
-    TaskHandle m_c2TaskInput = 0;
 
-	float64 m_minValChannel;
-	float64 m_maxValChannel;
+    float64 m_minValChannel = 0;
+    float64 m_maxValChannel = 3;
 
 	// At what percentage the linearization will change.
 	float64 m_linearizationBreak; 
@@ -53,7 +53,8 @@ private:
     float64 m_prevSignals[2];
 
     const char *analog_output;
-    const char *analog_input;
+    const char *analog_input;// = "Dev1/ai1:4";
+            //analog_input = "Dev1/ai1:4";                    // pin [33 65 30 28]
     const char *digital_output_power;
     const char *digital_output_PWM;
 
@@ -100,8 +101,6 @@ private:
 	void voltageToDecimal(float64 *values);
 	// Transforms an interval between -1 and 1 to corresponding voltage.
     void decimalToVoltage(float64 *values, bool isBacking);
-    // Transforms an interval between -1 and 1 to corresponding voltage.
-    void decimalToVoltageLinearMap(float64 *values);
 	// Recieve the voltage from the input pins.
     void receiveSignalsVolt(float64 *signal);
 	// Send the voltage to the output pins.

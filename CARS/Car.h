@@ -33,7 +33,7 @@ private:
 	// Counter used to determine when an active car should become inactive.
 	int m_inactiveTimer = 0;
 	// Number of samples before an active car becomes inactive.
-	const int m_inactiveTimerMax = 500; 
+    const int m_inactiveTimerMax = 500000;
 	// Number of samples before an inactive car becomes active.
 	const int m_activeTimerMax = 20; 
 

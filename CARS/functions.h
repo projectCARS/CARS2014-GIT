@@ -20,3 +20,7 @@ void drawCar(Eigen::MatrixXf carPattern, float x, float y, float yaw, cv::Mat im
 void cubic_nak ( int n, double *x, double *f, double *b, double *c, double *d );
 double spline_eval ( int n, double *x, double *f, double *b, double *c, double *d, double t );
 void tridiagonal ( int n, double *c, double *a, double *b, double *r ); //called by cubic_nak
+
+// Function that reads the returned status message from a DAQmx function. If failed, displays the error message
+// Should be called whenever a DAQmx function is called
+void printError(int32 status, int line, QString str);

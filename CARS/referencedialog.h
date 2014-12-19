@@ -26,6 +26,8 @@ private:
     std::vector<float> m_ref;
     std::vector<float> m_vRef;
     int m_refLen;
+    double m_gain = 0;
+    double m_offset = 0;
 
     void loadReference(void);
     void drawReference(void);
@@ -36,6 +38,10 @@ private slots:
     void on_chooseFileButton_clicked();
 
     void on_reversecheckBox_clicked(bool checked);
+    void on_decreaseGainButton_clicked();
+    void on_increaseGainButton_clicked();
+    void on_decreaseOffsetButton_clicked();
+    void on_increaseOffsetButton_clicked();
 };
 
 #endif // REFERENCEDIALOG_H

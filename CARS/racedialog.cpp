@@ -58,13 +58,6 @@ void raceDialog::on_startRaceButton_released()
     }
 }
 
-void raceDialog::on_carSettingsButton_clicked()
-{
-    CarSettingsDialog dialog;
-    dialog.setModal(true);
-    dialog.exec();
-}
-
 void raceDialog::on_decreaseLapsButton_clicked()
 {
     if(lapNumber > 1)

@@ -125,10 +125,8 @@ namespace CarSpecificDrawSettings
 }
 
 
-
-
 // ---------- Structs ----------
-// Struct passed from fildCars();
+// Struct passed from findCars();
 struct CarMeasurement
 {
     int id;
@@ -157,11 +155,6 @@ struct RaceSettings
 // Struct to store lap data.
 struct LapData
 {
-    //int checkPoint = 730;
-    //int check1, check2;
-    //clock_t startTime, t2;
-    //float currTime;             // used to get time for log file.
-
     QElapsedTimer lapTimer;
     float lapTime, bestTime, lastLapTime;
     bool firstLapStarted = false;

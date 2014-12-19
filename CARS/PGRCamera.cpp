@@ -154,7 +154,7 @@ void PGRCamera::setup(void)
 
     if (valid)
     {
-        std::cout << "First time settings are vaild" << std::endl;
+        std::cout << "First time settings are valid" << std::endl;
         std::cout << "Max bytes per packet: " << info.maxBytesPerPacket << std::endl;
     }
     else

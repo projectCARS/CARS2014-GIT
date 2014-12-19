@@ -79,7 +79,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_fpsInterval = 100;
     m_t1 = 0;
 
-    //dialog.show();
 }
 
 MainWindow::~MainWindow()
@@ -97,12 +96,11 @@ MainWindow::~MainWindow()
     //cv::destroyAllWindows();
 
     delete ui;
-    // delete imageLabelProjector;
-    //delete imageLabelGui;
 }
 
 void MainWindow::startThreads(void)
 {
+    qDebug("\n\n\n");
     raceSettings.doRace = m_settings.value("race_settings/do_race").toBool();
     raceSettings.raceDone = false;
     m_loopCounter = 0;
@@ -838,6 +836,10 @@ void MainWindow::loadReference()
     gRef.resize(gRefLen * 2);
     vRef.resize(gRefLen);
     aRef.resize(gRefLen);
+
+    float gain = m_settings.value("reference/gain").toFloat();
+    float offset = m_settings.value("reference/offset").toFloat();
+
     // Get values from reference curve and convert from pixels to meters.
     if(m_settings.value("reference/reverse").toInt() == 0 ){
         for (int i = 0; i < gRefLen; i++)
@@ -851,7 +853,7 @@ void MainWindow::loadReference()
             // v_i - speed reference at point (x_i,y_i)
             file >> vRef[i];  //speed must be stored in global coordinates in reference.txt
             // file >> aRef[i]; // angle must be stored in reference.txt
-
+            vRef[i] = vRef[i] * gain + offset;
             numPoints++;
         }
     }
@@ -868,11 +870,10 @@ void MainWindow::loadReference()
             // v_i - speed reference at point (x_i,y_i)
             file >> vRef[i - 1];  //speed must be stored in global coordinates in reference.txt
             //file >> aRef[i]; // angle must be stored in reference.txt
-
+            vRef[i] = vRef[i] * gain + offset;
             numPoints++;
         }
     }
-    qDebug("da");
 
     // Check that there were at least gRefLen numbers to read.
     if (numPoints < gRefLen)
