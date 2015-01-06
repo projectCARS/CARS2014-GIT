@@ -9,6 +9,7 @@
 #include "carsettingsdialog.h"
 #include "racedialog.h"
 #include "plotwindow.h"
+#include "pidsettings.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,6 +31,7 @@ private:
     //For testing plot
     plotWindow adaptiveRefWindow;
     plotWindow adaptiveTimeWindow;
+    plotWindow adaptiveGainRefWindow;
 
     QSettings m_settings;
     QImage m_image;
@@ -87,6 +89,7 @@ private slots:
     void on_raceButton_clicked();
     void on_initRace_clicked();
     void on_startRaceButton_clicked();
+    void on_pidSettingsButton_clicked();
 };
 
 #endif // MAINWINDOW_H

@@ -8,7 +8,7 @@ CarSettingsDialog::CarSettingsDialog(QWidget *parent) :
     ui->setupUi(this);
     ui->scrollAreaContentsLayout->setAlignment(Qt::AlignTop);
     // Set window size.
-    setFixedSize(720,450);
+    setFixedSize(750,450);
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
@@ -67,7 +67,7 @@ void CarSettingsDialog::addNewCar(void)
     m_settings.setValue("filter",(int)FilterType::EKF);
     m_settings.setValue("motion_model",(int)MotionModelType::CTModel);
     m_settings.setValue("handController",(int)HandController::HandControl_1);
-    m_settings.setValue("controller",(int)ControllerType::PIDController);
+    m_settings.setValue("controller",(int)ControllerType::PIDdefault);
     m_settings.endGroup();
     addCarGroupBox();
 }

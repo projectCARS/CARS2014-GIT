@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1035</width>
+    <width>1073</width>
     <height>404</height>
    </rect>
   </property>
@@ -66,6 +66,13 @@
        <widget class="QPushButton" name="plotSettingsButton">
         <property name="text">
          <string>Plot Settings</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pidSettingsButton">
+        <property name="text">
+         <string>Pid Settings</string>
         </property>
        </widget>
       </item>
@@ -164,7 +171,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1035</width>
+     <width>1073</width>
      <height>21</height>
     </rect>
    </property>

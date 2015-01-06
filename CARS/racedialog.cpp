@@ -40,22 +40,7 @@ void raceDialog::closeEvent(QCloseEvent *event)
 
 void raceDialog::on_startRaceButton_released()
 {
-    int ans = QMessageBox::question(this,tr("Ready?"),
-                                    tr("Place your cars in starting positions,\nthen click 'Yes' for count down "),
-                                    QMessageBox::Cancel | QMessageBox::Yes,
-                                    QMessageBox::Yes);
-    switch (ans)
-    {
-    case (QMessageBox::Yes):
-        close();    //close racedialog
-        //start count down
-        //start race //make race class?
 
-
-        break;
-    default:
-        ;
-    }
 }
 
 void raceDialog::on_decreaseLapsButton_clicked()

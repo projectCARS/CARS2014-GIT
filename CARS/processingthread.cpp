@@ -26,9 +26,7 @@ void ProcessingThread::run()
     VirtualSensor sensor;
     // Timing.
     QTime time;
-    double ompTimeStart = 0, ompTimeMid = 0, ompTimeEnd = 0, t1 = 0, t2 = 0;
-   //double t2,t3,t4 = 0;
-    //clock_t timerTest1, timerTest2;
+    double ompTimeStart = 0, ompTimeMid = 0, ompTimeEnd = 0;
     double timeDiff, currTime;
     // Counts the number while loops.
     int loopCounter = 0;

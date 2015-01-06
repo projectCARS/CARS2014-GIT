@@ -24,22 +24,35 @@ void ControllerThread::loadControllerSettings()
     while (m_settings.contains(QString("car/id%1/mode").arg(m_numCars)))
     {
         m_settings.beginGroup(QString("car/id%1").arg(m_numCars));
+        int c = m_settings.value("controller").toInt();
+        m_settings.endGroup();
         // Add car to vector m_cars.
-        switch (static_cast<ControllerType::Enum>(m_settings.value("controller").toInt()))
+        switch (static_cast<ControllerType::Enum>(c))
         {
-        case ControllerType::PIDController:
-            m_controllers.push_back(new PIDController(m_numCars));
-            break;
-        case ControllerType::PIDControllerSR:
-            m_controllers.push_back(new PIDControllerSR(m_numCars));
-            break;
         case ControllerType::PIDadaptiveGain:
             m_controllers.push_back(new PIDadaptiveGain(m_numCars));
+            break;
+        case ControllerType::PIDadaptiveSection:
+            m_controllers.push_back(new PIDadaptiveSection(m_numCars));
+            break;
+        case ControllerType::PIDdefault:
+            m_controllers.push_back(new PIDdefault(m_numCars));
+            break;
+        case ControllerType::PIDaggressive:
+            float K_array[5];
+            m_settings.beginGroup(QString("pid_settings"));
+            K_array[0] = m_settings.value("Kp").toFloat();
+            K_array[1] = m_settings.value("Kd").toFloat();
+            K_array[2] = m_settings.value("Ki").toFloat();
+            K_array[3] = m_settings.value("Ka").toFloat();
+            K_array[4] = m_settings.value("KBrake").toFloat();
+            m_settings.endGroup();
+            qDebug() << "hej: " << K_array[0] <<  " " << m_settings.value("race_settings/number_of_laps").toFloat();
+            m_controllers.push_back(new PIDaggressive(m_numCars, K_array));
             break;
         default:
             qDebug() << "Error: Controller type not implemented, in loadControllerSettings(), controllerthread.cpp";
         }
-        m_settings.endGroup();
         m_numCars++;
         //qDebug() << m_numCars;
     }
@@ -49,7 +62,7 @@ void ControllerThread::loadControllerSettings()
     {
         // TODO, implement this properly!
         m_settings.beginGroup(QString("car/id%1").arg(m_numCars));
-        m_controllers.push_back(new PIDController(m_numCars));
+        m_controllers.push_back(new PIDdefault(m_numCars));
         m_settings.endGroup();
         m_numCars++;
     }

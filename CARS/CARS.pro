@@ -81,21 +81,23 @@ SOURCES += main.cpp\
     EKF.cpp \
     functions.cpp \
     PGRCamera.cpp \
-    PIDController.cpp \
     VirtualSensor.cpp \
     AutoReverse.cpp \
     NoFilter.cpp \
     drawsettingsdialog.cpp \
     Calibrator.cpp \
-    PIDControllerSR.cpp \
     particleFilter.cpp \
     racedialog.cpp \
-    PIDadaptiveGain.cpp \
     racegroupbox.cpp \
     STModel.cpp \
     qcustomplot.cpp \
     plotwindow.cpp \
-    plotsettingsdialog.cpp
+    plotsettingsdialog.cpp \
+    PIDadaptiveSection.cpp \
+    PIDdefault.cpp \
+    PIDaggressive.cpp \
+    PIDadaptiveGain.cpp \
+    pidsettings.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -117,21 +119,23 @@ HEADERS  += mainwindow.h \
     IOControl.h \
     MotionModel.h \
     PGRCamera.h \
-    PIDController.h \
     VirtualSensor.h \
     AutoReverse.h \
     NoFilter.h \
     drawsettingsdialog.h \
     Calibrator.h \
-    PIDControllerSR.h \
     ParticleFilter.h \
     racedialog.h \
-    PIDadaptiveGain.h \
     racegroupbox.h \
     STModel.h \
     qcustomplot.h \
     plotwindow.h \
-    plotsettingsdialog.h
+    plotsettingsdialog.h \
+    PIDadaptiveSection.h \
+    PIDdefault.h \
+    PIDaggressive.h \
+    PIDadaptiveGain.h \
+    pidsettings.h
 
 
 FORMS    += mainwindow.ui \
@@ -142,7 +146,8 @@ FORMS    += mainwindow.ui \
     racedialog.ui \
     racegroupbox.ui \
     plotwindow.ui \
-    plotsettingsdialog.ui
+    plotsettingsdialog.ui \
+    pidsettings.ui
 
 #RESOURCES += \
 #    CARS.qrc

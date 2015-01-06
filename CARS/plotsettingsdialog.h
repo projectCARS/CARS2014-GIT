@@ -24,6 +24,8 @@ private slots:
 
     void on_speedErrorCheckBox_toggled(bool checked);
 
+    void on_GainReferenceCheckBox_toggled(bool checked);
+
 private:
     Ui::plotsettingsdialog *ui;
     QSettings m_settings;

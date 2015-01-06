@@ -2,7 +2,6 @@
 #include "Controller.h"
 #include "definitions.h"
 #include "headers.h"
-#include "PIDController.h"
 
 class AutoReverse : public Controller
 {

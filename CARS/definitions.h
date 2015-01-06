@@ -36,9 +36,6 @@ using Eigen::VectorXd;
 // Number of particles to use in the particle filter
 #define NUMBER_OF_PARTICLES     10000
 
-// Controls which parameters are used in PIDController.
-#define safeMode
-// #define fullForce
 
 // ---------- Globals ----------
 // Radius of circle (squared) surrounding the car. Used in controller.
@@ -88,9 +85,10 @@ namespace ControllerType
 {
     enum Enum
     {
-        PIDController,
-        PIDControllerSR,
+        PIDdefault,
+        PIDaggressive,
         PIDadaptiveGain,
+        PIDadaptiveSection,
     };
 }
 
@@ -237,7 +235,7 @@ struct ControllerThreadData
 // ---------- External declarations ----------
 extern struct DrawThreadData drawThreadData;
 extern struct ControllerThreadData controllerThreadData;
-extern struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData;
+extern struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData, AdaptiveGainPlotData;
 //extern struct RaceSettings raceSettings;
 // Critical section that is used during communication between main thread and draw thread.
 extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData, csPlotData;

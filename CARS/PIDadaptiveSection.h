@@ -1,5 +1,5 @@
-#ifndef PIDadaptiveGain_H
-#define PIDadaptiveGain_H
+#ifndef PIDADAPTIVESECTION_H
+#define PIDADAPTIVESECTION_H
 
 #pragma once
 #include "Controller.h"
@@ -12,7 +12,7 @@
 
 
 
-class PIDadaptiveGain : public Controller
+class PIDadaptiveSection : public Controller
 {
 private:
 
@@ -80,8 +80,8 @@ private:
 
 
 public:
-    PIDadaptiveGain(int ID);
-    ~PIDadaptiveGain();
+    PIDadaptiveSection(int ID);
+    ~PIDadaptiveSection();
 
     // Calculates and returns a vector with gas and turn signal.
     virtual void calcSignals(std::vector<float> &state, float &gas, float &turn);
@@ -100,15 +100,13 @@ private:
     // Calculates gas signal based on speed profile.
     float calcGasSignal(std::vector<float> &state, float m_refSpeed);
     // Calcultes reference speed for regulation
-    float calcRefSpeed(int refInd, double gain);
+    float calcRefSpeed(int refInd);
     // Update speed reference gain(m_gain and possibly m_offset)
     void updateSpeedReferenceGain();
     //
     void updateSectionTimers(int IndexSection);
     //
     void updateSpeedReference();
-    //
-    bool lapDone(std::vector<float> &state);
     //
     int findClosestSection(int index);
     //
@@ -119,4 +117,4 @@ private:
     void newLapStarted();
 
 };
-#endif // PIDadaptiveGain_H
+#endif // PIDADAPTIVESECTION_H

@@ -179,7 +179,7 @@ void ReferenceDialog::on_reversecheckBox_clicked(bool checked)
 void ReferenceDialog::on_decreaseGainButton_clicked()
 {
     if(m_gain > 0.1)
-        m_gain -= 0.1;
+        m_gain -= 0.05;
     ui->gainLabel->setText(QString("%1").arg(m_gain));
     m_settings.setValue("reference/gain", m_gain);
 }
@@ -187,7 +187,7 @@ void ReferenceDialog::on_decreaseGainButton_clicked()
 void ReferenceDialog::on_increaseGainButton_clicked()
 {
     if(m_gain < 3)
-        m_gain += 0.1;
+        m_gain += 0.05;
     ui->gainLabel->setText(QString("%1").arg(m_gain));
     m_settings.setValue("reference/gain", m_gain);
 }
@@ -195,7 +195,7 @@ void ReferenceDialog::on_increaseGainButton_clicked()
 void ReferenceDialog::on_decreaseOffsetButton_clicked()
 {
     if(m_offset > -0.9)
-        m_offset -= 0.1;
+        m_offset -= 0.05;
     if(m_offset < 0.05 && m_offset > -0.05)
         m_offset = 0;
     ui->offsetLabel->setText(QString("%1").arg(m_offset));
@@ -205,7 +205,7 @@ void ReferenceDialog::on_decreaseOffsetButton_clicked()
 void ReferenceDialog::on_increaseOffsetButton_clicked()
 {
     if(m_offset < 0.9)
-        m_offset += 0.1;
+        m_offset += 0.05;
     if(m_offset < 0.05 && m_offset > -0.05)
         m_offset = 0;
     ui->offsetLabel->setText(QString("%1").arg(m_offset));

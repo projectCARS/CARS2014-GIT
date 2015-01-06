@@ -1,10 +1,10 @@
-//#include "headers.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "referencedialog.h"
 #include "drawsettingsdialog.h"
 #include "plotsettingsdialog.h"
 #include "racedialog.h"
+#include "pidsettings.h"
 
 #include "functions.h"
 #include "definitions.h"
@@ -18,7 +18,7 @@
 #include <QLabel>
 #include <QDebug>
 
-struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData;
+struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData, AdaptiveGainPlotData;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     // Fixates the size of the MainWindow.
-    setFixedSize(980,800);
+    setFixedSize(1080,800);
 
     // If Qt should be used to draw images, instead of OpenCV:
     //QDesktopWidget *desktop = QApplication::desktop();
@@ -110,7 +110,7 @@ void MainWindow::startThreads(void)
     loadReference();
     // Start threads.
 
-    // init the plot windows
+    // initiate the plot windows
     EnterCriticalSection(&csPlotData);
     if(m_settings.value("plotSettings/adGainReferencePlot").toBool())
     {
@@ -123,13 +123,12 @@ void MainWindow::startThreads(void)
         AdaptiveRefPlotData.Y.resize(0);
         AdaptiveRefPlotData.Y.resize(AdaptiveRefPlotData.numOfGraphs);
 
-        adaptiveRefWindow.init(AdaptiveRefPlotData.numOfGraphs,"<h1>Speedreference in each section</h1>","Section","Speed reference [m/s]");
+        adaptiveRefWindow.init(AdaptiveRefPlotData.numOfGraphs, "<h1>Speedreference - PIDadaptiveSection</h1>","Reference point","Speed reference [m/s]");
         adaptiveRefWindow.setLegend(0,"Original speed reference");
         adaptiveRefWindow.setLegend(1,"Best speed reference");
         adaptiveRefWindow.setLegend(2,"Current speed reference");
         adaptiveRefWindow.setLegend(3,"Current speed");
         adaptiveRefWindow.show();
-
     }
     if(m_settings.value("plotSettings/adSectionTimePlot").toBool())
     {
@@ -142,11 +141,28 @@ void MainWindow::startThreads(void)
         AdaptiveTimePlotData.Y.resize(0);
         AdaptiveTimePlotData.Y.resize(AdaptiveTimePlotData.numOfGraphs);
 
-        adaptiveTimeWindow.init(AdaptiveTimePlotData.numOfGraphs ,"<h1>Time spent in each section</h1>","Section","Time [m/s]");
+        adaptiveTimeWindow.init(AdaptiveTimePlotData.numOfGraphs, "<h1>Time spent in each section</h1>", "Section", "Time [m/s]");
         adaptiveTimeWindow.setLegend(0,"Best time for section in all laps");
         adaptiveTimeWindow.setLegend(1,"Time for section on last lap");
         adaptiveTimeWindow.show();
+    }
+    if(m_settings.value("plotSettings/AdaptiveGainPlot").toBool())
+    {
+        AdaptiveGainPlotData.makePlot = true;
+        AdaptiveGainPlotData.numOfGraphs = 4;
+        AdaptiveGainPlotData.newDataReady.resize(0);
+        AdaptiveGainPlotData.newDataReady.resize(AdaptiveGainPlotData.numOfGraphs);
+        AdaptiveGainPlotData.X.resize(0);
+        AdaptiveGainPlotData.X.resize(AdaptiveGainPlotData.numOfGraphs);
+        AdaptiveGainPlotData.Y.resize(0);
+        AdaptiveGainPlotData.Y.resize(AdaptiveGainPlotData.numOfGraphs);
 
+        adaptiveGainRefWindow.init(AdaptiveGainPlotData.numOfGraphs, "<h1>Speed reference - PIDadaptiveGain</h1>","Reference point","Speed reference [m/s]");
+        adaptiveGainRefWindow.setLegend(0,"Original speed reference");
+        adaptiveGainRefWindow.setLegend(1,"Best speed reference");
+        adaptiveGainRefWindow.setLegend(2,"Current speed reference");
+        adaptiveGainRefWindow.setLegend(3,"Current speed");
+        adaptiveGainRefWindow.show();
     }
     LeaveCriticalSection(&csPlotData);
 
@@ -493,26 +509,41 @@ void MainWindow::updateFrame(void)
     m_carTimerID = drawThreadData.carTimerID;
     LeaveCriticalSection(&csDrawThreadData);
 
-
-
+    // Update plot windows
     EnterCriticalSection(&csPlotData);
     if (AdaptiveRefPlotData.makePlot)
     {
-        for (int i = 0; i < AdaptiveRefPlotData.numOfGraphs ; i++)
+        for (int i = 0; i < AdaptiveRefPlotData.numOfGraphs ; i++) //sweep all graphs. one line in a plot corresponds to one graph
         {
-            if (AdaptiveRefPlotData.newDataReady[i])
+            if (AdaptiveRefPlotData.newDataReady[i]) //if new data is avaliabel update the plot, else do nothing
             {
-              adaptiveRefWindow.updatePlot(i,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.X[i], AdaptiveRefPlotData.Y[i]);
+                adaptiveRefWindow.updatePlot(i,AdaptiveRefPlotData.axisRange, AdaptiveRefPlotData.X[i], AdaptiveRefPlotData.Y[i]);
+                AdaptiveRefPlotData.newDataReady[i] = false;
             }
         }
     }
+
     if (AdaptiveTimePlotData.makePlot)
     {
         for (int i = 0; i < AdaptiveTimePlotData.numOfGraphs ; i++)
         {
+
             if (AdaptiveTimePlotData.newDataReady[i])
             {
-              adaptiveTimeWindow.updatePlot(i,AdaptiveTimePlotData.axisRange, AdaptiveTimePlotData.X[i], AdaptiveTimePlotData.Y[i]);
+                adaptiveTimeWindow.updatePlot(i,AdaptiveTimePlotData.axisRange, AdaptiveTimePlotData.X[i], AdaptiveTimePlotData.Y[i]);
+                AdaptiveGainPlotData.newDataReady[i] = false;
+            }
+        }
+    }
+
+    if (AdaptiveGainPlotData.makePlot)
+    {
+        for (int i = 0; i < AdaptiveGainPlotData.numOfGraphs ; i++)
+        {
+            if (AdaptiveGainPlotData.newDataReady[i])
+            {
+                adaptiveGainRefWindow.updatePlot(i,AdaptiveGainPlotData.axisRange, AdaptiveGainPlotData.X[i], AdaptiveGainPlotData.Y[i]);
+                AdaptiveGainPlotData.newDataReady[i] = false;
             }
         }
     }
@@ -966,4 +997,11 @@ void MainWindow::on_initRace_clicked()
 void MainWindow::on_startRaceButton_clicked()
 {
     startRace();
+}
+
+void MainWindow::on_pidSettingsButton_clicked()
+{
+    PidSettings dialog;
+    dialog.setModal(true);
+    dialog.exec();
 }

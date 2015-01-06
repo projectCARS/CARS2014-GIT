@@ -17,7 +17,6 @@ public:
     void init(int numGraphs, QString title, QString xlabel, QString ylabel);
     void setLegend(int graph, QString leg1);
 
-
     void updatePlot(int graph, QVector<double> axisRange, QVector<double> xvalues, QVector<double> yvalues );
 
 private slots:

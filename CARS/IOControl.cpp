@@ -727,23 +727,22 @@ void IOControl::decimalToVoltage(float64 *decimal, bool isBacking)
 void IOControl::receiveSignalsVolt(float64 *signal)
 {
     float64 tempArray[4];
-    qDebug("gas: %f\nTurn: %f", signal[0], signal[1]);
-    printError(DAQmxReadAnalogF64(TaskInput, 1, 10.0, DAQmx_Val_GroupByChannel, signal, 4, NULL, NULL), 797, " in IOcontrol");
 #ifdef NIDAQ_IS_AVALIABLE
+    printError(DAQmxReadAnalogF64(TaskInput, 1, 10.0, DAQmx_Val_GroupByChannel, tempArray, 4, NULL, NULL), 797, " in IOcontrol");
     switch(m_handController)
     {
     case (HandController::HandControl_1) :
-        //signal[0] = tempArray[0];
-        //signal[1] = tempArray[1];
+        signal[0] = tempArray[0];
+        signal[1] = tempArray[1];
         break;
     case (HandController::HandControl_2) :
-        //signal[0] = tempArray[2];
-        //signal[1] = tempArray[3];
+        signal[0] = tempArray[2];
+        signal[1] = tempArray[3];
         break;
     }
     signal[0] = (signal[0] + m_prevSignals[0]) / 2;
     signal[1] = (signal[1] + m_prevSignals[1]) / 2;
-
+    //qDebug("gas: %f \t \t Turn: %f", signal[0], signal[1]);
     m_prevSignals[0] = signal[0];
     m_prevSignals[1] = signal[1];
 

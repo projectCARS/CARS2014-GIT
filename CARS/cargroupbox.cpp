@@ -28,14 +28,17 @@ CarGroupBox::CarGroupBox(QWidget *parent) :
     ui->handControllercomboBox->addItem("Hand Controller 2", (int)HandController::HandControl_2);
 
     // Add controllers.
-    ui->controllerComboBox->addItem("PIDController", (int)ControllerType::PIDController);
-    ui->controllerComboBox->addItem("PIDControllerSR", (int)ControllerType::PIDControllerSR);
+    ui->controllerComboBox->addItem("PIDdefault", (int)ControllerType::PIDdefault);
+    ui->controllerComboBox->addItem("PIDaggressive", (int)ControllerType::PIDaggressive);
     ui->controllerComboBox->addItem("PIDadaptiveGain", (int)ControllerType::PIDadaptiveGain);
+    ui->controllerComboBox->addItem("PIDadaptiveSection", (int)ControllerType::PIDadaptiveSection);
+
+
 
     // Set fixed width of combo boxes (not optimal solution, but it works).
     ui->filterComboBox->setFixedWidth(70);
     ui->motionModelComboBox->setFixedWidth(100);
-    ui->controllerComboBox->setFixedWidth(100);
+    ui->controllerComboBox->setFixedWidth(130);
 
     QSizePolicy policy = sizePolicy();
     policy.setHorizontalPolicy(QSizePolicy::Fixed);
