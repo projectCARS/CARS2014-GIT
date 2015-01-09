@@ -8,10 +8,9 @@
 
 PIDadaptiveGain::PIDadaptiveGain(int ID)
 {
-    qDebug("1");
+
     m_ID = ID;
     m_startInd = 0;
-    m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;   //m_vRef is uniqe to each car
     m_aRef = aRef;
     m_gain = 1.0f;
@@ -20,7 +19,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
     m_firstLapDone = false;
     timer.start();
     m_bLap = 1000.0;
-qDebug("2");
+
     srand(time(NULL));
 
     m_prevI = 0;
@@ -37,7 +36,7 @@ qDebug("2");
     Kp_brake = 5.8f;
     Ki = 0.0f;
     Kd = 0.008f;
-qDebug("3");
+
     EnterCriticalSection(&csPlotData);
     if (AdaptiveGainPlotData.makePlot)
     {
@@ -67,36 +66,6 @@ qDebug("3");
     }
     LeaveCriticalSection(&csPlotData);
 
-
-qDebug("4");
-
-    // Deciding which log file to write to
-    timeSRgain.start();
-    int fileNo = 1;
-    std::stringstream str;
-    for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here. (i < ceiling)
-    {
-        str.clear();
-        str.str(std::string());
-        str << "outdata/logFiles/logAdaptiveGain" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
-        if (!fileExists(str.str()))
-        {
-            break;
-        }
-        fileNo++;
-    }
-    logFileAdaptive.open(str.str());
-
-    logFileAdaptive << "m_numOfInterval gRefLen newline m_intervalMidIndexes  m_refSpeedShort andThen m_refSpeedShortBest  m_times m_timesBest \n";
-    logFileAdaptive << m_numOfInterval << " " << gRefLen << " 0" << "\n" ;
-    for (int i = 0; i<m_numOfInterval ; i++ )
-    {
-        logFileAdaptive <<  m_intervalMidIndexes[i] << " " << m_refSpeedShort[i] << " 0" << "\n";
-    }
-
-    // logFileSRgain << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
-    std::cout << "PIDadaptiveGain object:		Writing log to " << str.str() << std::endl;
-qDebug("200");
 }
 
 PIDadaptiveGain::~PIDadaptiveGain()

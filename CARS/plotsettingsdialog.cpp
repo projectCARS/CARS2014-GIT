@@ -11,7 +11,6 @@ plotsettingsdialog::plotsettingsdialog(QDialog *parent) :
 
     ui->referenceCheckBox->setChecked(m_settings.value("plotSettings/adGainReferencePlot").toBool());
     ui->sectionTimeCheckBox->setChecked(m_settings.value("plotSettings/adSectionTimePlot").toBool());
-    ui->speedErrorCheckBox->setChecked(m_settings.value("plotSettings/speedErrorPlot").toBool());
     ui->GainReferenceCheckBox->setChecked(m_settings.value("plotSettings/AdaptiveGainPlot").toBool());
 }
 
@@ -28,11 +27,6 @@ void plotsettingsdialog::on_referenceCheckBox_toggled(bool checked)
 void plotsettingsdialog::on_sectionTimeCheckBox_toggled(bool checked)
 {
     m_settings.setValue("plotSettings/adSectionTimePlot", checked);
-}
-
-void plotsettingsdialog::on_speedErrorCheckBox_toggled(bool checked)
-{
-    m_settings.setValue("plotSettings/speedErrorPlot", checked);
 }
 
 void plotsettingsdialog::on_GainReferenceCheckBox_toggled(bool checked)

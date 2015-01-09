@@ -33,7 +33,6 @@ void printError(int32 status, int line, QString str)
     }
 }
 
-
 // Updates the lapdata struct in the car
 void updateLapData(CarData &cardata)
 {

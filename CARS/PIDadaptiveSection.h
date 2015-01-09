@@ -21,7 +21,6 @@ private:
     int m_refIndCircle;
     int m_refIndClosest;
     float m_dist_lateral;
-    float m_turnGain;
     float Kp_forward;
     float Kp_brake;
     float Ki;
@@ -32,20 +31,12 @@ private:
     float m_prevIturn = 0;
     float m_prevD;
     float m_prevAngError;
-    float m_prevSpeed;
     float m_refSpeed;
-    float m_refGas;
 
-    bool m_onPath;
-    float m_oldRefInd;
     std::vector<float> m_vRef;
     std::vector<float> m_aRef;
-    double m_gain, m_bGain;
-    double m_offset;
-    std::vector<float> m_LapError;
-    bool m_checkPoint, m_firstLapDone;
-    QElapsedTimer timer;
-    float m_lLap, m_bLap;
+
+    bool m_checkPoint, m_firstLapDone, m_firstLapStarted;
 
     int m_IndexSection;
     int m_IndexSectionOld;
@@ -53,7 +44,6 @@ private:
     float oldIncrease = 0;
     float newIncrease = 0;
 
-    //for section
     float m_numOfInterval;
     std::vector<int> m_noIncreaseCounter;
     std::vector<int> m_noDecreaseCounter;
@@ -67,17 +57,9 @@ private:
     std::vector<float> m_timerTimes;
     std::vector<float> m_timesBest;
     QElapsedTimer timerSection;
-    bool m_firstLapStarted;  //section also uses m_firstLapDone declared above
     std::vector<bool> m_sectionVisited;
 
-    //end for section
-
-
     std::chrono::time_point<std::chrono::system_clock> start, end;
-
-    QElapsedTimer timeSRgain;
-    std::ofstream logFileAdaptive;
-
 
 public:
     PIDadaptiveSection(int ID);
@@ -101,8 +83,6 @@ private:
     float calcGasSignal(std::vector<float> &state, float m_refSpeed);
     // Calcultes reference speed for regulation
     float calcRefSpeed(int refInd);
-    // Update speed reference gain(m_gain and possibly m_offset)
-    void updateSpeedReferenceGain();
     //
     void updateSectionTimers(int IndexSection);
     //

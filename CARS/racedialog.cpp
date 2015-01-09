@@ -17,6 +17,7 @@ raceDialog::raceDialog(QWidget *parent) :
     ui->setupUi(this);
     ui->scrollAreaContentsLayout->setAlignment(Qt::AlignTop);
     ui->lapNumberLabel->setText(QString("%1").arg(lapNumber));
+    setFixedSize(400,300);
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 

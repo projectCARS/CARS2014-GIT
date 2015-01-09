@@ -23,6 +23,7 @@ private:
 
 
     FilterType::Enum m_filtertype;
+    MotionModelType::Enum m_modelType;
 
 	// Counts the number of times an active car is not detected.
 	int m_numberOfLosses = 0;
@@ -56,6 +57,9 @@ public:
     CarMode::Enum getMode() { return m_mode; }
     // returns the filter type of the car
     FilterType::Enum getFiltertype(){ return m_filtertype;}
+
+    MotionModelType::Enum getModelType(){ return m_modelType;}
+
 	// Returns true if the filter has received a new measurement.
     bool hasNewMeasurement() { return m_filter->hasNewMeasurement(); }
 

@@ -7,11 +7,15 @@ PidSettings::PidSettings(QWidget *parent) :
 {
     ui->setupUi(this);
     loadPidSettings();
-    ui->kplabel->setText(QString("%1").arg(m_Kp));
-    ui->kdlabel->setText(QString("%1").arg(m_Kd));
-    ui->kilabel->setText(QString("%1").arg(m_Ki));
-    ui->kalabel->setText(QString("%1").arg(m_Ka));
-    ui->kbrakelabel->setText(QString("%1").arg(m_KBrake));
+    setFixedSize(181,580);
+    ui->KPlineEdit->setText(QString("%1").arg(m_Kp));
+    ui->KDlineEdit->setText(QString("%1").arg(m_Kd));
+    ui->KIlineEdit->setText(QString("%1").arg(m_Ki));
+    ui->KAlineEdit->setText(QString("%1").arg(m_Ka));
+    ui->KBRAKElineEdit->setText(QString("%1").arg(m_KBrake));
+    ui->KpTurnlineEdit->setText(QString("%1").arg(m_KpTurn));
+    ui->KiTurnlineEdit->setText(QString("%1").arg(m_KiTurn));
+    ui->KdTurnlineEdit->setText(QString("%1").arg(m_KdTurn));
 
 }
 
@@ -26,66 +30,6 @@ void PidSettings::on_pushButton_clicked()
     this->close();
 }
 
-void PidSettings::on_KpDecreaseButton_clicked()
-{
-    m_Kp -= 0.05f;
-    ui->kplabel->setText(QString("%1").arg(m_Kp));
-}
-
-void PidSettings::on_KpIncreaseButton_clicked()
-{
-    m_Kp += 0.05f;
-    ui->kplabel->setText(QString("%1").arg(m_Kp));
-}
-
-void PidSettings::on_KiDecreaseButton_clicked()
-{
-    m_Ki -= 0.05f;
-    ui->kilabel->setText(QString("%1").arg(m_Ki));
-}
-
-void PidSettings::on_KiIncreaseButton_clicked()
-{
-    m_Ki += 0.05f;
-    ui->kilabel->setText(QString("%1").arg(m_Ki));
-}
-
-void PidSettings::on_KdDecreaseButton_clicked()
-{
-    m_Kd -= 0.05f;
-    ui->kdlabel->setText(QString("%1").arg(m_Kd));
-}
-
-void PidSettings::on_KdIncreaseButton_clicked()
-{
-    m_Kd += 0.05f;
-    ui->kdlabel->setText(QString("%1").arg(m_Kd));
-}
-
-void PidSettings::on_KaDecreaseButton_clicked()
-{
-    m_Ka -= 0.05f;
-    ui->kalabel->setText(QString("%1").arg(m_Ka));
-}
-
-void PidSettings::on_KaIncreaseButton_clicked()
-{
-    m_Ka += 0.05f;
-    ui->kalabel->setText(QString("%1").arg(m_Ka));
-}
-
-void PidSettings::on_KBrakeDecreaseButton_clicked()
-{
-    m_KBrake -= 0.05f;
-    ui->kbrakelabel->setText(QString("%1").arg(m_KBrake));
-}
-
-void PidSettings::on_KBrakeIncreaseButton_clicked()
-{
-    m_KBrake += 0.05f;
-    ui->kbrakelabel->setText(QString("%1").arg(m_KBrake));
-}
-
 void PidSettings::savePidSettings()
 {
     m_settings.setValue("pid_settings/Kp", m_Kp);
@@ -93,6 +37,9 @@ void PidSettings::savePidSettings()
     m_settings.setValue("pid_settings/Ki", m_Ki);
     m_settings.setValue("pid_settings/Ka", m_Ka);
     m_settings.setValue("pid_settings/KBrake", m_KBrake);
+    m_settings.setValue("pid_settings/KpTurn", m_KpTurn);
+    m_settings.setValue("pid_settings/KiTurn", m_KiTurn);
+    m_settings.setValue("pid_settings/KdTurn", m_KdTurn);
 }
 
 void PidSettings::loadPidSettings()
@@ -103,5 +50,48 @@ void PidSettings::loadPidSettings()
     m_Ki = m_settings.value("Ki").toFloat();
     m_Ka = m_settings.value("Ka").toFloat();
     m_KBrake = m_settings.value("KBrake").toFloat();
+    m_KpTurn = m_settings.value("KpTurn").toFloat();
+    m_KiTurn = m_settings.value("KiTurn").toFloat();
+    m_KdTurn = m_settings.value("KdTurn").toFloat();
     m_settings.endGroup();
+}
+
+void PidSettings::on_KPlineEdit_editingFinished()
+{
+    m_Kp = ui->KPlineEdit->text().toFloat();
+}
+
+void PidSettings::on_KIlineEdit_editingFinished()
+{
+    m_Ki = ui->KIlineEdit->text().toFloat();
+}
+
+void PidSettings::on_KDlineEdit_editingFinished()
+{
+    m_Kd = ui->KDlineEdit->text().toFloat();
+}
+
+void PidSettings::on_KAlineEdit_editingFinished()
+{
+    m_Ka = ui->KAlineEdit->text().toFloat();
+}
+
+void PidSettings::on_KBRAKElineEdit_editingFinished()
+{
+    m_KBrake = ui->KBRAKElineEdit->text().toFloat();
+}
+
+void PidSettings::on_KpTurnlineEdit_editingFinished()
+{
+    m_KpTurn= ui->KpTurnlineEdit->text().toFloat();
+}
+
+void PidSettings::on_KiTurnlineEdit_editingFinished()
+{
+    m_KiTurn = ui->KiTurnlineEdit->text().toFloat();
+}
+
+void PidSettings::on_KdTurnlineEdit_editingFinished()
+{
+    m_KdTurn = ui->KdTurnlineEdit->text().toFloat();
 }

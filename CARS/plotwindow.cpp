@@ -1,7 +1,12 @@
 #include "plotwindow.h"
 #include "ui_plotwindow.h"
-
 #include "definitions.h"
+#include "functions.h"
+#include "classes.h"
+#include "headers.h"
+#include <fstream>
+#include <iomanip>
+
 
 plotWindow::plotWindow(QWidget *parent) :
     QWidget(parent),
@@ -16,14 +21,17 @@ plotWindow::~plotWindow()
 }
 
 // create graphs for plot, and sets text labels for title, xaxis and yaxis
-void plotWindow::init(int numGraphs, QString title, QString xlabel, QString ylabel)
+void plotWindow::init(PlotData *plotData, QString title, QString xlabel, QString ylabel)
 {
     ui->plotArea->clearGraphs();
     ui->plotArea->xAxis->setLabel(xlabel);
     ui->plotArea->yAxis->setLabel(ylabel);
 
+    m_plotData = plotData;
+    qDebug() << m_plotData->numOfGraphs;
+
     ui->titleLabel->setText(title);
-    for(int i = 0; i<numGraphs; i++)
+    for(int i = 0; i < m_plotData->numOfGraphs; i++)
         ui->plotArea->addGraph();
 }
 
@@ -63,4 +71,44 @@ void plotWindow::on_closeButton_released()
 void plotWindow::closeEvent(QCloseEvent *event)
 {
     event->accept();
+}
+
+void plotWindow::on_ExportDataButton_released()
+{
+    int fileNo = 1;
+    std::stringstream str;
+    for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here.
+    {
+        str.clear();
+        str.str(std::string());
+        str << "outdata/dataFiles/Data" << m_plotData->name << std::setw(3) << std::setfill('0') << fileNo << ".txt";
+        if (!fileExists(str.str()))
+        {
+            break;
+        }
+        fileNo++;
+    }
+    std::ofstream dataStream;
+    dataStream.open(str.str());
+
+    for (int k = 0; k < m_plotData->numOfGraphs; k++)
+    {
+        dataStream << "X" << k << " ";
+        for (int i = 0; i< m_plotData->X[k].length(); i++)
+        {
+            dataStream << m_plotData->X[k][i] << " ";
+
+        }
+        dataStream << "\n";
+        dataStream << "Y" << k << " ";
+        for (int i = 0; i< m_plotData->Y[k].length(); i++)
+        {
+            dataStream << m_plotData->Y[k][i] << " ";
+
+        }
+        dataStream << "\n";
+
+    }
+    dataStream.close();
+    std::cout << "PlotWindow object:		Writing data to " << str.str() << std::endl;
 }

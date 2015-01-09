@@ -72,7 +72,7 @@ void ProcessingThread::run()
     std::ofstream logFile;
     logFile.open(str.str());
     logFile << "sysTime carID xPos yPos speed yaw yawVel xPosRaw yPosRaw yawRaw gas turn\n";
-    std::cout << "Main thread:		Writing log to " << str.str() << std::endl;
+    std::cout << "processingthread thread:		Writing log to " << str.str() << std::endl;
 
     // Resize vectors.
     for (int i = 0; i < m_numCars; i++)
@@ -156,14 +156,15 @@ void ProcessingThread::run()
         // Tell controller thread that the input signals has been read.
         SetEvent(hControllerThreadEvent_signalsRead);
         // Loop over all cars and estimate states.
+        ompTimeMid = omp_get_wtime();
         for (int j = 0; j < m_numCars; j++)
         {
             // Add input signals to cars.
             m_cars[j].addInputSignals(signal[j].gas, signal[j].turn);
             // Update filter.
-            ompTimeMid = omp_get_wtime();
+
             m_cars[j].updateFilter();
-            ompTimeEnd = omp_get_wtime();
+
             /* Extract data from the car object and store in vector carData,
             which will be sent to other threads. */
             carData[j].id = m_cars[j].getId();
@@ -171,6 +172,7 @@ void ProcessingThread::run()
             carData[j].lost = m_cars[j].isLost();
             carData[j].mode = m_cars[j].getMode();
             carData[j].state = m_cars[j].getState();
+            carData[j].modelType = m_cars[j].getModelType();
 
             if(imageMode && m_cars[j].getFiltertype() == FilterType::Enum::ParticleFilter)
             {
@@ -183,6 +185,7 @@ void ProcessingThread::run()
                             carData[j].state[4] = angvel;
             }
         }
+        ompTimeEnd = omp_get_wtime();
         // Log data. Currently only log data of car with id 0.
         if (loopCounter%logInterval==0) // log only some loops
         {
@@ -240,6 +243,7 @@ void ProcessingThread::run()
             ompTimeStart = omp_get_wtime();
             // Calculate duration of one iteration in ms.
             std::cout << "FPS main: " << 1000.0/timeDiff << std::endl;
+            //qDebug() << ompTimeEnd - ompTimeMid;
 
         }
 

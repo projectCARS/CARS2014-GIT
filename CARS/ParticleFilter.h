@@ -71,19 +71,23 @@ private:
     bool m_newMeasurement;
 
     //Parameters for the ST model
-    float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kTurn, mTurn, kThrottle, mThrottle, k_alphaF;
+    float m, Cm1, Cm2, Cm3, Cf, lf, Iz,kTurn, mTurn, kThrottle, mThrottle, k_alphaF, turngain;
     float p1, p2, p3, p4, p5, q1, q2, q3, q4;
     float dutyCycles, thetaF;
 
     float gaussianNoise(void);
     int findFirst(const float value);
 
+    float calcDutycycles();
+    float calcThetaF();
+    float calcFyFront(float thetaF);
+    float calcFxRear(float D, float Vx);
+    void decimalToVoltage(float64 *decimal);
+
 public:
     ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionModelType::Enum motionModelType);
     ParticleFilter();
     ~ParticleFilter();
-
-
 
     void setState(float state[5]);
     void extensiveSearch(cv::Mat img);
@@ -96,16 +100,6 @@ public:
     void update(const cv::Mat img);
     void parallelUpdate(const cv::Mat img);
     void noImgUpdate(float x, float y, float theta);
-
-    float calcDutycycles();
-    float calcThetaF();
-    float calcAlphaF(float Vy, float Vx, float omegaZ, float thetaF);
-    float calcLatForce(float alphaF);
-    float calcFyFront(float Vx, float thetaF, float alphaF);
-    float calcFxFront(float thetaF, float alphaF);
-    float calcFxRear(float D, float Vx, float Fxfront);
-    void nonLinearUndistort(float input[2], float output[2]);
-    void cameraToWorldCoordinates(float cameraPoint[2], float worldPoint[2]);
 
     void resample(void);
     void systematicResample(void);
@@ -134,7 +128,7 @@ public:
     // Get current state estimate.
     virtual std::vector<float> getState(void);
     // Returns true if the filter has recieved new measurements, otherwise false.
-    virtual bool hasNewMeasurement(void);
+    virtual bool hasNewMeasurement(void){ return m_newMeasurement; };
 
     virtual void addImageMeasurement(cv::Mat img);
 

@@ -114,6 +114,7 @@ void MainWindow::startThreads(void)
     EnterCriticalSection(&csPlotData);
     if(m_settings.value("plotSettings/adGainReferencePlot").toBool())
     {
+        AdaptiveRefPlotData.name = "AdaptiveSectionRef";
         AdaptiveRefPlotData.makePlot = true;
         AdaptiveRefPlotData.numOfGraphs = 4;
         AdaptiveRefPlotData.newDataReady.resize(0);
@@ -123,7 +124,7 @@ void MainWindow::startThreads(void)
         AdaptiveRefPlotData.Y.resize(0);
         AdaptiveRefPlotData.Y.resize(AdaptiveRefPlotData.numOfGraphs);
 
-        adaptiveRefWindow.init(AdaptiveRefPlotData.numOfGraphs, "<h1>Speedreference - PIDadaptiveSection</h1>","Reference point","Speed reference [m/s]");
+        adaptiveRefWindow.init(&AdaptiveRefPlotData, "<h1>Speed reference - PIDadaptiveSection</h1>","Reference point","Speed reference [m/s]");
         adaptiveRefWindow.setLegend(0,"Original speed reference");
         adaptiveRefWindow.setLegend(1,"Best speed reference");
         adaptiveRefWindow.setLegend(2,"Current speed reference");
@@ -132,6 +133,7 @@ void MainWindow::startThreads(void)
     }
     if(m_settings.value("plotSettings/adSectionTimePlot").toBool())
     {
+        AdaptiveTimePlotData.name = "AdaptiveSectionTime";
         AdaptiveTimePlotData.makePlot = true;
         AdaptiveTimePlotData.numOfGraphs = 2;
         AdaptiveTimePlotData.newDataReady.resize(0);
@@ -141,13 +143,14 @@ void MainWindow::startThreads(void)
         AdaptiveTimePlotData.Y.resize(0);
         AdaptiveTimePlotData.Y.resize(AdaptiveTimePlotData.numOfGraphs);
 
-        adaptiveTimeWindow.init(AdaptiveTimePlotData.numOfGraphs, "<h1>Time spent in each section</h1>", "Section", "Time [m/s]");
+        adaptiveTimeWindow.init(&AdaptiveTimePlotData, "<h1>Time spent in each section</h1>", "Section", "Time [m/s]");
         adaptiveTimeWindow.setLegend(0,"Best time for section in all laps");
         adaptiveTimeWindow.setLegend(1,"Time for section on last lap");
         adaptiveTimeWindow.show();
     }
     if(m_settings.value("plotSettings/AdaptiveGainPlot").toBool())
     {
+        AdaptiveGainPlotData.name = "AdaptiveGainRef";
         AdaptiveGainPlotData.makePlot = true;
         AdaptiveGainPlotData.numOfGraphs = 4;
         AdaptiveGainPlotData.newDataReady.resize(0);
@@ -157,7 +160,7 @@ void MainWindow::startThreads(void)
         AdaptiveGainPlotData.Y.resize(0);
         AdaptiveGainPlotData.Y.resize(AdaptiveGainPlotData.numOfGraphs);
 
-        adaptiveGainRefWindow.init(AdaptiveGainPlotData.numOfGraphs, "<h1>Speed reference - PIDadaptiveGain</h1>","Reference point","Speed reference [m/s]");
+        adaptiveGainRefWindow.init(&AdaptiveGainPlotData, "<h1>Speed reference - PIDadaptiveGain</h1>","Reference point","Speed reference [m/s]");
         adaptiveGainRefWindow.setLegend(0,"Original speed reference");
         adaptiveGainRefWindow.setLegend(1,"Best speed reference");
         adaptiveGainRefWindow.setLegend(2,"Current speed reference");
@@ -188,6 +191,7 @@ void MainWindow::startThreads(void)
     ui->startRaceButton->setEnabled(false);
     ui->initRace->setEnabled(false);
     ui->plotSettingsButton->setEnabled(false);
+    ui->pidSettingsButton->setEnabled(false);
 
     // Start timer used to draw images.
     // Tell the GUI thread to redraw images as fast as possible by passing the value 0.
@@ -197,7 +201,7 @@ void MainWindow::startThreads(void)
     m_fpsTime.restart();
 }
 
-// Connect this to first race start button
+// Initializes the race conditions
 void MainWindow::initializeRace()
 {
     m_loopCounter = 0;
@@ -277,6 +281,8 @@ void MainWindow::initializeRace()
     ui->raceButton->setEnabled(false);
     ui->startRaceButton->setEnabled(true);
     ui->initRace->setEnabled(false);
+    ui->plotSettingsButton->setEnabled(false);
+    ui->pidSettingsButton->setEnabled(false);
 
     // Draw Start boxes
     int numStartBoxes = 0;
@@ -304,7 +310,7 @@ void MainWindow::initializeRace()
 
 }
 
-// Connect this tosecond race start button
+// Starts a race
 void MainWindow::startRace()
 {
     EnterCriticalSection(&csDrawThreadData);
@@ -393,6 +399,7 @@ void MainWindow::stopThreads(void)
     ui->initRace->setEnabled(true);
     ui->startRaceButton->setEnabled(true);
     ui->plotSettingsButton->setEnabled(true);
+    ui->pidSettingsButton->setEnabled(true);
 
     raceSettings.doRace = false;
     raceSettings.raceDone = false;
@@ -531,7 +538,7 @@ void MainWindow::updateFrame(void)
             if (AdaptiveTimePlotData.newDataReady[i])
             {
                 adaptiveTimeWindow.updatePlot(i,AdaptiveTimePlotData.axisRange, AdaptiveTimePlotData.X[i], AdaptiveTimePlotData.Y[i]);
-                AdaptiveGainPlotData.newDataReady[i] = false;
+                AdaptiveTimePlotData.newDataReady[i] = false;
             }
         }
     }
@@ -883,7 +890,8 @@ void MainWindow::loadReference()
             //gRef[i * 2 + 1] = gRef[i * 2 + 1];
             // v_i - speed reference at point (x_i,y_i)
             file >> vRef[i];  //speed must be stored in global coordinates in reference.txt
-            // file >> aRef[i]; // angle must be stored in reference.txt
+            file >> aRef[i]; //angle must be stored in reference.txt
+
             vRef[i] = vRef[i] * gain + offset;
             numPoints++;
         }
@@ -900,7 +908,7 @@ void MainWindow::loadReference()
             //gRef[i * 2 + 1] = gRef[i * 2 + 1];
             // v_i - speed reference at point (x_i,y_i)
             file >> vRef[i - 1];  //speed must be stored in global coordinates in reference.txt
-            //file >> aRef[i]; // angle must be stored in reference.txt
+            file >> aRef[i]; //angle must be stored in reference.txt
             vRef[i] = vRef[i] * gain + offset;
             numPoints++;
         }

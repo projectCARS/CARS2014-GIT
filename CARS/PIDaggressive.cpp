@@ -4,7 +4,7 @@
 #include "PIDaggressive.h"
 
 
-PIDaggressive::PIDaggressive(int ID, float K_array[5])
+PIDaggressive::PIDaggressive(int ID, float K_array[8])
 {
     m_ID = ID;
     m_startInd = 0;
@@ -13,16 +13,16 @@ PIDaggressive::PIDaggressive(int ID, float K_array[5])
     m_prevD = 0;
     m_prevAngError = 0;
 
-    m_turnPID.resize(3);
-    m_turnPID[0] = 2.5f;// 1.5f;    //P
-    m_turnPID[1] = 0.3f;            //I
-    m_turnPID[2] = 0.0f;            //D
-
     Kp_forward = K_array[0];
     Kd = K_array[1];
     Ki = K_array[2];
     Ka = K_array[3];
     Kp_brake = K_array[4];
+
+    m_turnPID.resize(3);
+    m_turnPID[0] = K_array[5];// 1.5f;    //P
+    m_turnPID[1] = K_array[6];            //I
+    m_turnPID[2] = K_array[7];            //D
 
     std::cout << Kp_forward << " " << Kd << " " << Ki << " " << Ka << " " << Kp_brake << "\n";
 
@@ -45,6 +45,7 @@ void PIDaggressive::calcSignals(std::vector<float> &state, float &gas, float &tu
     // Find point on reference curve.
     m_refInd = findIntersection(state, m_startInd);
     m_refSpeed = vRef[m_refInd];
+    m_refAngle = aRef[m_refInd];
 
     if(m_refSpeed > state[2] + 0.5)
     {
@@ -62,6 +63,11 @@ float PIDaggressive::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
     //m_refAngle = aRef[m_refInd];
     float error = (refSpeed - state[2]);
     float angleError = abs(m_refAngle - state[3]);
+    if(angleError > 2*M_PI)
+    {
+        angleError -= 2*M_PI;
+        angleError = abs(angleError);
+    }
 
     start = std::chrono::system_clock::now();
     std::chrono::duration<double> T = start - end;
@@ -83,7 +89,7 @@ float PIDaggressive::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
 
     float signal = KP * error +
                    Ki * Ierror +
-                   Kd * Derror +
+                   Kd * Derror -
                    Ka * angleError;
 
     m_prevAngError = error;
@@ -208,7 +214,7 @@ float PIDaggressive::calcTurnSignal(std::vector<float> &state, int refInd)
     }
     else
     {
-        float KturnVel = 0.20f;
+        float KturnVel = 0.10f;
         float I = m_turnPID[1]*(m_prevIturn + diffAngle*dt);
         float P = m_turnPID[0]*diffAngle / M_PI_2 - KturnVel*state[4];
         turnSignal = P + I;

@@ -45,9 +45,9 @@ void STModel::matrixSetup()
     // Tuna dessa
     Q(0, 0) = 1;
     Q(1, 1) = 1;
-    Q(2, 2) = 20;
+    Q(2, 2) = 100;
     Q(3, 3) = 1;
-    Q(4, 4) = 30;
+    Q(4, 4) = 100;
     Q(5, 5) = 20;
 
     m = 0.0406f;
@@ -58,10 +58,8 @@ void STModel::matrixSetup()
     lf = 0.003f;
     Iz = 0.000016344f;
     kTurn = 0.10f;
-    mTurn = -0.1f*(1.53f); // 1.53 in this case is turnNeutral from IOControl
-    kThrottle = -2.259f; // not used
+    mTurn = -0.1f*(1.43f); // 1.53 in this case is turnNeutral from IOControl
     mThrottle = -0.0437f;
-    k_alphaF = 0.4835f; // not used
     m_gas = 0;
     m_turn = 0;
     p1 = 1.0989f;
@@ -93,9 +91,7 @@ void STModel::updateModel(VectorXd xhat, double T)
 
     double dutyCycles = calcDutycycles();
     double thetaF = calcThetaF();
-    //double alphaF = calcAlphaF(Vx, Vy, w, thetaF);
-    double FyFront = calcFyFront(thetaF);
-    //double FxFront = calcFxFront(thetaF, alphaF);
+    double FyFront = calcFyFront(thetaF, Vx);
     double FxRear = calcFxRear(dutyCycles, Vx);
 
     //qDebug("Turn signal: %f, thetaF: %f, FyFront: %f", m_turn, thetaF, FyFront);
@@ -109,9 +105,10 @@ void STModel::updateModel(VectorXd xhat, double T)
     f(5) = Vy + (FyFront/m)*T;
 
     qDebug("After:\n x: %f\nY: %f\nVx: %f\nh: %f\nw: %f\nVy: %f\n", f(0), f(1), f(2), f(3), f(4), f(5));
+    qDebug() << "Duty Cycles: " << dutyCycles << "\nFxRear" << FxRear;
 
     /* This section is for calculating terms used in the jacobian.
-     * Currently, a simpler version of the STModel is used where these are not needed
+     * Currently (2015-01-08), a simpler version of the STModel is used where these are not needed
     double dAlphaF[3];
     double dFxFront[3];
     double dFyFront[3];
@@ -172,7 +169,6 @@ void STModel::updateModel(VectorXd xhat, double T)
     F(5, 4) = 0; // (dFyFront[1])*T/m;
     F(5, 5) = 1; // 1 + (dFyFront[2])*T/m;
 
-    //TODO: Add dynamics for G and H...
 }
 
 void STModel::addInput(float u_gas, float u_turn)
@@ -187,7 +183,7 @@ void STModel::addInput(float u_gas, float u_turn)
 
 float STModel::calcDutycycles()
 {
-    if(m_gas > 1.45 || m_gas < 1.66)
+    if(m_gas > 1.45 && m_gas < 1.66)
         return 0;
     else
         return  mThrottle + ((p1*pow(m_gas,4) + p2*pow(m_gas,3) + p3*pow(m_gas,2) + p4*m_gas + p5) / (pow(m_gas,4) + q1*pow(m_gas,3) + q2*pow(m_gas,2) + q3*m_gas + q4));
@@ -195,9 +191,10 @@ float STModel::calcDutycycles()
 
 float STModel::calcThetaF()
 {
-    return kTurn*m_turn + mTurn;
+    return (kTurn*m_turn + mTurn);
 }
 
+// Currently not used, was used in a more detailed (not working) version of STModel
 float STModel::calcAlphaF(float Vx, float Vy, float w, float thetaF)
 {
     if(Vx == 0)
@@ -207,10 +204,10 @@ float STModel::calcAlphaF(float Vx, float Vy, float w, float thetaF)
     return thetaF - atan((Vy+lf*w)/Vx);
 }
 
-float STModel::calcFyFront(float thetaF)
+float STModel::calcFyFront(float thetaF, float Vx)
 {
     //return (sin(thetaF)*k_alphaF*alphaF)+ k* thetaF*0.035*(1/Vx);
-    return turngain * thetaF;
+    return turngain * thetaF * Vx*Vx;
 }
 
 // Currently not used, was used in a more detailed (not working) version of STModel

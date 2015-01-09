@@ -55,19 +55,14 @@ void VirtualSensor::stopSensor(void)
 #endif
 }
 
-
+// Function used to wait for a new image from the camera. Essentially detectMarkers() without the image2Markers function call.
 void VirtualSensor::grabThresholdImage()
 {
 #ifdef CAMERA_IS_AVALIABLE
     // Grab image from camera.
-
-    //double t0 = omp_get_wtime();
-
     m_pgrCamera.grabImage(&m_rawData);
     // Create cv::Mat object. Data is not copied - pData is simply stored in tempMat.
     cv::Mat tempMat = cv::Mat(m_rawData.rows, m_rawData.cols, CV_8UC1, m_rawData.pData, cv::Mat::AUTO_STEP);
-
-    //std::cout << "img grab time : " << omp_get_wtime() - t0 << std::endl;
 
     if (tempMat.empty())
     {
@@ -115,9 +110,16 @@ std::vector<float> VirtualSensor::detectMarkers()
     std::vector<float> allMarkers;
 #ifdef CAMERA_IS_AVALIABLE
 
-
+   // t0 = omp_get_wtime();
+    //if(count%2 == 0)
+     //   qDebug() << t0 - t1;
     // Grab image from camera.
     m_pgrCamera.grabImage(&m_rawData);
+    //t1 = omp_get_wtime();
+   // if(count%2 == 0)
+     //   qDebug() << "camera: " << t1 - t0;
+
+
 
     // Create cv::Mat object. Data is not copied - pData is simply stored in tempMat.
 
@@ -152,16 +154,9 @@ std::vector<float> VirtualSensor::detectMarkers()
     tempMat.copyTo(drawThreadData.processedImage);
     LeaveCriticalSection(&csDrawThreadData);
 
-
-
-
     /* Calculate markers from tempMat. Markers are given in camera coordinates. */
     imageToMarkers(tempMat, allMarkers);
-
-
     cameraToWorldCoordinates(allMarkers);
-
-
     count++;
 
     return allMarkers;

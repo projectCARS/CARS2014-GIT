@@ -39,15 +39,18 @@ void ControllerThread::loadControllerSettings()
             m_controllers.push_back(new PIDdefault(m_numCars));
             break;
         case ControllerType::PIDaggressive:
-            float K_array[5];
+            float K_array[8];
             m_settings.beginGroup(QString("pid_settings"));
             K_array[0] = m_settings.value("Kp").toFloat();
             K_array[1] = m_settings.value("Kd").toFloat();
             K_array[2] = m_settings.value("Ki").toFloat();
             K_array[3] = m_settings.value("Ka").toFloat();
             K_array[4] = m_settings.value("KBrake").toFloat();
+            K_array[5] = m_settings.value("KpTurn").toFloat();
+            K_array[6] = m_settings.value("KiTurn").toFloat();
+            K_array[7] = m_settings.value("KdTurn").toFloat();
             m_settings.endGroup();
-            qDebug() << "hej: " << K_array[0] <<  " " << m_settings.value("race_settings/number_of_laps").toFloat();
+
             m_controllers.push_back(new PIDaggressive(m_numCars, K_array));
             break;
         default:
@@ -89,6 +92,7 @@ void ControllerThread::loadModeSettings( std::vector<CarData> &carData)
         m_settings.beginGroup(QString("car/id%1").arg(numCars));
         // Add car to vector m_cars.
         carData[numCars].mode = static_cast<CarMode::Enum>(m_settings.value("mode").toInt());
+        carData[numCars].modelType = static_cast<MotionModelType::Enum>(m_settings.value("motion_model").toInt());
         m_settings.endGroup();
         numCars++;
     }
@@ -155,7 +159,6 @@ void ControllerThread::run()
         }
         m_doStopMutex.unlock();
 
-
         // Wait for all data to be written to struct.
         WaitForSingleObject(hControllerThreadEvent1, INFINITE);
 
@@ -176,13 +179,18 @@ void ControllerThread::run()
                     // Send gas and turn signal from hand controller to car.
                 case CarMode::Manual:
                     ioControls[i].manualControl(carData[i]);
-                    ioControls[i].receiveSignals(signal[i].gas, signal[i].turn);
+                    //ioControls[i].receiveSignals(signal[i].gas, signal[i].turn);
                     break;
                     // Send gas and turn signal from controller to car.
                 case CarMode::Auto:
 
                     if (-0.02 < carData[i].state[2] && carData[i].state[2] < 0.02 && signal[i].gas > 0.005 && !m_isBacking[i])
                     {
+                        m_stuckCounter[i]++;
+                    }
+                    else if (carData[i].modelType == MotionModelType::Enum::STModel && -0.1 < carData[i].state[2] && carData[i].state[2] < 0.1 && signal[i].gas > 0.005 && !m_isBacking[i])
+                    {
+                        qDebug() << "ST WWWWWWWWWOOOOO!!!";
                         m_stuckCounter[i]++;
                     }
                     else

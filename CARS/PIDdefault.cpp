@@ -16,14 +16,14 @@ PIDdefault::PIDdefault(int ID)
         case 0:
             m_turnPID.resize(3);
 
-            m_turnPID[0] = 2.5f;// 1.5f;    //P
-            m_turnPID[1] = 0.3f;            //I
+            m_turnPID[0] = 1.5f;// 1.5f;    //P
+            m_turnPID[1] = 0.0f;            //I
             m_turnPID[2] = 0.0f;            //D
 
             Kp_forward = 0.25f;
             Kp_brake = 3.9f;
-            Ki = 0.05f;
-            Kd = 0.001f;
+            Ki = 0.01f;
+            Kd = 0.008f;
             Ka = 0.0f;
 
 
@@ -31,14 +31,15 @@ PIDdefault::PIDdefault(int ID)
             break;
         case 1:
             m_turnPID.resize(3);
-            m_turnPID[0] = 1.3f;		//P
+            m_turnPID[0] = 2.5f;		//P
             m_turnPID[1] = 0.3f;		//I
             m_turnPID[2] = 0;		//D
 
-            Kp_forward = 0.16f;
-            Kp_brake = 0.56f;//0.8f;
-            Ki = 0.01f;
-            Kd = 0.008f;
+            Kp_forward = 0.25f;
+            Kp_brake = 3.9f;//0.8f;
+            Ki = 0.05f;
+            Kd = 0.001f;
+            Ka = 0;
             break;
         case 2:
             m_turnPID.resize(3);
@@ -72,6 +73,7 @@ void PIDdefault::calcSignals(std::vector<float> &state, float &gas, float &turn)
     // Find point on reference curve.
     m_refInd = findIntersection(state, m_startInd);
     m_refSpeed = vRef[m_refInd];
+    m_refAngle = aRef[m_refInd];
 
     if(m_refSpeed > state[2] + 0.5)
     {
@@ -86,9 +88,14 @@ void PIDdefault::calcSignals(std::vector<float> &state, float &gas, float &turn)
 
 float PIDdefault::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
 
-    //m_refAngle = aRef[m_refInd];
+
     float error = (refSpeed - state[2]);
-    //float angleError = abs(m_refAngle - state[3]);
+    float angleError = abs(m_refAngle - state[3]);
+    if(angleError > 2*M_PI)
+    {
+        angleError -= 2*M_PI;
+        angleError = abs(angleError);
+    }
 
     start = std::chrono::system_clock::now();
     std::chrono::duration<double> T = start - end;
@@ -110,8 +117,8 @@ float PIDdefault::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
 
     float signal = KP * error +
                    Ki * Ierror +
-                   Kd * Derror;// +
-                   //Ka * angleError;
+                   Kd * Derror -
+                   Ka * angleError;
 
     m_prevAngError = error;
     m_prevI = Ierror;

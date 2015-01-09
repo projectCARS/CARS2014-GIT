@@ -13,6 +13,7 @@ Car::Car(int id, CarMode::Enum mode, FilterType::Enum filterType, MotionModelTyp
 	m_lost = false;
 	m_mode = mode;
     m_filtertype = filterType;
+    m_modelType = motionModelType;
     m_handController = handController;
 
 	// Initialize filter.

@@ -20,29 +20,25 @@ public:
 private slots:
     void on_pushButton_clicked();
 
-    void on_KpDecreaseButton_clicked();
-
-    void on_KpIncreaseButton_clicked();
-
-    void on_KiDecreaseButton_clicked();
-
-    void on_KiIncreaseButton_clicked();
-
-    void on_KdDecreaseButton_clicked();
-
-    void on_KdIncreaseButton_clicked();
-
-    void on_KaDecreaseButton_clicked();
-
-    void on_KaIncreaseButton_clicked();
-
-    void on_KBrakeDecreaseButton_clicked();
-
-    void on_KBrakeIncreaseButton_clicked();
-
     void savePidSettings();
 
     void loadPidSettings();
+
+    void on_KPlineEdit_editingFinished();
+
+    void on_KIlineEdit_editingFinished();
+
+    void on_KDlineEdit_editingFinished();
+
+    void on_KAlineEdit_editingFinished();
+
+    void on_KBRAKElineEdit_editingFinished();
+
+    void on_KpTurnlineEdit_editingFinished();
+
+    void on_KiTurnlineEdit_editingFinished();
+
+    void on_KdTurnlineEdit_editingFinished();
 
 private:
     Ui::PidSettings *ui;
@@ -51,6 +47,9 @@ private:
     float m_Kd = 0;
     float m_Ka = 0;
     float m_KBrake = 0;
+    float m_KpTurn = 0;
+    float m_KiTurn = 0;
+    float m_KdTurn = 0;
 
     QSettings m_settings;
 

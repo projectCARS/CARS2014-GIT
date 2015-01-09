@@ -9,6 +9,8 @@ private:
 	PGRCamera m_pgrCamera;		// Is pointer better?
 	RawData m_rawData;
 
+    double t1 = 0;
+    double t0 = 0;
 
 	cv::Mat mask;
 		

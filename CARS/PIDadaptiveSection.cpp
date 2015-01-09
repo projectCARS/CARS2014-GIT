@@ -10,16 +10,11 @@ PIDadaptiveSection::PIDadaptiveSection(int ID)
 {
     m_ID = ID;
     m_startInd = 0;
-    m_onPath = false;   //dont update speed reference until car is near the reference path
     m_vRef = vRef;   //m_vRef is uniqe to each car
     m_aRef = aRef;
-    m_gain = 1.0f;
-    m_offset = 0.3f;
 
     m_checkPoint = false;
     m_firstLapDone = false;
-    timer.start();
-    m_bLap = 1000.0;
 
     srand(time(NULL));
 
@@ -137,39 +132,6 @@ PIDadaptiveSection::PIDadaptiveSection(int ID)
 
     }
     LeaveCriticalSection(&csPlotData);
-
-
-
-
-
-
-    // Deciding which log file to write to
-    timeSRgain.start();
-    int fileNo = 1;
-    std::stringstream str;
-    for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here, (i < ceiling). 100 is a good number
-    {
-        str.clear();
-        str.str(std::string());
-        str << "outdata/logFiles/logAdaptiveSection" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
-        if (!fileExists(str.str()))
-        {
-            break;
-        }
-        fileNo++;
-    }
-    logFileAdaptive.open(str.str());
-
-    logFileAdaptive << "m_numOfInterval gRefLen newline m_intervalMidIndexes  m_refSpeedShort andThen m_refSpeedShortBest  m_times m_timesBest \n";
-    logFileAdaptive << m_numOfInterval << " " << gRefLen << " 0" << "\n" ;
-    for (int i = 0; i<m_numOfInterval ; i++ )
-    {
-        logFileAdaptive <<  m_intervalMidIndexes[i] << " " << m_refSpeedShort[i] << " 0" << "\n";
-    }
-
-    // logFileAdaptive << "sysTime carID xPos yPos speed lateralError refInd vRef[refInd]_before vRef[refInd]_after \n";
-    std::cout << "PIDadaptiveSection object:		Writing log to " << str.str() << std::endl;
-
 }
 
 PIDadaptiveSection::~PIDadaptiveSection()
@@ -354,11 +316,10 @@ void PIDadaptiveSection::updateSpeedReference()
     {
         AdaptiveRefPlotData.newDataReady[1] = true;
         AdaptiveRefPlotData.newDataReady[2] = true;
-        AdaptiveRefPlotData.newDataReady[3] = true;
         for (int i = 0; i < m_numOfInterval ; i++ )
         {
-            AdaptiveRefPlotData.Y[1][i] = m_refSpeedShort[i];
-            AdaptiveRefPlotData.Y[2][i] = m_refSpeedShortBest[i];
+            AdaptiveRefPlotData.Y[2][i] = m_refSpeedShort[i];
+            AdaptiveRefPlotData.Y[1][i] = m_refSpeedShortBest[i];
         }
     }
     if (AdaptiveTimePlotData.makePlot)
@@ -383,7 +344,7 @@ void PIDadaptiveSection::updateSpeedReference()
 
     double *x,*f,*b,*c,*d;
     int n;
-    n = m_numOfInterval+2; // all vectors is 2 samples longer then the number of intervals.
+    n = m_numOfInterval+6; // all vectors is 2 samples longer then the number of intervals.
     x = new double [n];
     f = new double [n];
     b = new double [n];
@@ -391,24 +352,28 @@ void PIDadaptiveSection::updateSpeedReference()
     d = new double [n];
 
 
-    x[0] = m_intervalMidIndexes[0] - m_intervalLength;
-    f[0] = m_refSpeedShort[m_numOfInterval-1];          //first function value is equal to the last value in m_refSpeedShort
+    x[0] = m_intervalMidIndexes[0] - 3*m_intervalLength;
+    f[0] = m_refSpeedShort[m_numOfInterval-3];          //first function value is equal to the second to last value in m_refSpeedShort
+    x[1] = m_intervalMidIndexes[0] - 2*m_intervalLength;
+    f[1] = m_refSpeedShort[m_numOfInterval-2];          //first function value is equal to the last value in m_refSpeedShort
+    x[2] = m_intervalMidIndexes[0] - m_intervalLength;
+    f[2] = m_refSpeedShort[m_numOfInterval-1];          //first function value is equal to the last value in m_refSpeedShort
     for (int i = 0; i<m_numOfInterval; i++)
     {
-        x[i+1] = (double) m_intervalMidIndexes[i];
-        f[i+1] = m_refSpeedShort[i];
+        x[i+3] = (double) m_intervalMidIndexes[i];
+        f[i+3] = m_refSpeedShort[i];
     }
-    x[n-1] = m_intervalMidIndexes[m_numOfInterval-1] + m_intervalLength;
-    f[n-1] = m_refSpeedShort[0];                        //last function value is equal to the first value in m_refSpeedShort
+    x[n-3] = m_intervalMidIndexes[m_numOfInterval-1] + m_intervalLength;
+    f[n-3] = m_refSpeedShort[0];                        //second to last function value is equal to the first value in m_refSpeedShort
+    x[n-2] = m_intervalMidIndexes[m_numOfInterval-1] + 2*m_intervalLength;
+    f[n-2] = m_refSpeedShort[1];                        //last function value is equal to the second value in m_refSpeedShort
+    x[n-1] = m_intervalMidIndexes[m_numOfInterval-1] + 3*m_intervalLength;
+    f[n-1] = m_refSpeedShort[2];                        //last function value is equal to the second value in m_refSpeedShort
 
     cubic_nak(n, x, f, b, c, d);        //make spline coefficents.
     for (int i = 0; i<gRefLen; i++)
     {
         m_vRef[i] = spline_eval(n, x, f, b, c, d, (double)i);       //eval cooefficents to make new reference
-    }
-    for (int i = 0; i<m_numOfInterval; i++)
-    {
-        logFileAdaptive << m_refSpeedShortBest[i] << " " << m_times[i] << " " << m_timesBest[i] << "\n";
     }
 }
 
@@ -656,37 +621,5 @@ float PIDadaptiveSection::calcRefSpeed(int refInd)
 }
 
 
-// Update speed reference gain
-void PIDadaptiveSection::updateSpeedReferenceGain()
-{
-    if (m_firstLapDone)
-    {
-        m_lLap = timer.elapsed()/1000.0;
-        timer.restart();
-        qDebug() <<"last: " << m_lLap << "best: " << m_bLap;
 
-        if (m_lLap<m_bLap)
-        {
-            m_bLap = m_lLap;
-            m_bGain = m_gain;
-        }
-        m_gain = m_bGain + 0.15*(rand()/((float)RAND_MAX)- 0.3);
-        qDebug() << "bestGain: " << m_bGain << "new gain: " << m_gain;
-
-    }
-    else
-    {
-        timer.restart();
-        m_firstLapDone = true;
-    }
-    // qDebug() << "Gain: " <<m_gain;
-
-    /*
-    double currTime = (double)timeSRgain.elapsed()/1000.0;
-    //"sysTime carID xPos yPos speed lateralError || refInd vRef[refInd]_before vRef[refInd]_after \n";
-    (logFileSRgain) << currTime << " " << m_ID << " " << state[0] << " " << state[1] << " " << state[2] << " " << lateralError << " ";
-    (logFileSRgain) << refInd << " " << old_vRef << " " << m_vRef[refInd] << " ";
-    (logFileSRgain) << "\n";
-    */
-}
 

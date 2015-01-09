@@ -28,6 +28,7 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
             mType = motionModelType;
             M = new STModel();
 
+            // Set the Parameters needed for the ST-model
             m = 0.0406f;
             Cm1 = 0.6148f;
             Cm2 = 0.0477f;
@@ -51,22 +52,27 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
             q2 = 17.8926f;
             q3 = -20.1442f;
             q4 = 8.5883f;
+            turngain = 0.1f;
         }
             break;
         default:
             std::cout << "Error: Motion model type not implemented, in ParticleFilter::ParticleFilter(), ParticleFilter.cpp" << std::endl;
     }
 
+    // Set this to true to use raw images as measurements instead of x,y,theta measurements as inputs.
     imageMode = false;
+
+    // Load the track constraints from file
     LoadTrack();
 
+    // Initialize the timer
     time = omp_get_wtime();
     carPattern = ID;
     expectedSpeed = speed;
     limit = lim;
     noCar = true;
 
-    T = 1/100;
+    T = 1/120;
     noCarCounter = 31;
     //xhat = Eigen::MatrixXf::Zero(M->getNumStates(),NUMBER_OF_PARTICLES);
     //xhatpred = Eigen::MatrixXf::Zero(M->getNumStates(), NUMBER_OF_PARTICLES);
@@ -96,20 +102,9 @@ ParticleFilter::ParticleFilter(Eigen::MatrixXf ID, float speed, int lim, MotionM
     }
 }
 
+// Destructor
 ParticleFilter::~ParticleFilter()
 {
-}
-
-void ParticleFilter::setState(float state[5])
-{
-    for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
-    {
-        posX[i] = state[0];
-        posY[i] = state[1];
-        vel[i] = state[2];
-        yaw[i] = state[3];
-        angvel[i] = state[4];
-    }
 }
 
 // Propagate according to random walk model using camera coordinates
@@ -155,7 +150,7 @@ void ParticleFilter::propagateCT(void)
 #pragma omp parallel for
     for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
-        /*
+        /* TODO...  Add this Code to be used when changing the state vector to a single matrix.
         xhatpred(2,i) = xhat(2,i) + gaussianNoise()*30; //Velocity
         xhatpred(4,i) = xhat(4,i) + M_PI / 7 * gaussianNoise(); // Angular velocity
         xhatpred(3,i) = xhat(3,i) + xhat(4,i)*T; //Yaw
@@ -164,6 +159,7 @@ void ParticleFilter::propagateCT(void)
         xhatpred(0,i) = xhat(0,i) + 2 * xhatpred(2,i) / xhatpred(4,i) * sin(xhatpred(4,i)*T / 2) * cos(xhatpred(3,i) + xhatpred(4,i)*T / 2);
         xhatpred(1,i) = xhat(1,i) + 2 * xhatpred(2,i) / xhatpred(4,i) * sin(xhatpred(4,i)*T / 2) * sin(xhatpred(3,i) + xhatpred(4,i)*T / 2);
         */
+
         // update points with CT model
         velPoints[i] = vel[i] + gaussianNoise()*30;
         angvelPoints[i] = angvel[i] + M_PI / 7 * gaussianNoise();
@@ -178,7 +174,7 @@ void ParticleFilter::propagateCT(void)
     }
 }
 
-// Propagate according to coordinated turn model using world coordinates
+// Propagate according to coordinated turn model using world coordinates. Used in noImage mode
 void ParticleFilter::propagateCTWorldCoordinates(void)
 {
     T = ((double)(omp_get_wtime() - time));
@@ -201,6 +197,8 @@ void ParticleFilter::propagateCTWorldCoordinates(void)
     }
 }
 
+// Propagate according to Single Track model. Not Updated to work with the updated ST model as of 2015-01-08.
+// TODO... Add the correct dynamics from STmodel.cpp, This is also needed in the resampling step
 void ParticleFilter::propagateST(void)
 {
     // Update the time step
@@ -210,14 +208,12 @@ void ParticleFilter::propagateST(void)
     dutyCycles = calcDutycycles();
     thetaF = calcThetaF();
 
-    float alphaF, FLat;
+    float FLat = 0;
 
     omp_set_num_threads(3);
-#pragma omp parallel for private(alphaF, FLat)
+#pragma omp parallel for private(FLat)
     for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
     {
-        alphaF = calcAlphaF(velPoints[i], latvelPoints[i], yawPoints[i], thetaF);
-        //FLat = calcLatForce(alphaF);
 
         velPoints[i] = (dutyCycles * (Cm1 - Cm2*vel[i]) + thetaF * (FLat - Cm3 * FLat) - Cm3 * latvel[i] * angvel[i]) / m - latvel[i]*angvel[i] + gaussianNoise()*0.05;
         angvelPoints[i] = angvel[i] + T*FLat*lf/Iz + M_PI / 7 * gaussianNoise();
@@ -244,6 +240,7 @@ float ParticleFilter::gaussianNoise(void)
     return sqrt(rand1) * cos(rand2);
 }
 
+// Old update function used to add a weight to each particle. Use parallelUpdate or noImageUpdate instead
 void ParticleFilter::update(const cv::Mat img)
 {
     double tStart = 0;
@@ -296,8 +293,6 @@ void ParticleFilter::update(const cv::Mat img)
                 }
             }
         }
-        //if(sum != 0)
-            //std::cout << sum << std::endl;
         totSum += sum;
         cumulativeWeights[n] = totSum; // save weights cumulative sum for later normalization
     }
@@ -306,7 +301,7 @@ void ParticleFilter::update(const cv::Mat img)
     //std::cout << "For time: " << tEnd - tStart << std::endl;
 }
 
-// Parallelized version of update
+// Parallelized version of update. Every particle is paired with a weight used to form a cumulative distribution
 void ParticleFilter::parallelUpdate(const cv::Mat img)
 {
     // Add border values around each point controlled
@@ -317,7 +312,6 @@ void ParticleFilter::parallelUpdate(const cv::Mat img)
     Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(2, points);
     float sum = 0;
     //tStart = omp_get_wtime();
-qDebug("pf8");
 omp_set_num_threads(3);
 #pragma omp parallel for private(rotate, translate, pos, sum)
     for (int n = 0; n < NUMBER_OF_PARTICLES; n++)
@@ -409,7 +403,7 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
             sum = 0;
             noncumulativeWeights[n] = 0;
         }
-        // If the hypothesis is outside the track boundaries then also discard it
+        // If the hypothesis is outside the track boundaries then discard it
         else if(trackConstraints[(int)yWorld][(int)xWorld] == 0)
         {
             sum = 0;
@@ -420,6 +414,7 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
             sum = 0.;
             angle = yawPoints[n];
 
+            // Add the inverse of the difference between the measured position and particle position to the weight
             sum += sqrt(pow((posXPoints[n] - x), 2.0) + pow((posYPoints[n] - y), 2.0));
             sum = 1.0/sum;
 
@@ -436,8 +431,6 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
             else if(angle < (-M_PI))
                 angle += 2.0*M_PI;
 
-            //std::cout << "yawPoints value: " << angle << std::endl;
-
             // Normalize angles to value between 0 and 1
             if(angle < 0)
             {
@@ -447,8 +440,6 @@ void ParticleFilter::noImgUpdate(float x, float y, float theta)
             {
                 angle = angle/(2.0*M_PI);
             }
-
-            //std::cout << "after: " << angle << std::endl << std::endl;
 
             // Multiply the sum weight with the difference between the angle state and measurement to the power of 20
             if(abs(angle - measAngle) > 0.5 && angle > 0.5)
@@ -566,10 +557,10 @@ void ParticleFilter::resample(void)
 // Resample using systematic resampling which is faster than multinomial sampling
 void ParticleFilter::systematicResample(void)
 {
-    // randomly, uniformally, sample from the cummulative distribution of the probability distribution generated by the
+    // randomly, uniformally, sample from the cumulative distribution of the probability distribution generated by the
     // weighted vector 'weight'.
     float ordNum[NUMBER_OF_PARTICLES];
-    float lim;
+    float randNr;
     sumStates[0] = 0;
     sumStates[1] = 0;
     sumStates[2] = 0;
@@ -577,24 +568,16 @@ void ParticleFilter::systematicResample(void)
     sumStates[4] = 0;
     int k = 0;
 
-    if(imageMode)
-    {
-        lim = 0;
-    }
-    else
-    {
-        lim = NUMBER_OF_PARTICLES;
-    }
-
     if ((imageMode && cumulativeWeights[NUMBER_OF_PARTICLES - 1] != 0) || (!imageMode && cumulativeWeights[NUMBER_OF_PARTICLES - 1] > NUMBER_OF_PARTICLES))
     {
-        ordNum[0] = (rand() / ((float)RAND_MAX))/NUMBER_OF_PARTICLES;
+        randNr = (rand() / ((float)RAND_MAX)); // Generate a single uniform random number
+        ordNum[0] = randNr/NUMBER_OF_PARTICLES;
 
         // Normalize weights to form a cumulative summed probability distribution
         for (int i = 0; i < NUMBER_OF_PARTICLES - 1; ++i)
         {
             cumulativeWeights[i] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
-            ordNum[i + 1] = ((i + 1) + (rand() / ((float)RAND_MAX))) / NUMBER_OF_PARTICLES;
+            ordNum[i + 1] = ((i + 1) + randNr) / NUMBER_OF_PARTICLES;
         }
         cumulativeWeights[NUMBER_OF_PARTICLES - 1] /= cumulativeWeights[NUMBER_OF_PARTICLES - 1];
 
@@ -619,11 +602,10 @@ void ParticleFilter::systematicResample(void)
                 if(yawPoints[k] < 0 && numPartInCritReg < NUMBER_OF_PARTICLES*0.1f)
                 {
                     sumStates[3] += (yawPoints[k] + 2*M_PI);
-                    //std::cout << "1 " << yawPoints[k] + 2*M_PI << std::endl;
                 }
-                else{
+                else
+                {
                     sumStates[3] += yawPoints[k];
-                    //std::cout << "2 " << yawPoints[k] << std::endl;
                 }
             }
             else
@@ -634,13 +616,13 @@ void ParticleFilter::systematicResample(void)
             angvel[j] = angvelPoints[k];
             sumStates[4] += angvelPoints[k];
 
-            if(mType == MotionModelType::STModel)
+            if(mType == MotionModelType::STModel) // The ST model has an additional state over the CT model
             {
                 latvel[j] = latvelPoints[k];
                 sumStates[5] += latvelPoints[k];
             }
 
-            /*
+            /* TODO... implement a generalized state vector instead of the 5/6 different vectors.
             xhat(0,j) = xhatpred(0,k);
             sumStates[0] += xhatpred(0,k);
             xhat(1,j) = xhatpred(1,k);
@@ -654,11 +636,10 @@ void ParticleFilter::systematicResample(void)
                 if(xhatpred(3,k) < 0 && numPartInCritReg < NUMBER_OF_PARTICLES*0.1f)
                 {
                     sumStates[3] += (xhatpred(3,k) + 2*M_PI);
-                    //std::cout << "1 " << yawPoints[k] + 2*M_PI << std::endl;
                 }
-                else{
+                else
+                {
                     sumStates[3] += xhatpred(3,k);
-                    //std::cout << "2 " << yawPoints[k] << std::endl;
                 }
             }
             else
@@ -706,7 +687,7 @@ void ParticleFilter::systematicResample(void)
                 sumStates[5] += latvelPoints[i];
             }
 
-            /*
+            /* TODO... implement a generalized state vector instead of the 5/6 different vectors.
             xhat(0,i) = xhatpred(0,i);
             sumStates[0] += xhatpred(0,i);
             xhat(1,i) = xhatpred(1,i);
@@ -737,6 +718,7 @@ void ParticleFilter::systematicResample(void)
     }
 }
 
+// Function used in ImageMode. When the filter can't find the car. Use an image to match a car to the best matching pattern
 void ParticleFilter::extensiveSearch(cv::Mat img)
 {
     // Detect contrasting image features for seeding states
@@ -815,6 +797,7 @@ void ParticleFilter::extensiveSearch(cv::Mat img)
     noCar = false; // To break extensive search. This will be tried on next image search.
 }
 
+// This function is called from the processingThread. Calls all the functions to update the filter.
 void ParticleFilter::updateFilter()
 {
     // Update the filter using an image as measurement
@@ -838,7 +821,7 @@ void ParticleFilter::updateFilter()
                 //#pragma omp parallel for
                 for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
                 {
-                    /*
+                    /* TODO... implement a generalized state vector instead of the 5/6 different vectors.
                     xhatpred(2,i) = xhat(2,i);
                     xhatpred(4,i) = xhat(4,i);
                     xhatpred(3,i) = xhat(3,i) + xhatpred(4,i)*T;
@@ -877,7 +860,7 @@ void ParticleFilter::updateFilter()
     {
         if(m_newMeasurement)
         {
-            if (carGone())
+            if (carGone()) //Initialize the particles around the measurements.
             {
                 for (int i = 0; i < NUMBER_OF_PARTICLES; i++)
                 {
@@ -913,7 +896,7 @@ void ParticleFilter::updateFilter()
             noImgUpdate(m_x, m_y, m_theta);
             systematicResample();
         }
-        else // If a new measurement was not found
+        else // If a new measurement was not found, update the states according to the Model
         {
             switch(mType)
             {
@@ -1031,6 +1014,7 @@ void ParticleFilter::logStates(std::ofstream *logFile)
     *logFile << sumStates[0] / NUMBER_OF_PARTICLES << " " << sumStates[1] / NUMBER_OF_PARTICLES << " " << sumStates[3] / NUMBER_OF_PARTICLES << std::endl;
 }
 
+// Returns the relevant states
 std::vector<float> ParticleFilter::getState(void)
 {
     std::vector<float> state(M->getNumStates());
@@ -1046,12 +1030,18 @@ std::vector<float> ParticleFilter::getState(void)
     return state;
 }
 
+// Used when using the ST-model
 void ParticleFilter::addInputSignals(float gas, float turn)
 {
-    m_gas = gas;
-    m_turn = turn;
+    float64 signal[2];
+    signal[0] = gas;
+    signal[1] = turn;
+    decimalToVoltage(signal);
+    m_gas = signal[0];
+    m_turn = signal[1];
 }
 
+// Add a new set of measurements to the filter
 void ParticleFilter::addMeasurement(float x, float y, float theta)
 {
     m_x = x;
@@ -1060,65 +1050,16 @@ void ParticleFilter::addMeasurement(float x, float y, float theta)
     m_newMeasurement = true;
 }
 
+// Add a new image measurement to the filter
 void ParticleFilter::addImageMeasurement(cv::Mat img)
 {
     img.copyTo(m_img);
     m_newMeasurement = true;
 }
 
-bool ParticleFilter::hasNewMeasurement(void)
+// Loads the track constraints from file
+void ParticleFilter::LoadTrack()
 {
-    return m_newMeasurement;
-}
-
-// Used in camera2worldCoordinates
-void ParticleFilter::nonLinearUndistort(float input[2], float output[2])
-{
-    double k1, k2, p1, p2, k3, fx, cx, fy, cy, z, x, y, r2, dx, dy, scale, xBis, yBis;
-    // Following a somewhat standardized notation for distortion coefficients, the matrix elements are as follows:
-    k1 = distCoeffs.at<double>(0, 0);
-    k2 = distCoeffs.at<double>(0, 1);
-    p1 = distCoeffs.at<double>(0, 2);
-    p2 = distCoeffs.at<double>(0, 3);
-    k3 = distCoeffs.at<double>(0, 4);
-    fx = cameraMatrix.at<double>(0, 0);
-    cx = cameraMatrix.at<double>(0, 2);
-    fy = cameraMatrix.at<double>(1, 1);
-    cy = cameraMatrix.at<double>(1, 2);
-    z = 1.;
-
-    x = (input[0] - cx) / fx;
-    y = (input[1] - cy) / fy;
-    r2 = x*x + y*y;
-
-    dx = 2 * p1*x*y + p2*(r2 + 2 * x*x);
-    dy = p1*(r2 + 2 * y*y) + 2 * p2*x*y;
-    scale = (1 + k1*r2 + k2*r2*r2 + k3*r2*r2*r2);
-
-    xBis = x*scale + dx;
-    yBis = y*scale + dy;
-
-    output[0] = xBis*fx + cx;
-    output[1] = yBis*fy + cy;
-}
-
-void ParticleFilter::cameraToWorldCoordinates(float cameraPoint[2], float worldPoint[2])
-{
-    float nonLinearUndistorted[2];
-    Eigen::Vector3f worldPoint_Eigen;
-    Eigen::Vector3f undistCameraPoint;
-
-    nonLinearUndistort(cameraPoint, nonLinearUndistorted);
-
-    undistCameraPoint << nonLinearUndistorted[0], nonLinearUndistorted[1], 1;
-
-    worldPoint_Eigen = cameraToWorldMatrix_Eigen*undistCameraPoint;
-    worldPoint_Eigen = worldPoint_Eigen / worldPoint_Eigen[2];
-    worldPoint[0] = worldPoint_Eigen[0]/PIXELS_PER_METER;
-    worldPoint[1] = worldPoint_Eigen[1]/PIXELS_PER_METER;
-}
-
-void ParticleFilter::LoadTrack() {
   int x, y;
   std::ifstream in("track.txt");
 
@@ -1135,39 +1076,95 @@ void ParticleFilter::LoadTrack() {
   in.close();
 }
 
+// Used in ST model
 float ParticleFilter::calcDutycycles()
 {
-    return  mThrottle + ((p1*pow(m_gas,4) + p2*pow(m_gas,3) + p3*pow(m_gas,2) + p4*m_gas + p5) / (pow(m_gas,4) + q1*pow(m_gas,3) + q2*pow(m_gas,2) + q3*m_gas + q4));
+    if(m_gas > 1.45 || m_gas < 1.66)
+        return 0;
+    else
+        return  mThrottle + ((p1*pow(m_gas,4) + p2*pow(m_gas,3) + p3*pow(m_gas,2) + p4*m_gas + p5) / (pow(m_gas,4) + q1*pow(m_gas,3) + q2*pow(m_gas,2) + q3*m_gas + q4));
 }
 
+// Used in ST model
 float ParticleFilter::calcThetaF()
 {
     return kTurn*m_turn + mTurn;
 }
-
-float ParticleFilter::calcAlphaF(float Vx, float Vy, float w, float thetaF)
+// Used in ST model
+float ParticleFilter::calcFyFront(float thetaF)
 {
-    if(Vx == 0)
+    return turngain * thetaF;
+}
+
+// Calculate the Force in the cars x-direction from the rear wheels
+float ParticleFilter::calcFxRear(float D, float Vx)
+{
+    return Cm1*D - Cm2*D*Vx;
+}
+
+// Map interval [-1,1] to [m_minVal,m_maxVal].
+void ParticleFilter::decimalToVoltage(float64 *decimal)
+{
+
+    float m_voltGasIntervall = 1.4693f;
+
+    float m_voltGasMin = 1.4710f;
+    float m_voltGasMax = 0.95f;
+    float m_voltGasSlope = m_voltGasMax - m_voltGasMin;
+
+    float m_voltBrakeThreshold = 1.472f;
+
+    float m_reverseGasSlope = 0.51f;
+
+    float m_minTurnVolt = 0.11f;
+    float m_maxTurnVolt = 2.97f; //3.242;
+
+    float m_gasNeutral = 1.61f;
+    float m_turnNeutral = 1.53f;
+
+    // Transform gas signal if gas is 0
+    if (decimal[0] == 0)
     {
-        Vx = 0.001f;
+        decimal[0] = m_gasNeutral;
     }
-    return thetaF - atan((Vy+lf*w)/Vx);
-}
+    else if (decimal[0] > 0 && decimal[0] <= 1) // If positive gas signal
+    {
+        decimal[0] = m_voltGasIntervall + decimal[0] * m_voltGasSlope;
+    }
+    // If break/reverse
+    else if (decimal[0] < 0 && decimal[0] >= -1)
+    {
+        decimal[0] = m_voltBrakeThreshold  - decimal[0] * m_reverseGasSlope;
+    }
+    // If out of bounds
+    else
+    {
+        decimal[0] = m_gasNeutral;
+    }
 
-float ParticleFilter::calcFyFront(float Vx, float thetaF, float alphaF)
-{
-    if(Vx == 0)
-        Vx = 0.001f;
-
-    return (sin(thetaF)*k_alphaF*alphaF)+thetaF*0.035*(1/Vx);
-}
-
-float ParticleFilter::calcFxFront(float thetaF, float alphaF)
-{
-    return -3*sin(thetaF)*k_alphaF*alphaF;
-}
-
-float ParticleFilter::calcFxRear(float D, float Vx, float Fxfront)
-{
-    return Cm1*D - Cm2*D*Vx - Cm3*Fxfront;
+    // Transform turn signal
+    if (decimal[1] == 0)
+    {
+        decimal[1] = m_turnNeutral;
+    }
+    else if (decimal[1] > 0 && decimal[1] <= 1)
+    {
+        decimal[1] = m_turnNeutral + decimal[1] * (m_maxTurnVolt - m_turnNeutral);
+        if (decimal[1] > m_maxTurnVolt)
+        {
+            std::cout << "Turn signal is too high: " << decimal[1] << std::endl;
+        }
+    }
+    else if (decimal[1] < 0 && decimal[1] >= -1)
+    {
+        decimal[1] = m_turnNeutral - -decimal[1] * (m_turnNeutral - m_minTurnVolt);
+        if (decimal[1] < m_minTurnVolt)
+        {
+            std::cout << "Turn signal is too low: " << decimal[1] << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "Turn signal is out of bounds2: " << decimal[1] << std::endl;
+    }
 }

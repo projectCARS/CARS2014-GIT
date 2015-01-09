@@ -124,7 +124,7 @@ private:
     float calcLatForce(float alphaF);
 
     // returns the force in the car's y-direction for the front wheels
-    float calcFyFront(float thetaF);
+    float calcFyFront(float thetaF, float Vx);
     // returns the force in the car's x-direction for the front wheels
     float calcFxFront(float thetaF, float alphaF);
     // returns the force in car's x-direction from the rear wheels

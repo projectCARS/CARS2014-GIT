@@ -17,9 +17,6 @@ bool firstCallingConstructor = true;
 bool firstCallingStop = true;
 TaskHandle TaskInput = 0;
 
-
-
-
 // Function that reads the returned status message from a DAQmx function. If failed, displays the error message
 // Should be called whenever a DAQmx function is called
 
@@ -161,7 +158,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             std::stringstream str;
             str.clear();
             str.str(std::string());
-            str << "outdata/logFiles/logVoltage1_theOneAndOnly.txt";
+            str << "outdata/logFiles/logVoltageAuto.txt";
             LF.open(str.str());
             LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn\n";
             std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
@@ -477,7 +474,6 @@ void IOControl::controllerOn(void)
         value[0] = 1;
         // Turn on controller.
         printError(DAQmxWriteDigitalLines(m_hTaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL), 488, " in IOcontrol");
-        qDebug("handcontroller 1 turned on");
         // Sleep to ensure that the signals have been written.
         Sleep(200);
         signal[0] = m_gasNeutral; //0.9;
@@ -489,20 +485,17 @@ void IOControl::controllerOn(void)
         break;
     case HandController::HandControl_2:
 #ifdef NIDAQ_IS_AVALIABLE
-        //float64 signal[2];
-        // Start the controller with full gas. This ensures that the car starts in racing mode.
 
+        // Start the controller with full gas. This ensures that the car starts in racing mode.
         signal[0] = m_gasFull;
         signal[1] = m_turnNeutral;
         voltageToDutyCycle(signal);
         printError(DAQmxWriteCtrFreq(m_c2TaskOutput, 1, 1, 10.0, DAQmx_Val_GroupByChannel, m_freq, signal, NULL, NULL), 505, " in IOcontrol");
 
         Sleep(20);
-        //uInt8 value[1];
         value[0] = 1;
         // Turn on controller.
         printError(DAQmxWriteDigitalLines(m_c2TaskPower, 1, 1, 10.0, DAQmx_Val_GroupByChannel, value, NULL, NULL), 511, " in IOcontrol");
-        qDebug("handcontroller 2 turned on");
 
         // Sleep to ensure that the signals have been written.
         Sleep(200);
@@ -554,7 +547,7 @@ void IOControl::controllerOff(void)
     }
 }
 
-void IOControl::manualControl( CarData &carData)
+void IOControl::manualControl(CarData &carData)
 {
 #ifdef NIDAQ_IS_AVALIABLE
     // Read input signals and save to m_tempArray
@@ -607,12 +600,13 @@ void IOControl::assistedControl(float turnSignal, CarData &carData)
 #endif
 }
 
+
+// AS of 2015-01-08 this does not work as intendend. Changes in DecimalToVoltage needs to be adjusted for in this function as well.
 void IOControl::voltageToDecimal(float64 *voltage)
 {
 #ifdef NIDAQ_IS_AVALIABLE
     // Transform gas signal
     // If voltage results in no gas
-
 
     if (voltage[0] <= m_voltReverseThreshold && voltage[0] >= m_voltGasMin)
     {

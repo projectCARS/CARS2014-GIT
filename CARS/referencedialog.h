@@ -25,6 +25,7 @@ private:
     QSettings m_settings;
     std::vector<float> m_ref;
     std::vector<float> m_vRef;
+    std::vector<float> m_aRef;
     int m_refLen;
     double m_gain = 0;
     double m_offset = 0;
@@ -38,10 +39,8 @@ private slots:
     void on_chooseFileButton_clicked();
 
     void on_reversecheckBox_clicked(bool checked);
-    void on_decreaseGainButton_clicked();
-    void on_increaseGainButton_clicked();
-    void on_decreaseOffsetButton_clicked();
-    void on_increaseOffsetButton_clicked();
+    void on_GainlineEdit_editingFinished();
+    void on_OffsetlineEdit_editingFinished();
 };
 
 #endif // REFERENCEDIALOG_H

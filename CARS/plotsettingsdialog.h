@@ -22,8 +22,6 @@ private slots:
 
     void on_sectionTimeCheckBox_toggled(bool checked);
 
-    void on_speedErrorCheckBox_toggled(bool checked);
-
     void on_GainReferenceCheckBox_toggled(bool checked);
 
 private:

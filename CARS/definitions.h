@@ -1,5 +1,6 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
+#define NOMINMAX
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -8,7 +9,7 @@
 #include <QElapsedTimer>
 #include <QVector>
 
-
+#include <stdlib.h>
 #include <windows.h>
 
 
@@ -169,6 +170,7 @@ struct CarData
     // True if the car is active but is not detected, otherwise false.
     bool lost;
     CarMode::Enum mode;
+    MotionModelType::Enum modelType;
     FilterType::Enum filter;
     std::vector<float> state;
     LapData lapData;
@@ -190,6 +192,7 @@ struct CarData
  * */
 struct PlotData
 {
+    std::string name;
     bool makePlot = false;
     std::vector<bool> newDataReady;
     QVector<QVector<double>> X,Y;

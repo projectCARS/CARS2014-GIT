@@ -70,7 +70,12 @@ private:
    QElapsedTimer timeVoltageLog;
    //std::ofstream logFileVoltageLog;
    //std::stringstream str;
-   bool writeVoltageLogAuto = true;
+
+   /*activates logfiles for IOcontrol
+    * Works only for handcontrol1 and only for one car. If several cars exist, even if they are marked as "not connected", problems may occur.
+    * Default this should be set to false. Anly set to true even this logData is of interest.
+    */
+   bool writeVoltageLogAuto = false;
    bool writeVoltageLogMan = false;
    bool writeVoltageLogAss = false;
 
