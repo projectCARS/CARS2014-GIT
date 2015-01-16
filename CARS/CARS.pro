@@ -95,9 +95,9 @@ SOURCES += main.cpp\
     plotsettingsdialog.cpp \
     PIDadaptiveSection.cpp \
     PIDdefault.cpp \
-    PIDaggressive.cpp \
     PIDadaptiveGain.cpp \
-    pidsettings.cpp
+    pidsettings.cpp \
+    PIDuser.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -133,9 +133,9 @@ HEADERS  += mainwindow.h \
     plotsettingsdialog.h \
     PIDadaptiveSection.h \
     PIDdefault.h \
-    PIDaggressive.h \
     PIDadaptiveGain.h \
-    pidsettings.h
+    pidsettings.h \
+    PIDuser.h
 
 
 FORMS    += mainwindow.ui \

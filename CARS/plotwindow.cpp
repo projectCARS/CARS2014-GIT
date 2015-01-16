@@ -110,5 +110,5 @@ void plotWindow::on_ExportDataButton_released()
 
     }
     dataStream.close();
-    std::cout << "PlotWindow object:		Writing data to " << str.str() << std::endl;
+    std::cout << "PlotWindow object:    Writing data to " << str.str() << std::endl;
 }

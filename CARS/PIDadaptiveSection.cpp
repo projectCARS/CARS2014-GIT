@@ -6,6 +6,8 @@
 
 #include <fstream>
 
+std::ofstream dataStream;
+
 PIDadaptiveSection::PIDadaptiveSection(int ID)
 {
     m_ID = ID;
@@ -24,13 +26,13 @@ PIDadaptiveSection::PIDadaptiveSection(int ID)
 
     m_turnPID.resize(3);
 
-    m_turnPID[0] = 1.8f;	//P
-    m_turnPID[1] = 0.2f;		//I
-    m_turnPID[2] = 0.0;		//D
+    m_turnPID[0] = 1.5f;// 1.8	//P
+    m_turnPID[1] = 0.2f;// 0.2		//I
+    m_turnPID[2] = 1.0f;	// 0	//D
 
-    Kp_forward = 0.18f;
+    Kp_forward = 0.23f;//0.18f;
     Kp_brake = 5.8f;
-    Ki = 0.0f;
+    Ki = 0.001f;
     Kd = 0.008f;
 
     m_numOfInterval = 10.0;
@@ -132,10 +134,28 @@ PIDadaptiveSection::PIDadaptiveSection(int ID)
 
     }
     LeaveCriticalSection(&csPlotData);
+    int fileNo = 1;
+    std::stringstream str;
+    for (int i=0 ; i < 100 ; i++) // Ceiling for number of log files here.
+    {
+        str.clear();
+        str.str(std::string());
+        str << "outdata/logFiles/logAdaptiveSection" << std::setw(3) << std::setfill('0') << fileNo << ".txt";
+        if (!fileExists(str.str()))
+        {
+            break;
+        }
+        fileNo++;
+    }
+    dataStream.open(str.str());
+    dataStream << "Lap times " << "\n";
+    std::cout << "PIDadaptiveSection object :  Writing log to " << str.str() << std::endl;
+
 }
 
 PIDadaptiveSection::~PIDadaptiveSection()
 {
+    dataStream.close();
 }
 
 void PIDadaptiveSection::calcSignals(std::vector<float> &state, float &gas, float &turn)
@@ -194,6 +214,8 @@ void PIDadaptiveSection::newLapStarted()
     if ( m_firstLapDone )
     {
             m_timerTimes[m_numOfInterval-1] = timerSection.elapsed()/1000.0;
+            //Save lap time to log file
+            dataStream << m_timerTimes[m_numOfInterval-1] << "\n";
             timerSection.restart();     //restart timer on every new lap
             updateSpeedReference();
     }

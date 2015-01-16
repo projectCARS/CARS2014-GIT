@@ -72,7 +72,7 @@ void ProcessingThread::run()
     std::ofstream logFile;
     logFile.open(str.str());
     logFile << "sysTime carID xPos yPos speed yaw yawVel xPosRaw yPosRaw yawRaw gas turn\n";
-    std::cout << "processingthread thread:		Writing log to " << str.str() << std::endl;
+    std::cout << "processingthread thread:  Writing log to " << str.str() << std::endl;
 
     // Resize vectors.
     for (int i = 0; i < m_numCars; i++)

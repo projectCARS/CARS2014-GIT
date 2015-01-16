@@ -220,7 +220,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Note: These settings change the Gas and Turn parameters of the Aggressive PID</string>
+    <string>Note: These settings change the Gas and Turn parameters of the controller PIDUser</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>

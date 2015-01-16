@@ -1,5 +1,5 @@
-#ifndef PIDAGGRESSIVE_H
-#define PIDAGGRESSIVE_H
+#ifndef PIDUSER_H
+#define PIDUSER_H
 
 #include "Controller.h"
 #include "qtheaders.h"
@@ -8,7 +8,7 @@
 #include <chrono>
 
 
-class PIDaggressive : public Controller
+class PIDuser : public Controller
 {
 private:
     //int m_gain = 1;
@@ -36,8 +36,8 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start, end, startTurn, endTurn;
 
 public:
-    PIDaggressive(int ID, float K_array[5]);
-    ~PIDaggressive();
+    PIDuser(int ID, float K_array[5]);
+    ~PIDuser();
 
     // Calculates and returns a vector with gas and turn signal.
     virtual void calcSignals(std::vector<float> &state, float &gas, float &turn);
@@ -59,4 +59,4 @@ private:
 
 };
 
-#endif // PIDAGGRESSIVE_H
+#endif // PIDUSER_H

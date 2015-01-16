@@ -87,7 +87,7 @@ namespace ControllerType
     enum Enum
     {
         PIDdefault,
-        PIDaggressive,
+        PIDuser,
         PIDadaptiveGain,
         PIDadaptiveSection,
     };
@@ -238,7 +238,7 @@ struct ControllerThreadData
 // ---------- External declarations ----------
 extern struct DrawThreadData drawThreadData;
 extern struct ControllerThreadData controllerThreadData;
-extern struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData, AdaptiveGainPlotData;
+extern struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData, AdaptiveGainPlotData, UserSpeedPlotData;
 //extern struct RaceSettings raceSettings;
 // Critical section that is used during communication between main thread and draw thread.
 extern CRITICAL_SECTION csDrawThreadData, csControllerThreadData, csPlotData;

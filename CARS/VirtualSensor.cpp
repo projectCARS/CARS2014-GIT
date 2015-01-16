@@ -110,14 +110,14 @@ std::vector<float> VirtualSensor::detectMarkers()
     std::vector<float> allMarkers;
 #ifdef CAMERA_IS_AVALIABLE
 
-   // t0 = omp_get_wtime();
+    //t0 = omp_get_wtime();
     //if(count%2 == 0)
-     //   qDebug() << t0 - t1;
+    //    qDebug() << t0 - t1;
     // Grab image from camera.
     m_pgrCamera.grabImage(&m_rawData);
     //t1 = omp_get_wtime();
-   // if(count%2 == 0)
-     //   qDebug() << "camera: " << t1 - t0;
+    //if(count%2 == 0)
+    //    qDebug() << "camera: " << t1 - t0;
 
 
 

@@ -1,10 +1,12 @@
 #include "headers.h"
 #include "qtheaders.h"
 #include "definitions.h"
-#include "PIDaggressive.h"
+#include "classes.h"
+#include "definitions.h"
+#include "PIDuser.h"
 
 
-PIDaggressive::PIDaggressive(int ID, float K_array[8])
+PIDuser::PIDuser(int ID, float K_array[8])
 {
     m_ID = ID;
     m_startInd = 0;
@@ -28,19 +30,46 @@ PIDaggressive::PIDaggressive(int ID, float K_array[8])
 
     m_turnGain = 1;
 
+    EnterCriticalSection(&csPlotData);
+    if (UserSpeedPlotData.makePlot)
+    {
+        for (int i = 0; i < UserSpeedPlotData.numOfGraphs; i++)
+        {
+            UserSpeedPlotData.X[i].resize(0);
+            UserSpeedPlotData.X[i].resize((int) gRefLen);
+            UserSpeedPlotData.Y[i].resize(0);
+            UserSpeedPlotData.Y[i].resize((int) gRefLen);
+        }
+
+        UserSpeedPlotData.axisRange.resize(4);
+        UserSpeedPlotData.axisRange[0] = 0;
+        UserSpeedPlotData.axisRange[1] = gRefLen;
+        UserSpeedPlotData.axisRange[2] = 0;
+        UserSpeedPlotData.axisRange[3] = 3.5;
+
+        for (int i = 0; i<gRefLen ; i++ )
+        {
+            UserSpeedPlotData.X[0][i] = i;
+            UserSpeedPlotData.X[1][i] = i;
+            UserSpeedPlotData.Y[0][i] = vRef[i];
+        }
+        UserSpeedPlotData.newDataReady[0] = true;
+    }
+    LeaveCriticalSection(&csPlotData);
+
 }
 
-PIDaggressive::~PIDaggressive()
+PIDuser::~PIDuser()
 {
 }
 
-void PIDaggressive::calcTurnSignal(std::vector<float> &state, float &turn)
+void PIDuser::calcTurnSignal(std::vector<float> &state, float &turn)
 {
     m_refInd = findIntersection(state, m_startInd);
     turn = calcTurnSignal(state, m_refInd);
 }
 
-void PIDaggressive::calcSignals(std::vector<float> &state, float &gas, float &turn)
+void PIDuser::calcSignals(std::vector<float> &state, float &gas, float &turn)
 {
     // Find point on reference curve.
     m_refInd = findIntersection(state, m_startInd);
@@ -56,9 +85,17 @@ void PIDaggressive::calcSignals(std::vector<float> &state, float &gas, float &tu
     gas = calcGasSignalAlt(state, m_refSpeed);
     //gas = m_refGas;
     turn = calcTurnSignal(state, m_refInd);
+
+    EnterCriticalSection(&csPlotData);
+    if (UserSpeedPlotData.makePlot)
+    {
+        UserSpeedPlotData.Y[1][m_refInd] = state[2];
+        UserSpeedPlotData.newDataReady[1] = true;
+    }
+    LeaveCriticalSection(&csPlotData);
 }
 
-float PIDaggressive::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
+float PIDuser::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
 
     //m_refAngle = aRef[m_refInd];
     float error = (refSpeed - state[2]);
@@ -107,7 +144,7 @@ float PIDaggressive::calcGasSignalAlt(std::vector<float> &state, float refSpeed)
 
 // Finds the intersection between the reference curve
 // and the circle with gCarRadius.
-int PIDaggressive::findIntersection(std::vector<float> &state, int startInd)
+int PIDuser::findIntersection(std::vector<float> &state, int startInd)
 {
     int i, ind1, ind2;
     float dist1, dist2, diffX, diffY, carX, carY;
@@ -151,7 +188,7 @@ int PIDaggressive::findIntersection(std::vector<float> &state, int startInd)
     {
         // At the next iteration, start searching in the same place on the reference curve.
         ind1 = m_startInd;
-        //std::cout << "Warning, no intersection point found, in PIDaggressive.cpp" << std::endl;
+        //std::cout << "Warning, no intersection point found, in PIDuser.cpp" << std::endl;
     }
     else
     {
@@ -164,7 +201,7 @@ int PIDaggressive::findIntersection(std::vector<float> &state, int startInd)
 }
 
 // Calculate Turning voltage.
-float PIDaggressive::calcTurnSignal(std::vector<float> &state, int refInd)
+float PIDuser::calcTurnSignal(std::vector<float> &state, int refInd)
 {
     float carX, carY, diffX, diffY, refAngle, carAngle, diffAngle;
     float turnSignal = 0;

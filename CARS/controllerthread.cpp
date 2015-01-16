@@ -38,7 +38,7 @@ void ControllerThread::loadControllerSettings()
         case ControllerType::PIDdefault:
             m_controllers.push_back(new PIDdefault(m_numCars));
             break;
-        case ControllerType::PIDaggressive:
+        case ControllerType::PIDuser:
             float K_array[8];
             m_settings.beginGroup(QString("pid_settings"));
             K_array[0] = m_settings.value("Kp").toFloat();
@@ -51,7 +51,7 @@ void ControllerThread::loadControllerSettings()
             K_array[7] = m_settings.value("KdTurn").toFloat();
             m_settings.endGroup();
 
-            m_controllers.push_back(new PIDaggressive(m_numCars, K_array));
+            m_controllers.push_back(new PIDuser(m_numCars, K_array));
             break;
         default:
             qDebug() << "Error: Controller type not implemented, in loadControllerSettings(), controllerthread.cpp";

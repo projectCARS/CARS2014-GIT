@@ -80,9 +80,6 @@ void updateLapData(CarData &cardata)
                     //std::cout << "bestTime: " << cardata.lapData.bestTime << std::endl;
                 }
             }
-            //update LapData with information
-
-
         }
     }
 }
@@ -214,8 +211,7 @@ void drawCar(Eigen::MatrixXf carPattern, float x, float y, float yaw, cv::Mat im
 }
 
 void cubic_nak ( int n, double *x, double *f, double *b, double *c, double *d )
-
-/*
+/* http://www.pcs.cnu.edu/~bbradie/cinterpolation.html
      PURPOSE:
           determine the coefficients for the 'not-a-knot'
           cubic spline for a given set of data
@@ -256,7 +252,6 @@ void cubic_nak ( int n, double *x, double *f, double *b, double *c, double *d )
           to evaluate the cubic spline, use the routine
           'spline_eval'
 */
-
 {
      double *h,
             *dl,
@@ -304,8 +299,7 @@ void cubic_nak ( int n, double *x, double *f, double *b, double *c, double *d )
 
 double spline_eval ( int n, double *x, double *f, double *b, double *c,
                      double *d, double t )
-
-/*
+/* http://www.pcs.cnu.edu/~bbradie/cinterpolation.html
      PURPOSE:
           evaluate a cubic spline at a single value of
           the independent variable given the coefficients of
@@ -363,8 +357,9 @@ double spline_eval ( int n, double *x, double *f, double *b, double *c,
 }
 
 void tridiagonal ( int n, double *c, double *a, double *b, double *r )
-
 {
+    //used by cubic_nak
+    //http://www.pcs.cnu.edu/~bbradie/cinterpolation.html
      int i;
 
      for ( i = 0; i < n-1; i++ ) {

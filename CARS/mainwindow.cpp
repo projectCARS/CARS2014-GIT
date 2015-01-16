@@ -18,7 +18,7 @@
 #include <QLabel>
 #include <QDebug>
 
-struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData, AdaptiveGainPlotData;
+struct PlotData AdaptiveRefPlotData, AdaptiveTimePlotData, AdaptiveGainPlotData, UserSpeedPlotData;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -166,6 +166,23 @@ void MainWindow::startThreads(void)
         adaptiveGainRefWindow.setLegend(2,"Current speed reference");
         adaptiveGainRefWindow.setLegend(3,"Current speed");
         adaptiveGainRefWindow.show();
+    }
+    if(m_settings.value("plotSettings/userSpeedPlot").toBool())
+    {
+        UserSpeedPlotData.name = "PIDuserSpeed";
+        UserSpeedPlotData.makePlot = true;
+        UserSpeedPlotData.numOfGraphs = 2;
+        UserSpeedPlotData.newDataReady.resize(0);
+        UserSpeedPlotData.newDataReady.resize(UserSpeedPlotData.numOfGraphs);
+        UserSpeedPlotData.X.resize(0);
+        UserSpeedPlotData.X.resize(UserSpeedPlotData.numOfGraphs);
+        UserSpeedPlotData.Y.resize(0);
+        UserSpeedPlotData.Y.resize(UserSpeedPlotData.numOfGraphs);
+
+        userSpeedWindow.init(&UserSpeedPlotData, "<h1>Speed reference - PIDuser</h1>","Reference point","Speed [m/s]");
+        userSpeedWindow.setLegend(0,"Speed reference");
+        userSpeedWindow.setLegend(1,"Current speed");
+        userSpeedWindow.show();
     }
     LeaveCriticalSection(&csPlotData);
 
@@ -554,6 +571,17 @@ void MainWindow::updateFrame(void)
             }
         }
     }
+    if (UserSpeedPlotData.makePlot)
+    {
+        for (int i = 0; i < UserSpeedPlotData.numOfGraphs ; i++)
+        {
+            if (UserSpeedPlotData.newDataReady[i])
+            {
+                userSpeedWindow.updatePlot(i,UserSpeedPlotData.axisRange, UserSpeedPlotData.X[i], UserSpeedPlotData.Y[i]);
+                UserSpeedPlotData.newDataReady[i] = false;
+            }
+        }
+    }
     LeaveCriticalSection(&csPlotData);
 
 
@@ -802,8 +830,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     case (QMessageBox::Yes):
         stopThreads();
 
+        //Make sure that all plot windows is closed.
         adaptiveRefWindow.close();
         adaptiveTimeWindow.close();
+        adaptiveGainRefWindow.close();
+        userSpeedWindow.close();
         // Close Qt labels without parents.
         //imageLabelProjector->close();
         //imageLabelGui->close();

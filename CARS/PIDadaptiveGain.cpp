@@ -45,7 +45,7 @@ PIDadaptiveGain::PIDadaptiveGain(int ID)
             AdaptiveGainPlotData.X[i].resize(0);
             AdaptiveGainPlotData.X[i].resize((int) gRefLen);
             AdaptiveGainPlotData.Y[i].resize(0);
-            AdaptiveGainPlotData.Y[i].resize((int )gRefLen);
+            AdaptiveGainPlotData.Y[i].resize((int) gRefLen);
         }
 
         AdaptiveGainPlotData.axisRange.resize(4);

@@ -29,7 +29,7 @@ CarGroupBox::CarGroupBox(QWidget *parent) :
 
     // Add controllers.
     ui->controllerComboBox->addItem("PIDdefault", (int)ControllerType::PIDdefault);
-    ui->controllerComboBox->addItem("PIDaggressive", (int)ControllerType::PIDaggressive);
+    ui->controllerComboBox->addItem("PIDuser", (int)ControllerType::PIDuser);
     ui->controllerComboBox->addItem("PIDadaptiveGain", (int)ControllerType::PIDadaptiveGain);
     ui->controllerComboBox->addItem("PIDadaptiveSection", (int)ControllerType::PIDadaptiveSection);
 

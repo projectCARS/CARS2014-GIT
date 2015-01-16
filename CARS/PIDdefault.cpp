@@ -113,7 +113,7 @@ float PIDdefault::calcGasSignalAlt(std::vector<float> &state, float refSpeed){
 
     float Ierror = (m_prevI + error*dt);
     if (Ierror > 8) Ierror = 8;
-    float Derror = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt; //
+    float Derror = 0.5*m_prevD + 0.5*(m_prevAngError - error) / dt;
 
     float signal = KP * error +
                    Ki * Ierror +

@@ -161,7 +161,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             str << "outdata/logFiles/logVoltageAuto.txt";
             LF.open(str.str());
             LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn gas turn\n";
-            std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+            std::cout << "IOcontrol object: Writing log to " << str.str() << std::endl;
         }
         if (writeVoltageLogMan)
         {
@@ -172,7 +172,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             str << "outdata/logFiles/logVoltageManual.txt";
             LF.open(str.str());
             LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn\n";
-            std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+            std::cout << "IOcontrol object: Writing log to " << str.str() << std::endl;
         }
 
         if (writeVoltageLogAss)
@@ -184,7 +184,7 @@ IOControl::IOControl(int ID, HandController::Enum handController)
             str << "outdata/logFiles/logVoltageAss.txt";
             LF.open(str.str());
             LF << "time carID xPos yPos speed yaw yawVel Ugas Uturn turn\n";
-            std::cout << "IOcontrol object:		Writing log to " << str.str() << std::endl;
+            std::cout << "IOcontrol object: Writing log to " << str.str() << std::endl;
         }
         break;
     case HandController::HandControl_2:

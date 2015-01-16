@@ -32,6 +32,7 @@ private:
     plotWindow adaptiveRefWindow;
     plotWindow adaptiveTimeWindow;
     plotWindow adaptiveGainRefWindow;
+    plotWindow userSpeedWindow;
 
     QSettings m_settings;
     QImage m_image;
